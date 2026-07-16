@@ -3,8 +3,10 @@ CXXFLAGS := -std=c++20 -O2 -Wall -Wextra -Wpedantic -Werror -Isrc -Itests
 BUILD_DIR := build/blaze
 TEST_BIN := $(BUILD_DIR)/blaze_tests.exe
 PERFT_BIN := $(BUILD_DIR)/perft_driver.exe
-TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp)
-CORE_SOURCES := $(wildcard src/blaze/core/*.cpp)
+TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp) \
+	$(wildcard tests/eval/*.cpp) $(wildcard tests/search/*.cpp) $(wildcard tests/uci/*.cpp)
+ENGINE_SOURCES := $(wildcard src/blaze/core/*.cpp) $(wildcard src/blaze/eval/*.cpp) \
+	$(wildcard src/blaze/search/*.cpp) $(wildcard src/blaze/uci/*.cpp)
 
 .PHONY: all test perft-driver verify-clean-room clean
 
@@ -13,14 +15,14 @@ all: test
 $(BUILD_DIR):
 	powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path '$(BUILD_DIR)' | Out-Null"
 
-$(TEST_BIN): $(TEST_SOURCES) $(CORE_SOURCES) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(TEST_SOURCES) $(CORE_SOURCES) -o $(TEST_BIN)
+$(TEST_BIN): $(TEST_SOURCES) $(ENGINE_SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_SOURCES) $(ENGINE_SOURCES) -o $(TEST_BIN)
 
 test: $(TEST_BIN)
 	$(TEST_BIN)
 
-$(PERFT_BIN): tools/perft_driver.cpp $(CORE_SOURCES) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) tools/perft_driver.cpp $(CORE_SOURCES) -o $(PERFT_BIN)
+$(PERFT_BIN): tools/perft_driver.cpp $(ENGINE_SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) tools/perft_driver.cpp $(ENGINE_SOURCES) -o $(PERFT_BIN)
 
 perft-driver: $(PERFT_BIN)
 
