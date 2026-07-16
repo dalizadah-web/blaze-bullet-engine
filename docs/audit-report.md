@@ -46,7 +46,7 @@ On ten deterministic legal positions at 1000 ms per move:
 
 Blaze therefore searches about 38% as many nodes as this local Stockfish build
 at the same wall-clock budget. The latest pinned 2+0.02 smoke match completed
-50 games with 0 wins, 0 draws, and 50 losses for Blaze. This is not a formal Elo
+10 games with 0 wins, 0 draws, and 10 losses for Blaze. This is not a formal Elo
 rating, but it is decisive evidence that the 2950/Stockfish-beating requirement
 has not been met.
 
