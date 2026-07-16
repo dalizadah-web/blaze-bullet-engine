@@ -1,0 +1,9 @@
+.worktrees/
+build/
+*.o
+*.obj
+*.exe
+*.gcda
+*.gcno
+__pycache__/
+*.pyc
