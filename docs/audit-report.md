@@ -41,8 +41,8 @@ On ten deterministic legal positions at 1000 ms per move:
 
 | engine | average nodes | observed depth |
 | --- | ---: | ---: |
-| Blaze | 427,596 | 8-10 |
-| local Stockfish 17.1 | 1,028,234 | 19-25 |
+| Blaze | 480,021 | 8-10 |
+| local Stockfish 17.1 | 1,132,981 | 20-25 |
 
 Blaze therefore searches about 42% as many nodes as this local Stockfish build
 at the same wall-clock budget. The latest pinned 2+0.02 smoke match completed
