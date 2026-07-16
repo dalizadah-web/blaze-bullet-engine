@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <utility>
 #include <vector>
 
@@ -20,6 +21,31 @@ bool has_non_pawn_material(const Position& position, Color color) {
             position.pieces(color, PieceType::Bishop) |
             position.pieces(color, PieceType::Rook) |
             position.pieces(color, PieceType::Queen)) != 0;
+}
+
+bool king_is_safe_after_move(const Position& position, Color moving_side) {
+    const Bitboard king = position.pieces(moving_side, PieceType::King);
+    if (king == 0) {
+        return false;
+    }
+    const Square king_square = static_cast<Square>(std::countr_zero(king));
+    return !is_square_attacked(position, king_square, opposite(moving_side));
+}
+
+bool has_any_legal_move(Position& position, const MoveList& candidates) {
+    const Color moving_side = position.side_to_move();
+    for (const Move move : candidates) {
+        StateInfo state;
+        if (!position.make_move(move, state)) {
+            continue;
+        }
+        const bool legal = king_is_safe_after_move(position, moving_side);
+        position.unmake_move(move, state);
+        if (legal) {
+            return true;
+        }
+    }
+    return false;
 }
 
 int victim_value(Piece piece) {
@@ -167,17 +193,19 @@ int Searcher::negamax(
     ++context.nodes;
 
     MoveList legal_moves;
-    generate_legal(position, legal_moves);
-    if (legal_moves.empty()) {
-        return in_check(position) ? -search_mate_score + ply : 0;
-    }
-    if (position.rule50() >= 100 || is_repetition(context, position.key())) {
-        return 0;
-    }
+    generate_pseudo_legal(position, legal_moves);
     if (ply >= maximum_ply) {
         return evaluate(position);
     }
     const bool checked = in_check(position);
+    if (position.rule50() >= 100 || is_repetition(context, position.key())) {
+        if (!checked) {
+            return 0;
+        }
+        MoveList evasions;
+        generate_legal(position, evasions);
+        return evasions.empty() ? -search_mate_score + ply : 0;
+    }
 
     Move tt_move;
     const auto tt_hit = table_.probe(position.key(), ply);
@@ -220,6 +248,7 @@ int Searcher::negamax(
     const int original_alpha = alpha;
     Move best_move;
     int best_score = -infinity;
+    int legal_count = 0;
     const std::size_t color_index = static_cast<std::size_t>(position.side_to_move());
     const Move first_killer = killers_[static_cast<std::size_t>(ply)][0];
     const Move second_killer = killers_[static_cast<std::size_t>(ply)][1];
@@ -235,6 +264,11 @@ int Searcher::negamax(
         if (!position.make_move(move, state)) {
             continue;
         }
+        if (!king_is_safe_after_move(position, opposite(position.side_to_move()))) {
+            position.unmake_move(move, state);
+            continue;
+        }
+        ++legal_count;
         context.keys.push_back(position.key());
         std::vector<Move> child_pv;
         int score = 0;
@@ -308,6 +342,10 @@ int Searcher::negamax(
         }
     }
 
+    if (legal_count == 0) {
+        return checked ? -search_mate_score + ply : 0;
+    }
+
     Bound bound = Bound::Exact;
     if (best_score <= original_alpha) {
         bound = Bound::Upper;
@@ -332,18 +370,23 @@ int Searcher::quiescence(
     ++context.nodes;
 
     MoveList legal_moves;
-    generate_legal(position, legal_moves);
-    if (legal_moves.empty()) {
-        return in_check(position) ? -search_mate_score + ply : 0;
-    }
-    if (position.rule50() >= 100 || is_repetition(context, position.key())) {
-        return 0;
-    }
+    generate_pseudo_legal(position, legal_moves);
     if (ply >= maximum_ply) {
         return evaluate(position);
     }
 
     const bool checked = in_check(position);
+    if (!checked && !has_any_legal_move(position, legal_moves)) {
+        return 0;
+    }
+    if (position.rule50() >= 100 || is_repetition(context, position.key())) {
+        if (!checked) {
+            return 0;
+        }
+        return has_any_legal_move(position, legal_moves)
+            ? 0
+            : -search_mate_score + ply;
+    }
     if (!checked) {
         const int stand_pat = evaluate(position);
         if (stand_pat >= beta) {
@@ -352,6 +395,7 @@ int Searcher::quiescence(
         alpha = std::max(alpha, stand_pat);
     }
 
+    int legal_count = 0;
     for (const Move move : ordered_moves(
              position, legal_moves, Move{}, Move{}, Move{}, empty_history)) {
         if (!checked && !move.has_flag(MoveFlag::Capture) &&
@@ -362,6 +406,11 @@ int Searcher::quiescence(
         if (!position.make_move(move, state)) {
             continue;
         }
+        if (!king_is_safe_after_move(position, opposite(position.side_to_move()))) {
+            position.unmake_move(move, state);
+            continue;
+        }
+        ++legal_count;
         context.keys.push_back(position.key());
         std::vector<Move> child_pv;
         const int score = -quiescence(position, -beta, -alpha, ply + 1, context, child_pv);
@@ -378,6 +427,9 @@ int Searcher::quiescence(
                 break;
             }
         }
+    }
+    if (checked && legal_count == 0) {
+        return -search_mate_score + ply;
     }
     return alpha;
 }
