@@ -59,8 +59,10 @@ small tuning change. The next high-value engineering stages are:
 
 1. Replace the classical-only default with an independently trained NNUE-style
    evaluator and add a verified training/data pipeline.
-2. Replace the naive root split with a proper shared-tree SMP search; the current
-   multi-thread mode is race-safe but slower than one thread in benchmarks.
+2. Continue replacing the root split with a shared-tree SMP search; the current
+   race-safe root split scales to about 1.7x at two threads and 2.7x at four
+   threads on the deterministic one-second benchmark, but still needs stronger
+   workload balancing and shared-tree heuristics.
 3. Add stronger tactical/selective search (SEE capture pruning, extensions,
    correction history, singular/ProbCut-style pruning) with per-feature tests.
 4. Add a reproducible self-play tournament and SPRT gate against a pinned
