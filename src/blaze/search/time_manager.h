@@ -2,6 +2,7 @@
 #define BLAZE_SEARCH_TIME_MANAGER_H
 
 #include <chrono>
+#include <cstdint>
 
 namespace blaze {
 
@@ -42,6 +43,7 @@ public:
         const ClockState& clock,
         const LatencyBudget& latency,
         const SearchTelemetry& telemetry);
+    [[nodiscard]] static std::uint64_t clock_poll_interval(SearchRegime regime);
 };
 
 }  // namespace blaze

@@ -81,4 +81,13 @@ MoveBudget BulletTimeManager::allocate(
     return result;
 }
 
+std::uint64_t BulletTimeManager::clock_poll_interval(SearchRegime regime) {
+    switch (regime) {
+        case SearchRegime::Emergency: return 32;
+        case SearchRegime::Bullet: return 128;
+        case SearchRegime::Standard: return 1024;
+    }
+    return 128;
+}
+
 }  // namespace blaze

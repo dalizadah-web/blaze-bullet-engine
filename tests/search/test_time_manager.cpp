@@ -58,6 +58,12 @@ TEST_CASE(bullet_worker_count_tracks_the_hard_time_budget) {
     CHECK(normal.workers >= tiny.workers);
 }
 
+TEST_CASE(clock_polling_is_frequent_in_bullet_and_amortized_in_standard_search) {
+    CHECK_EQ(BulletTimeManager::clock_poll_interval(SearchRegime::Emergency), 32U);
+    CHECK_EQ(BulletTimeManager::clock_poll_interval(SearchRegime::Bullet), 128U);
+    CHECK_EQ(BulletTimeManager::clock_poll_interval(SearchRegime::Standard), 1024U);
+}
+
 TEST_CASE(complex_positions_receive_more_target_time_without_breaking_the_hard_limit) {
     SearchTelemetry simple;
     simple.complexity = 0.65;

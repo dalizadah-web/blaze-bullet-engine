@@ -782,6 +782,8 @@ bool Searcher::should_stop(Context& context) const {
     } else if (context.limits.nodes > 0 && context.nodes >= context.limits.nodes) {
         context.stopped = true;
     } else if (context.limits.move_time.count() > 0 &&
+               (context.nodes & (BulletTimeManager::clock_poll_interval(
+                   context.limits.regime) - 1U)) == 0 &&
                std::chrono::steady_clock::now() - context.start >= context.limits.move_time) {
         context.stopped = true;
     }
@@ -789,9 +791,6 @@ bool Searcher::should_stop(Context& context) const {
 }
 
 bool Searcher::consume_node(Context& context) const {
-    if (should_stop(context)) {
-        return false;
-    }
     if (context.limits.shared_node_budget) {
         std::uint64_t remaining =
             context.limits.shared_node_budget->load(std::memory_order_relaxed);
