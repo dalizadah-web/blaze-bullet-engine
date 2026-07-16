@@ -510,6 +510,45 @@ int Searcher::negamax(
         }
     }
 
+    if (depth >= 5 && !checked && beta < search_mate_threshold - 180) {
+        constexpr int probcut_margin = 180;
+        MoveList tactical_moves;
+        generate_pseudo_legal(position, tactical_moves);
+        for (const Move move : ordered_moves(
+                 position, tactical_moves, tt_move, Move{}, Move{}, empty_history)) {
+            if (!move.has_flag(MoveFlag::Capture) &&
+                !move.has_flag(MoveFlag::EnPassant) &&
+                !move.has_flag(MoveFlag::Promotion)) {
+                continue;
+            }
+            if (static_exchange_evaluation(position, move) < 0) continue;
+            StateInfo state;
+            if (!position.make_move(move, state)) continue;
+            const Color moving_side = position.side_to_move();
+            if (!king_is_safe_after_move(position, moving_side)) {
+                position.unmake_move(move, state);
+                continue;
+            }
+            context.keys.push_back(position.key());
+            const Move saved_previous_move = context.previous_move;
+            context.previous_move = move;
+            std::vector<Move> probe_pv;
+            const int probe_score = -negamax(
+                position,
+                depth - 4,
+                -beta - probcut_margin,
+                -beta,
+                ply + 1,
+                context,
+                probe_pv);
+            context.previous_move = saved_previous_move;
+            context.keys.pop_back();
+            position.unmake_move(move, state);
+            if (context.stopped) return 0;
+            if (probe_score >= beta + probcut_margin) return probe_score;
+        }
+    }
+
     const int original_alpha = alpha;
     Move best_move;
     int best_score = -infinity;
