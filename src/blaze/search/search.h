@@ -60,6 +60,7 @@ private:
         bool stopped = false;
         std::vector<std::uint64_t> keys;
         std::vector<Move> root_moves;
+        Move previous_move;
     };
 
     TranspositionTable& table_;

@@ -489,6 +489,8 @@ int Searcher::negamax(
         position.make_null(null_state);
         std::vector<Move> null_pv;
         const int reduction = depth >= 6 ? 3 : 2;
+        const Move saved_previous_move = context.previous_move;
+        context.previous_move = Move{};
         const int null_score = -negamax(
             position,
             depth - 1 - reduction,
@@ -498,6 +500,7 @@ int Searcher::negamax(
             context,
             null_pv,
             false);
+        context.previous_move = saved_previous_move;
         position.unmake_null(null_state);
         if (context.stopped) {
             return 0;
@@ -534,8 +537,15 @@ int Searcher::negamax(
         context.keys.push_back(position.key());
         std::vector<Move> child_pv;
         const bool gives_check = in_check(position);
-        const int full_depth = depth - 1 + (gives_check ? 1 : 0);
+        const bool recaptures = context.previous_move.is_valid() &&
+            context.previous_move.to() == move.to() &&
+            (context.previous_move.has_flag(MoveFlag::Capture) ||
+             context.previous_move.has_flag(MoveFlag::EnPassant)) &&
+            (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant));
+        const int full_depth = depth - 1 + (gives_check ? 1 : 0) + (recaptures ? 1 : 0);
         int score = 0;
+        const Move saved_previous_move = context.previous_move;
+        context.previous_move = move;
         if (move_count == 0) {
             score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
         } else {
@@ -571,6 +581,7 @@ int Searcher::negamax(
                 score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
             }
         }
+        context.previous_move = saved_previous_move;
         ++move_count;
         context.keys.pop_back();
         position.unmake_move(move, state);
