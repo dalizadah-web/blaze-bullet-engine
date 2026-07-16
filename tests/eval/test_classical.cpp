@@ -47,5 +47,23 @@ TEST_CASE(static_evaluation_stays_outside_mate_score_band) {
     CHECK(score < search_mate_threshold);
 }
 
+TEST_CASE(protected_castled_king_is_preferred_in_major_piece_position) {
+    Position castled = position("r2qk2r/ppp5/8/8/8/8/5PPP/R2Q2KR w - - 0 1");
+    Position exposed = position("r2qk2r/ppp5/8/8/4K3/8/5PPP/R2Q3R w - - 0 1");
+    CHECK(evaluate(castled) > evaluate(exposed));
+}
+
+TEST_CASE(developing_queen_too_early_is_penalized) {
+    Position home = position("r3k2r/ppp2ppp/8/8/8/8/PPP2PPP/R2QK2R w KQkq - 0 1");
+    Position early = position("r3k2r/ppp2ppp/8/7Q/8/8/PPP2PPP/R3K2R w KQkq - 0 1");
+    CHECK(evaluate(home) > evaluate(early));
+}
+
+TEST_CASE(passed_pawn_is_rewarded_over_opposed_pawn) {
+    Position passed = position("4k3/p7/8/4P3/8/8/8/4K3 w - - 0 1");
+    Position opposed = position("4k3/8/3p4/4P3/8/8/8/4K3 w - - 0 1");
+    CHECK(evaluate(passed) > evaluate(opposed));
+}
+
 }  // namespace
 }  // namespace blaze
