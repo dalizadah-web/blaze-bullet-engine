@@ -13,13 +13,20 @@ namespace {
 
 constexpr int infinity = search_mate_score + 1;
 constexpr int maximum_ply = 128;
+const std::array<std::array<int, 64>, 64> empty_history{};
 
 int victim_value(Piece piece) {
     constexpr std::array<int, 7> values = {0, 100, 320, 335, 500, 900, 20000};
     return values[static_cast<std::size_t>(type_of(piece))];
 }
 
-int move_order_score(const Position& position, Move move, Move tt_move) {
+int move_order_score(
+    const Position& position,
+    Move move,
+    Move tt_move,
+    Move first_killer,
+    Move second_killer,
+    const std::array<std::array<int, 64>, 64>& history) {
     if (tt_move.is_valid() && move == tt_move) {
         return 1'000'000;
     }
@@ -34,14 +41,32 @@ int move_order_score(const Position& position, Move move, Move tt_move) {
     if (move.has_flag(MoveFlag::Promotion)) {
         score += 80'000 + victim_value(make_piece(position.side_to_move(), move.promotion()));
     }
+    const bool quiet = !move.has_flag(MoveFlag::Capture) &&
+        !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
+    if (quiet && move == first_killer) {
+        score += 90'000;
+    } else if (quiet && move == second_killer) {
+        score += 89'000;
+    } else if (quiet) {
+        score += history[static_cast<std::size_t>(square_index(move.from()))]
+                        [static_cast<std::size_t>(square_index(move.to()))];
+    }
     return score;
 }
 
-std::vector<Move> ordered_moves(const Position& position, const MoveList& list, Move tt_move) {
+std::vector<Move> ordered_moves(
+    const Position& position,
+    const MoveList& list,
+    Move tt_move,
+    Move first_killer,
+    Move second_killer,
+    const std::array<std::array<int, 64>, 64>& history) {
     std::vector<std::pair<int, Move>> scored;
     scored.reserve(list.size());
     for (const Move move : list) {
-        scored.emplace_back(move_order_score(position, move, tt_move), move);
+        scored.emplace_back(
+            move_order_score(position, move, tt_move, first_killer, second_killer, history),
+            move);
     }
     std::stable_sort(scored.begin(), scored.end(), [](const auto& left, const auto& right) {
         return left.first > right.first;
@@ -62,6 +87,9 @@ SearchResult Searcher::search(
     const SearchLimits& limits,
     const std::atomic<bool>* external_stop,
     const std::vector<std::uint64_t>& prior_keys) {
+    killers_ = {};
+    history_ = {};
+
     MoveList legal_moves;
     generate_legal(position, legal_moves);
 
@@ -158,14 +186,33 @@ int Searcher::negamax(
     const int original_alpha = alpha;
     Move best_move;
     int best_score = -infinity;
-    for (const Move move : ordered_moves(position, legal_moves, tt_move)) {
+    const std::size_t color_index = static_cast<std::size_t>(position.side_to_move());
+    const Move first_killer = killers_[static_cast<std::size_t>(ply)][0];
+    const Move second_killer = killers_[static_cast<std::size_t>(ply)][1];
+    int move_count = 0;
+    for (const Move move : ordered_moves(
+             position,
+             legal_moves,
+             tt_move,
+             first_killer,
+             second_killer,
+             history_[color_index])) {
         StateInfo state;
         if (!position.make_move(move, state)) {
             continue;
         }
         context.keys.push_back(position.key());
         std::vector<Move> child_pv;
-        const int score = -negamax(position, depth - 1, -beta, -alpha, ply + 1, context, child_pv);
+        int score = 0;
+        if (move_count == 0) {
+            score = -negamax(position, depth - 1, -beta, -alpha, ply + 1, context, child_pv);
+        } else {
+            score = -negamax(position, depth - 1, -alpha - 1, -alpha, ply + 1, context, child_pv);
+            if (!context.stopped && score > alpha && score < beta) {
+                score = -negamax(position, depth - 1, -beta, -alpha, ply + 1, context, child_pv);
+            }
+        }
+        ++move_count;
         context.keys.pop_back();
         position.unmake_move(move, state);
 
@@ -182,6 +229,19 @@ int Searcher::negamax(
             pv.insert(pv.end(), child_pv.begin(), child_pv.end());
         }
         if (alpha >= beta) {
+            const bool quiet = !move.has_flag(MoveFlag::Capture) &&
+                !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
+            if (quiet) {
+                auto& killers = killers_[static_cast<std::size_t>(ply)];
+                if (move != killers[0]) {
+                    killers[1] = killers[0];
+                    killers[0] = move;
+                }
+                int& history = history_[color_index]
+                    [static_cast<std::size_t>(square_index(move.from()))]
+                    [static_cast<std::size_t>(square_index(move.to()))];
+                history = std::min(history + depth * depth * 16, 80'000);
+            }
             break;
         }
     }
@@ -230,7 +290,8 @@ int Searcher::quiescence(
         alpha = std::max(alpha, stand_pat);
     }
 
-    for (const Move move : ordered_moves(position, legal_moves, Move{})) {
+    for (const Move move : ordered_moves(
+             position, legal_moves, Move{}, Move{}, Move{}, empty_history)) {
         if (!checked && !move.has_flag(MoveFlag::Capture) &&
             !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion)) {
             continue;

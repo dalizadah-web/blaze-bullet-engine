@@ -6,6 +6,7 @@
 #include "blaze/search/transposition_table.h"
 
 #include <atomic>
+#include <array>
 #include <chrono>
 #include <cstdint>
 #include <vector>
@@ -48,6 +49,8 @@ private:
     };
 
     TranspositionTable& table_;
+    std::array<std::array<Move, 2>, 128> killers_{};
+    std::array<std::array<std::array<int, 64>, 64>, 2> history_{};
 
     [[nodiscard]] int negamax(
         Position& position,
