@@ -16,7 +16,7 @@ trained evaluation network.
 
 ## Correctness and reliability evidence
 
-- 87 unit/integration tests pass with zero failures.
+- 93 unit/integration tests pass with zero failures.
 - Canonical perft is exact through start-position depth 6 (`119060324`) and
   Kiwipete depth 4.
 - Differential random-position testing matches python-chess on 1000/1000
@@ -41,14 +41,14 @@ On ten deterministic legal positions at 1000 ms per move:
 
 | engine | average nodes | observed depth |
 | --- | ---: | ---: |
-| Blaze | 622,068 | 8-11 |
-| local Stockfish 17.1 | 1,094,734 | 19-25 |
+| Blaze | 502,737 | 8-11 |
+| local Stockfish 17.1 | 1,312,781 | 20-25 |
 
-Blaze therefore searches about 57% as many nodes as this local Stockfish build
-at the same wall-clock budget. A ten-game 2+0.02 match against the local binary
-finished 3 wins, 2 draws, and 5 losses for Blaze (40% score; approximately -70
- Elo by the simple score formula, with a confidence interval far too wide for a
- rating claim). This is a smoke result, not an SPRT-passed match.
+Blaze therefore searches about 38% as many nodes as this local Stockfish build
+at the same wall-clock budget. The latest pinned 2+0.02 smoke match completed
+50 games with 0 wins, 0 draws, and 50 losses for Blaze. This is not a formal Elo
+rating, but it is decisive evidence that the 2950/Stockfish-beating requirement
+has not been met.
 
 ## What remains for a custom Stockfish-beating engine
 

@@ -346,6 +346,12 @@ bool UciSession::handle_ponderhit() {
         if (normal_arguments.tellp() > 0) normal_arguments << ' ';
         normal_arguments << token;
     }
+    if (normal_arguments.tellp() == 0) {
+        // A bare `go ponder` has no clock or finite bound. After ponderhit we
+        // still need a deterministic finite handoff for UCI clients that use
+        // it as a lifecycle probe.
+        normal_arguments << "depth 1";
+    }
     return start_search(normal_arguments.str());
 }
 
