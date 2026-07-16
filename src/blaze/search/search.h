@@ -46,6 +46,12 @@ public:
         const std::vector<std::uint64_t>& prior_keys = {});
 
 private:
+    struct EvalCacheEntry {
+        std::uint64_t key = 0;
+        int score = 0;
+        bool valid = false;
+    };
+
     struct Context {
         SearchLimits limits;
         const std::atomic<bool>* external_stop = nullptr;
@@ -58,6 +64,7 @@ private:
 
     TranspositionTable& table_;
     const NetworkEvaluator* network_ = nullptr;
+    mutable std::array<EvalCacheEntry, 4096> eval_cache_{};
     std::array<std::array<Move, 2>, 128> killers_{};
     std::array<std::array<std::array<int, 64>, 64>, 2> history_{};
 

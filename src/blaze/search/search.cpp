@@ -739,7 +739,13 @@ bool Searcher::consume_node(Context& context) const {
 }
 
 int Searcher::evaluate_position(const Position& position) const {
-    return network_ != nullptr ? network_->evaluate(position) : evaluate(position);
+    constexpr std::size_t cache_mask = 4095U;
+    const std::uint64_t key = position.key();
+    EvalCacheEntry& entry = eval_cache_[static_cast<std::size_t>(key) & cache_mask];
+    if (entry.valid && entry.key == key) return entry.score;
+    const int score = network_ != nullptr ? network_->evaluate(position) : evaluate(position);
+    entry = EvalCacheEntry{key, score, true};
+    return score;
 }
 
 bool Searcher::is_repetition(const Context& context, std::uint64_t key) {
