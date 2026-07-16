@@ -10,7 +10,7 @@ TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp) \
 ENGINE_SOURCES := $(wildcard src/blaze/core/*.cpp) $(wildcard src/blaze/eval/*.cpp) \
 	$(wildcard src/blaze/search/*.cpp) $(wildcard src/blaze/uci/*.cpp)
 
-.PHONY: all test blaze perft-driver train-network experiment-test uci-stress repeated-start verify-clean-room clean
+.PHONY: all test blaze perft-driver train-network experiment-test uci-stress repeated-start bullet-latency verify-clean-room clean
 
 all: test blaze
 
@@ -39,6 +39,9 @@ uci-stress: $(BLAZE_BIN)
 
 repeated-start: $(BLAZE_BIN)
 	python tools/repeated_start.py --engine $(BLAZE_BIN) --launches 10
+
+bullet-latency: $(BLAZE_BIN)
+	python tools/bullet_latency.py --engine $(BLAZE_BIN) --positions 100 --repetitions 1
 
 $(PERFT_BIN): tools/perft_driver.cpp $(ENGINE_SOURCES) | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) tools/perft_driver.cpp $(ENGINE_SOURCES) -o $(PERFT_BIN)

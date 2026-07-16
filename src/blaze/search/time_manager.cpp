@@ -53,12 +53,16 @@ MoveBudget BulletTimeManager::allocate(
         ? clock.moves_to_go
         : default_moves_left(clock.game_ply);
 
-    Milliseconds base = usable / moves + scaled(clock.increment, 0.72);
+    // Pure-increment bullet must bank clock before buying deeper searches. With
+    // an existing bankroll we can spend a little more of each increment.
+    const double increment_fraction = clock.remaining > Milliseconds(0) ? 0.45 : 0.30;
+    Milliseconds base = usable / moves + scaled(clock.increment, increment_fraction);
     base = std::max(base, Milliseconds(1));
 
     // The hard limit is deliberately independent of position complexity. A
     // volatile position may use more of the allowance, but never risks the clock.
-    result.hard = std::min(usable, std::max(base * 2, Milliseconds(2)));
+    result.hard = std::min(
+        usable, std::max(scaled(base, 1.65), base + Milliseconds(1)));
     if (result.hard > Milliseconds(1)) {
         const double complexity = std::clamp(telemetry.complexity, 0.65, 1.45);
         result.target = std::clamp(

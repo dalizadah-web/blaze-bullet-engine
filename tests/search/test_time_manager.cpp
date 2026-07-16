@@ -23,6 +23,18 @@ TEST_CASE(pure_increment_bullet_always_has_a_finite_deadline) {
     CHECK_EQ(one_second.regime, SearchRegime::Bullet);
 }
 
+TEST_CASE(pure_increment_bullet_banks_most_of_each_increment) {
+    const MoveBudget one_second = BulletTimeManager::allocate(
+        ClockState{0ms, 1000ms, 0, 0}, LatencyBudget{30ms, 0ms}, SearchTelemetry{});
+    const MoveBudget two_seconds = BulletTimeManager::allocate(
+        ClockState{0ms, 2000ms, 0, 0}, LatencyBudget{30ms, 0ms}, SearchTelemetry{});
+
+    CHECK(one_second.target <= 400ms);
+    CHECK(one_second.hard <= 750ms);
+    CHECK(two_seconds.target <= 800ms);
+    CHECK(two_seconds.hard <= 1500ms);
+}
+
 TEST_CASE(clock_budget_keeps_the_measured_submission_reserve) {
     const MoveBudget budget = BulletTimeManager::allocate(
         ClockState{1000ms, 0ms, 0, 12}, LatencyBudget{25ms, 80ms}, SearchTelemetry{});
