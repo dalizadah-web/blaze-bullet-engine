@@ -1,6 +1,7 @@
 #ifndef BLAZE_CORE_POSITION_H
 #define BLAZE_CORE_POSITION_H
 
+#include "blaze/core/move.h"
 #include "blaze/core/types.h"
 
 #include <array>
@@ -31,6 +32,17 @@ template <typename... Rights>
     return (rights & static_cast<CastlingRights>(right)) != 0U;
 }
 
+struct StateInfo {
+    Color side_to_move = Color::White;
+    CastlingRights castling_rights = 0;
+    Square ep_square = Square::None;
+    int rule50 = 0;
+    int fullmove_number = 1;
+    std::uint64_t key = 0;
+    Piece captured_piece = Piece::None;
+    Square captured_square = Square::None;
+};
+
 class Position {
 public:
     [[nodiscard]] static std::optional<Position> from_fen(std::string_view fen);
@@ -45,6 +57,12 @@ public:
     [[nodiscard]] Bitboard occupied() const { return occupied_; }
     [[nodiscard]] Bitboard pieces(Color color, PieceType type) const;
     [[nodiscard]] bool is_consistent() const;
+    [[nodiscard]] std::uint64_t key() const { return key_; }
+
+    bool make_move(Move move, StateInfo& state);
+    void unmake_move(Move move, const StateInfo& state);
+    void make_null(StateInfo& state);
+    void unmake_null(const StateInfo& state);
 
 private:
     std::array<Bitboard, 12> piece_bitboards_{};
@@ -55,8 +73,15 @@ private:
     Square ep_square_ = Square::None;
     int rule50_ = 0;
     int fullmove_number_ = 1;
+    std::uint64_t key_ = 0;
 
     bool put_piece(Piece piece, Square square);
+    void add_piece(Piece piece, Square square);
+    Piece remove_piece(Square square);
+    void relocate_piece(Square from, Square to);
+    [[nodiscard]] bool ep_is_effective() const;
+    [[nodiscard]] std::uint64_t recompute_key() const;
+    void update_castling_rights(Piece mover, Square from, Piece captured, Square captured_square);
 };
 
 }  // namespace blaze

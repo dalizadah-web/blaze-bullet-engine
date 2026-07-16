@@ -12,6 +12,10 @@ enum class Color : std::uint8_t {
     Black = 1,
 };
 
+[[nodiscard]] constexpr Color opposite(Color color) {
+    return color == Color::White ? Color::Black : Color::White;
+}
+
 enum class PieceType : std::uint8_t {
     None = 0,
     Pawn = 1,
@@ -44,6 +48,19 @@ enum class Piece : std::uint8_t {
     }
     const unsigned color_offset = color == Color::White ? 0U : 6U;
     return static_cast<Piece>(color_offset + static_cast<unsigned>(type));
+}
+
+[[nodiscard]] constexpr PieceType type_of(Piece piece) {
+    const unsigned value = static_cast<unsigned>(piece);
+    return value == 0U
+        ? PieceType::None
+        : static_cast<PieceType>(((value - 1U) % 6U) + 1U);
+}
+
+[[nodiscard]] constexpr Color color_of(Piece piece) {
+    return static_cast<unsigned>(piece) <= static_cast<unsigned>(Piece::WhiteKing)
+        ? Color::White
+        : Color::Black;
 }
 
 [[nodiscard]] constexpr int piece_index(Piece piece) {

@@ -2,7 +2,9 @@
 
 #include "blaze/core/attacks.h"
 #include "blaze/core/move.h"
+#include "blaze/core/zobrist.h"
 
+#include <cassert>
 #include <bit>
 #include <charconv>
 #include <sstream>
@@ -97,6 +99,92 @@ bool Position::put_piece(Piece piece, Square square) {
     piece_bitboards_[static_cast<std::size_t>(piece_index(piece))] |= bit;
     occupied_ |= bit;
     return true;
+}
+
+void Position::add_piece(Piece piece, Square square) {
+    assert(piece != Piece::None);
+    assert(is_valid_square(square));
+    assert(board_[square_index(square)] == Piece::None);
+    const Bitboard bit = square_bit(square);
+    board_[square_index(square)] = piece;
+    piece_bitboards_[static_cast<std::size_t>(piece_index(piece))] |= bit;
+    occupied_ |= bit;
+    key_ ^= Zobrist::piece(piece, square);
+}
+
+Piece Position::remove_piece(Square square) {
+    assert(is_valid_square(square));
+    const Piece piece = board_[square_index(square)];
+    assert(piece != Piece::None);
+    const Bitboard bit = square_bit(square);
+    board_[square_index(square)] = Piece::None;
+    piece_bitboards_[static_cast<std::size_t>(piece_index(piece))] &= ~bit;
+    occupied_ &= ~bit;
+    key_ ^= Zobrist::piece(piece, square);
+    return piece;
+}
+
+void Position::relocate_piece(Square from, Square to) {
+    const Piece piece = remove_piece(from);
+    add_piece(piece, to);
+}
+
+bool Position::ep_is_effective() const {
+    if (ep_square_ == Square::None) {
+        return false;
+    }
+    const Bitboard possible_attackers = Attacks::pawn(opposite(side_to_move_), ep_square_);
+    return (possible_attackers & pieces(side_to_move_, PieceType::Pawn)) != 0;
+}
+
+std::uint64_t Position::recompute_key() const {
+    std::uint64_t result = Zobrist::castling(castling_rights_);
+    for (int index = 0; index < 64; ++index) {
+        const Piece piece = board_[index];
+        if (piece != Piece::None) {
+            result ^= Zobrist::piece(piece, static_cast<Square>(index));
+        }
+    }
+    if (side_to_move_ == Color::Black) {
+        result ^= Zobrist::side();
+    }
+    if (ep_is_effective()) {
+        result ^= Zobrist::ep_file(file_of(ep_square_));
+    }
+    return result;
+}
+
+void Position::update_castling_rights(
+    Piece mover,
+    Square from,
+    Piece captured,
+    Square captured_square) {
+    const auto clear = [this](CastlingRight right) {
+        castling_rights_ &= static_cast<CastlingRights>(
+            ~static_cast<CastlingRights>(right));
+    };
+
+    if (mover == Piece::WhiteKing) {
+        clear(CastlingRight::WhiteKing);
+        clear(CastlingRight::WhiteQueen);
+    } else if (mover == Piece::BlackKing) {
+        clear(CastlingRight::BlackKing);
+        clear(CastlingRight::BlackQueen);
+    } else if (mover == Piece::WhiteRook) {
+        if (from == Square::H1) clear(CastlingRight::WhiteKing);
+        if (from == Square::A1) clear(CastlingRight::WhiteQueen);
+    } else if (mover == Piece::BlackRook) {
+        if (from == Square::H8) clear(CastlingRight::BlackKing);
+        if (from == Square::A8) clear(CastlingRight::BlackQueen);
+    }
+
+    if (captured == Piece::WhiteRook) {
+        if (captured_square == Square::H1) clear(CastlingRight::WhiteKing);
+        if (captured_square == Square::A1) clear(CastlingRight::WhiteQueen);
+    } else if (captured == Piece::BlackRook) {
+        if (captured_square == Square::H8) clear(CastlingRight::BlackKing);
+        if (captured_square == Square::A8) clear(CastlingRight::BlackQueen);
+    }
 }
 
 std::optional<Position> Position::from_fen(std::string_view fen) {
@@ -211,6 +299,7 @@ std::optional<Position> Position::from_fen(std::string_view fen) {
     if ((Attacks::king(white_king_square) & black_king) != 0) {
         return std::nullopt;
     }
+    position.key_ = position.recompute_key();
     if (!castling_pieces_are_present(position) || !position.is_consistent()) {
         return std::nullopt;
     }
@@ -283,7 +372,185 @@ bool Position::is_consistent() const {
         rebuilt[static_cast<std::size_t>(piece_index(piece))] |= bit;
         occupied |= bit;
     }
-    return rebuilt == piece_bitboards_ && occupied == occupied_;
+    return rebuilt == piece_bitboards_ && occupied == occupied_ && key_ == recompute_key();
+}
+
+bool Position::make_move(Move move, StateInfo& state) {
+    if (!move.is_valid()) {
+        return false;
+    }
+    const Piece mover = piece_on(move.from());
+    if (mover == Piece::None || color_of(mover) != side_to_move_) {
+        return false;
+    }
+
+    const bool is_en_passant = move.has_flag(MoveFlag::EnPassant);
+    const bool is_capture = move.has_flag(MoveFlag::Capture);
+    const bool is_promotion = move.has_flag(MoveFlag::Promotion);
+    const bool is_castle = move.has_flag(MoveFlag::CastleKing) ||
+                           move.has_flag(MoveFlag::CastleQueen);
+
+    if (is_castle) {
+        const bool king_side = move.has_flag(MoveFlag::CastleKing);
+        const Square expected_from =
+            side_to_move_ == Color::White ? Square::E1 : Square::E8;
+        const Square expected_to = side_to_move_ == Color::White
+            ? (king_side ? Square::G1 : Square::C1)
+            : (king_side ? Square::G8 : Square::C8);
+        const Square rook_square = side_to_move_ == Color::White
+            ? (king_side ? Square::H1 : Square::A1)
+            : (king_side ? Square::H8 : Square::A8);
+        const CastlingRight required_right = side_to_move_ == Color::White
+            ? (king_side ? CastlingRight::WhiteKing : CastlingRight::WhiteQueen)
+            : (king_side ? CastlingRight::BlackKing : CastlingRight::BlackQueen);
+        if (move.from() != expected_from || move.to() != expected_to ||
+            piece_on(move.to()) != Piece::None ||
+            piece_on(rook_square) != make_piece(side_to_move_, PieceType::Rook) ||
+            !has_castling(castling_rights_, required_right) ||
+            is_capture || is_en_passant || is_promotion ||
+            move.has_flag(MoveFlag::DoublePush)) {
+            return false;
+        }
+    }
+
+    Square captured_square = move.to();
+    if (is_en_passant) {
+        captured_square = static_cast<Square>(
+            square_index(move.to()) + (side_to_move_ == Color::White ? -8 : 8));
+    }
+    const Piece captured = is_capture ? piece_on(captured_square) : Piece::None;
+
+    if ((is_capture && captured == Piece::None) ||
+        (!is_capture && !is_castle && piece_on(move.to()) != Piece::None) ||
+        (captured != Piece::None && color_of(captured) == side_to_move_) ||
+        (is_promotion && type_of(mover) != PieceType::Pawn) ||
+        (move.has_flag(MoveFlag::DoublePush) && type_of(mover) != PieceType::Pawn) ||
+        (is_castle && type_of(mover) != PieceType::King)) {
+        return false;
+    }
+
+    state.side_to_move = side_to_move_;
+    state.castling_rights = castling_rights_;
+    state.ep_square = ep_square_;
+    state.rule50 = rule50_;
+    state.fullmove_number = fullmove_number_;
+    state.key = key_;
+    state.captured_piece = captured;
+    state.captured_square = captured == Piece::None ? Square::None : captured_square;
+
+    if (ep_is_effective()) {
+        key_ ^= Zobrist::ep_file(file_of(ep_square_));
+    }
+    key_ ^= Zobrist::castling(castling_rights_);
+    ep_square_ = Square::None;
+
+    if (captured != Piece::None) {
+        remove_piece(captured_square);
+    }
+
+    if (move.has_flag(MoveFlag::CastleKing)) {
+        relocate_piece(move.from(), move.to());
+        const Square rook_from = side_to_move_ == Color::White ? Square::H1 : Square::H8;
+        const Square rook_to = side_to_move_ == Color::White ? Square::F1 : Square::F8;
+        relocate_piece(rook_from, rook_to);
+    } else if (move.has_flag(MoveFlag::CastleQueen)) {
+        relocate_piece(move.from(), move.to());
+        const Square rook_from = side_to_move_ == Color::White ? Square::A1 : Square::A8;
+        const Square rook_to = side_to_move_ == Color::White ? Square::D1 : Square::D8;
+        relocate_piece(rook_from, rook_to);
+    } else if (is_promotion) {
+        remove_piece(move.from());
+        add_piece(make_piece(side_to_move_, move.promotion()), move.to());
+    } else {
+        relocate_piece(move.from(), move.to());
+    }
+
+    update_castling_rights(mover, move.from(), captured, captured_square);
+    if (move.has_flag(MoveFlag::DoublePush)) {
+        ep_square_ = static_cast<Square>(
+            (square_index(move.from()) + square_index(move.to())) / 2);
+    }
+
+    rule50_ = type_of(mover) == PieceType::Pawn || captured != Piece::None
+        ? 0
+        : rule50_ + 1;
+    if (side_to_move_ == Color::Black) {
+        ++fullmove_number_;
+    }
+    side_to_move_ = opposite(side_to_move_);
+    key_ ^= Zobrist::side();
+    key_ ^= Zobrist::castling(castling_rights_);
+    if (ep_is_effective()) {
+        key_ ^= Zobrist::ep_file(file_of(ep_square_));
+    }
+
+    assert(is_consistent());
+    return true;
+}
+
+void Position::unmake_move(Move move, const StateInfo& state) {
+    side_to_move_ = state.side_to_move;
+
+    if (move.has_flag(MoveFlag::CastleKing)) {
+        relocate_piece(move.to(), move.from());
+        const Square rook_from = side_to_move_ == Color::White ? Square::F1 : Square::F8;
+        const Square rook_to = side_to_move_ == Color::White ? Square::H1 : Square::H8;
+        relocate_piece(rook_from, rook_to);
+    } else if (move.has_flag(MoveFlag::CastleQueen)) {
+        relocate_piece(move.to(), move.from());
+        const Square rook_from = side_to_move_ == Color::White ? Square::D1 : Square::D8;
+        const Square rook_to = side_to_move_ == Color::White ? Square::A1 : Square::A8;
+        relocate_piece(rook_from, rook_to);
+    } else if (move.has_flag(MoveFlag::Promotion)) {
+        remove_piece(move.to());
+        add_piece(make_piece(side_to_move_, PieceType::Pawn), move.from());
+    } else {
+        relocate_piece(move.to(), move.from());
+    }
+
+    if (state.captured_piece != Piece::None) {
+        add_piece(state.captured_piece, state.captured_square);
+    }
+
+    castling_rights_ = state.castling_rights;
+    ep_square_ = state.ep_square;
+    rule50_ = state.rule50;
+    fullmove_number_ = state.fullmove_number;
+    key_ = state.key;
+    assert(is_consistent());
+}
+
+void Position::make_null(StateInfo& state) {
+    state.side_to_move = side_to_move_;
+    state.castling_rights = castling_rights_;
+    state.ep_square = ep_square_;
+    state.rule50 = rule50_;
+    state.fullmove_number = fullmove_number_;
+    state.key = key_;
+    state.captured_piece = Piece::None;
+    state.captured_square = Square::None;
+
+    if (ep_is_effective()) {
+        key_ ^= Zobrist::ep_file(file_of(ep_square_));
+    }
+    ep_square_ = Square::None;
+    ++rule50_;
+    if (side_to_move_ == Color::Black) {
+        ++fullmove_number_;
+    }
+    side_to_move_ = opposite(side_to_move_);
+    key_ ^= Zobrist::side();
+    assert(is_consistent());
+}
+
+void Position::unmake_null(const StateInfo& state) {
+    side_to_move_ = state.side_to_move;
+    castling_rights_ = state.castling_rights;
+    ep_square_ = state.ep_square;
+    rule50_ = state.rule50;
+    fullmove_number_ = state.fullmove_number;
+    key_ = state.key;
+    assert(is_consistent());
 }
 
 }  // namespace blaze
