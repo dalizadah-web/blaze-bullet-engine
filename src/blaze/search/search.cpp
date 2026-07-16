@@ -310,7 +310,7 @@ SearchResult Searcher::search_parallel(
                     child_limits.shared_node_budget = shared_node_budget;
                     std::vector<std::uint64_t> child_history = prior_keys;
                     child_history.push_back(position.key());
-                    Searcher child_searcher(table_);
+                    Searcher child_searcher(table_, network_);
                     const int observed_alpha = shared_alpha.load(std::memory_order_relaxed);
                     const int child_alpha = observed_alpha == -infinity
                         ? -infinity

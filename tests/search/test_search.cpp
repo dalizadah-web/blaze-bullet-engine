@@ -5,7 +5,10 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstdint>
+#include <string>
 #include <string_view>
+#include <vector>
 
 namespace blaze {
 namespace {
@@ -131,6 +134,44 @@ TEST_CASE(search_parallel_root_split_preserves_single_thread_score) {
     CHECK_EQ(many.depth, one.depth);
     CHECK_EQ(many.score, one.score);
     CHECK(root.is_legal(many.best_move));
+}
+
+TEST_CASE(search_parallel_root_split_preserves_loaded_network_evaluation) {
+    constexpr std::size_t input_bytes = 768U * 256U * 2U;
+    constexpr std::size_t hidden_bias_bytes = 256U * 4U;
+    constexpr std::size_t output_weight_bytes = 256U * 2U;
+    constexpr int network_score = 1200;
+    std::vector<std::uint8_t> payload(
+        input_bytes + hidden_bias_bytes + output_weight_bytes + 4U,
+        0);
+    const std::uint32_t raw_bias = static_cast<std::uint32_t>(network_score * 4096);
+    const std::size_t bias_offset = payload.size() - 4U;
+    for (unsigned byte = 0; byte < 4; ++byte) {
+        payload[bias_offset + byte] = static_cast<std::uint8_t>(raw_bias >> (byte * 8U));
+    }
+
+    Network network;
+    network.version = 1;
+    network.features = 768;
+    network.hidden = 256;
+    network.weights = std::move(payload);
+    std::string error;
+    const auto evaluator = NetworkEvaluator::create(network, error);
+    CHECK(evaluator.has_value());
+
+    Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    TranspositionTable single_table(8);
+    Searcher single(single_table, &*evaluator);
+    const SearchResult one = single.search(root, SearchLimits{.depth = 2});
+
+    TranspositionTable parallel_table(8);
+    Searcher parallel(parallel_table, &*evaluator);
+    SearchLimits limits{.depth = 2};
+    limits.threads = 4;
+    const SearchResult many = parallel.search(root, limits);
+
+    CHECK_EQ(one.score, network_score);
+    CHECK_EQ(many.score, one.score);
 }
 
 TEST_CASE(search_start_position_depth_five_stays_under_node_regression_budget) {
