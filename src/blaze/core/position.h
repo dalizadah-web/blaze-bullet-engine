@@ -63,6 +63,7 @@ public:
     void unmake_move(Move move, const StateInfo& state);
     void make_null(StateInfo& state);
     void unmake_null(const StateInfo& state);
+    [[nodiscard]] bool is_legal(Move move);
 
 private:
     std::array<Bitboard, 12> piece_bitboards_{};
