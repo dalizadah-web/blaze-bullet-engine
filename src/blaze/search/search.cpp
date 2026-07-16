@@ -2,6 +2,7 @@
 
 #include "blaze/core/movegen.h"
 #include "blaze/eval/classical.h"
+#include "blaze/search/see.h"
 
 #include <algorithm>
 #include <array>
@@ -88,7 +89,7 @@ int move_order_score(
     return score;
 }
 
-std::vector<Move> ordered_moves(
+MoveList ordered_moves(
     const Position& position,
     const MoveList& list,
     Move tt_move,
@@ -105,11 +106,10 @@ std::vector<Move> ordered_moves(
     std::stable_sort(scored.begin(), scored.end(), [](const auto& left, const auto& right) {
         return left.first > right.first;
     });
-    std::vector<Move> result;
-    result.reserve(scored.size());
+    MoveList result;
     for (const auto& [score, move] : scored) {
         static_cast<void>(score);
-        result.push_back(move);
+        result.push(move);
     }
     return result;
 }
@@ -242,6 +242,10 @@ SearchResult Searcher::search_parallel(
     }
 
     const int maximum_depth = limits.depth > 0 ? limits.depth : 64;
+    const auto search_start = std::chrono::steady_clock::now();
+    const auto shared_node_budget = limits.nodes > 0
+        ? std::make_shared<std::atomic<std::uint64_t>>(limits.nodes)
+        : std::shared_ptr<std::atomic<std::uint64_t>>{};
     std::atomic<bool> parallel_stop = false;
     for (int depth = 1; depth <= maximum_depth; ++depth) {
         if (external_stop != nullptr && external_stop->load(std::memory_order_relaxed)) {
@@ -266,6 +270,8 @@ SearchResult Searcher::search_parallel(
             tasks[index].move = legal_moves[index];
         }
         std::atomic<std::size_t> next_task = 0;
+        std::atomic<int> shared_alpha{-infinity};
+        table_.new_search();
         const unsigned worker_count = std::min<unsigned>(
             static_cast<unsigned>(limits.threads),
             static_cast<unsigned>(legal_moves.size()));
@@ -292,22 +298,54 @@ SearchResult Searcher::search_parallel(
                     child_limits.threads = 1;
                     child_limits.depth = depth - 1;
                     child_limits.search_moves.clear();
-                    if (limits.nodes > 0) {
-                        child_limits.nodes = limits.nodes / tasks.size() + 1;
-                    }
+                    child_limits.nodes = 0;
+                    child_limits.shared_node_budget = shared_node_budget;
                     std::vector<std::uint64_t> child_history = prior_keys;
                     child_history.push_back(position.key());
                     Searcher child_searcher(table_);
-                    const SearchResult child_result = child_searcher.search(
-                        child, child_limits, external_stop, child_history);
+                    const int observed_alpha = shared_alpha.load(std::memory_order_relaxed);
+                    const int child_alpha = observed_alpha == -infinity
+                        ? -infinity
+                        : -observed_alpha - 1;
+                    const int child_beta = observed_alpha == -infinity
+                        ? infinity
+                        : -observed_alpha;
+                    SearchResult child_result = child_searcher.search_window(
+                        child,
+                        child_limits,
+                        depth - 1,
+                        child_alpha,
+                        child_beta,
+                        external_stop,
+                        child_history,
+                        search_start);
+                    int score = -child_result.score;
+                    if (!child_result.stopped && score > observed_alpha &&
+                        observed_alpha != -infinity) {
+                        child_result = child_searcher.search_window(
+                            child,
+                            child_limits,
+                            depth - 1,
+                            -infinity,
+                            infinity,
+                            external_stop,
+                            child_history,
+                            search_start);
+                        score = -child_result.score;
+                    }
                     TaskResult& task = tasks[index];
                     task.score = -child_result.score;
                     task.nodes = child_result.nodes;
                     task.pv.push_back(root_move);
                     task.pv.insert(task.pv.end(), child_result.pv.begin(), child_result.pv.end());
                     task.complete = !child_result.stopped;
-                    if (child_result.stopped && external_stop != nullptr &&
-                        external_stop->load(std::memory_order_relaxed)) {
+                    if (task.complete) {
+                        int previous = shared_alpha.load(std::memory_order_relaxed);
+                        while (score > previous &&
+                               !shared_alpha.compare_exchange_weak(
+                                   previous, score, std::memory_order_relaxed)) {
+                        }
+                    } else {
                         parallel_stop.store(true, std::memory_order_relaxed);
                     }
                 }
@@ -345,6 +383,39 @@ SearchResult Searcher::search_parallel(
     return result;
 }
 
+SearchResult Searcher::search_window(
+    Position position,
+    const SearchLimits& limits,
+    int depth,
+    int alpha,
+    int beta,
+    const std::atomic<bool>* external_stop,
+    const std::vector<std::uint64_t>& prior_keys,
+    std::chrono::steady_clock::time_point start) {
+    killers_ = {};
+    history_ = {};
+
+    Context context;
+    context.limits = limits;
+    context.external_stop = external_stop;
+    context.start = start;
+    context.keys = prior_keys;
+    context.keys.push_back(position.key());
+
+    SearchResult result;
+    std::vector<Move> pv;
+    const int score = negamax(position, depth, alpha, beta, 0, context, pv);
+    if (!context.stopped) {
+        result.score = score;
+        result.depth = depth;
+        result.pv = std::move(pv);
+        if (!result.pv.empty()) result.best_move = result.pv.front();
+    }
+    result.nodes = context.nodes;
+    result.stopped = context.stopped;
+    return result;
+}
+
 int Searcher::negamax(
     Position& position,
     int depth,
@@ -361,7 +432,9 @@ int Searcher::negamax(
     if (should_stop(context)) {
         return 0;
     }
-    ++context.nodes;
+    if (!consume_node(context)) {
+        return 0;
+    }
 
     MoveList legal_moves;
     generate_pseudo_legal(position, legal_moves);
@@ -553,7 +626,9 @@ int Searcher::quiescence(
     if (should_stop(context)) {
         return 0;
     }
-    ++context.nodes;
+    if (!consume_node(context)) {
+        return 0;
+    }
 
     MoveList legal_moves;
     generate_pseudo_legal(position, legal_moves);
@@ -573,8 +648,9 @@ int Searcher::quiescence(
             ? 0
             : -search_mate_score + ply;
     }
+    int stand_pat = -infinity;
     if (!checked) {
-        const int stand_pat = evaluate(position);
+        stand_pat = evaluate(position);
         if (stand_pat >= beta) {
             return stand_pat;
         }
@@ -587,6 +663,20 @@ int Searcher::quiescence(
         if (!checked && !move.has_flag(MoveFlag::Capture) &&
             !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion)) {
             continue;
+        }
+        if (!checked && (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant)) &&
+            !move.has_flag(MoveFlag::Promotion)) {
+            constexpr int see_margin = 80;
+            const Piece victim = move.has_flag(MoveFlag::EnPassant)
+                ? make_piece(opposite(position.side_to_move()), PieceType::Pawn)
+                : position.piece_on(move.to());
+            const Piece attacker = position.piece_on(move.from());
+            if (victim_value(victim) < victim_value(attacker)) {
+                const int see = static_exchange_evaluation(position, move);
+                if (stand_pat + see + see_margin <= alpha) {
+                    continue;
+                }
+            }
         }
         StateInfo state;
         if (!position.make_move(move, state)) {
@@ -633,6 +723,29 @@ bool Searcher::should_stop(Context& context) const {
         context.stopped = true;
     }
     return context.stopped;
+}
+
+bool Searcher::consume_node(Context& context) const {
+    if (should_stop(context)) {
+        return false;
+    }
+    if (context.limits.shared_node_budget) {
+        std::uint64_t remaining =
+            context.limits.shared_node_budget->load(std::memory_order_relaxed);
+        while (remaining != 0 &&
+               !context.limits.shared_node_budget->compare_exchange_weak(
+                   remaining,
+                   remaining - 1,
+                   std::memory_order_relaxed,
+                   std::memory_order_relaxed)) {
+        }
+        if (remaining == 0) {
+            context.stopped = true;
+            return false;
+        }
+    }
+    ++context.nodes;
+    return true;
 }
 
 bool Searcher::is_repetition(const Context& context, std::uint64_t key) {

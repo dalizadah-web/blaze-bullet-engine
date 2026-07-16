@@ -73,6 +73,14 @@ TEST_CASE(search_honors_node_and_external_stop_limits) {
     const SearchResult cancelled = searcher.search(root, SearchLimits{.depth = 20}, &stopped);
     CHECK(cancelled.best_move.is_valid());
     CHECK(cancelled.stopped);
+
+    TranspositionTable parallel_table(2);
+    Searcher parallel(parallel_table);
+    SearchLimits parallel_limits{.depth = 20, .nodes = 200};
+    parallel_limits.threads = 4;
+    const SearchResult parallel_limited = parallel.search(root, parallel_limits);
+    CHECK(parallel_limited.best_move.is_valid());
+    CHECK(parallel_limited.nodes <= 200);
 }
 
 TEST_CASE(search_treats_rule50_position_as_draw) {
@@ -106,6 +114,23 @@ TEST_CASE(search_parallel_root_split_returns_a_legal_result) {
     CHECK(result.depth >= 1);
     CHECK(result.nodes > 0);
     CHECK(!result.stopped);
+}
+
+TEST_CASE(search_parallel_root_split_preserves_single_thread_score) {
+    Position root = position("r1bqk2r/pppp1ppp/2n2n2/4p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 4 5");
+    TranspositionTable single_table(8);
+    Searcher single(single_table);
+    const SearchResult one = single.search(root, SearchLimits{.depth = 5});
+
+    TranspositionTable parallel_table(8);
+    Searcher parallel(parallel_table);
+    SearchLimits limits{.depth = 5};
+    limits.threads = 4;
+    const SearchResult many = parallel.search(root, limits);
+
+    CHECK_EQ(many.depth, one.depth);
+    CHECK_EQ(many.score, one.score);
+    CHECK(root.is_legal(many.best_move));
 }
 
 TEST_CASE(search_start_position_depth_five_stays_under_node_regression_budget) {

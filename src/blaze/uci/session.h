@@ -3,6 +3,7 @@
 
 #include "blaze/core/position.h"
 #include "blaze/search/transposition_table.h"
+#include "blaze/uci/limits.h"
 
 #include <atomic>
 #include <cstdint>
@@ -36,15 +37,19 @@ private:
     std::vector<std::uint64_t> history_;
     std::thread worker_;
     std::atomic<bool> stop_requested_{false};
+    std::atomic<bool> suppress_result_{false};
     int threads_ = 1;
     bool use_nnue_ = false;
     std::string eval_file_;
+    bool pondering_ = false;
+    std::string ponder_arguments_;
 
     void write_line(const std::string& line);
     void stop_search();
     [[nodiscard]] bool set_position(std::string_view arguments);
     [[nodiscard]] bool set_option(std::string_view arguments);
     [[nodiscard]] bool start_search(std::string_view arguments);
+    [[nodiscard]] bool handle_ponderhit();
     void reset_position();
 };
 

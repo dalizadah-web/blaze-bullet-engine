@@ -26,7 +26,13 @@ def positions(count: int, seed: int) -> list[str]:
     return result
 
 
-def run_one(engine: Path, fen: str, milliseconds: int) -> tuple[int, int, str, int]:
+def run_one(
+    engine: Path,
+    fen: str,
+    milliseconds: int,
+    threads: int,
+    depth_limit: int,
+) -> tuple[int, int, str, int]:
     process = subprocess.Popen(
         [str(engine)], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT, text=True, encoding="utf-8", bufsize=1
@@ -64,10 +70,15 @@ def run_one(engine: Path, fen: str, milliseconds: int) -> tuple[int, int, str, i
     try:
         send("uci")
         wait_for("uciok")
+        send(f"setoption name Threads value {threads}")
         send(f"position fen {fen}")
         started = time.monotonic()
-        send(f"go movetime {milliseconds}")
-        output = wait_for("bestmove ", milliseconds / 1000 + 5)
+        if depth_limit > 0:
+            send(f"go depth {depth_limit}")
+            output = wait_for("bestmove ", 60)
+        else:
+            send(f"go movetime {milliseconds}")
+            output = wait_for("bestmove ", milliseconds / 1000 + 5)
         elapsed = int((time.monotonic() - started) * 1000)
         info_lines = [line for line in output if line.startswith("info depth")]
         info = info_lines[-1] if info_lines else ""
@@ -92,13 +103,16 @@ def main() -> int:
     parser.add_argument("--positions", type=int, default=10)
     parser.add_argument("--milliseconds", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=20260716)
+    parser.add_argument("--threads", type=int, default=1)
+    parser.add_argument("--depth", type=int, default=0)
     args = parser.parse_args()
     fens = positions(args.positions, args.seed)
     for engine in args.engine:
         print(f"engine={engine}")
         total_nodes = 0
         for index, fen in enumerate(fens, start=1):
-            depth, nodes, best, elapsed = run_one(engine, fen, args.milliseconds)
+            depth, nodes, best, elapsed = run_one(
+                engine, fen, args.milliseconds, args.threads, args.depth)
             if chess.Move.from_uci(best) not in chess.Board(fen).legal_moves:
                 raise RuntimeError(f"{engine} returned illegal move {best} on position {index}")
             total_nodes += nodes

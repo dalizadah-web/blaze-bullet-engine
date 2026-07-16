@@ -94,7 +94,10 @@ bool UciSession::process_line(std::string_view raw_line) {
     if (command == "position") return set_position(arguments);
     if (command == "setoption") return set_option(arguments);
     if (command == "go") return start_search(arguments);
-    if (command == "stop" || command == "ponderhit") {
+    if (command == "ponderhit") {
+        return handle_ponderhit();
+    }
+    if (command == "stop") {
         stop_search();
         return true;
     }
@@ -181,6 +184,7 @@ bool UciSession::set_position(std::string_view arguments) {
     }
 
     stop_search();
+    pondering_ = false;
     position_ = proposed;
     history_ = std::move(proposed_history);
     return true;
@@ -246,10 +250,13 @@ bool UciSession::start_search(std::string_view arguments) {
     }
 
     stop_search();
+    pondering_ = go->ponder;
+    ponder_arguments_ = std::string(arguments);
     const Position root = position_;
     if (use_nnue_) {
         std::string error;
         if (!NetworkLoader::load(eval_file_, error)) {
+            pondering_ = false;
             write_line("info string critical NNUE unavailable: " + error);
             write_line("bestmove 0000");
             return false;
@@ -284,6 +291,10 @@ bool UciSession::start_search(std::string_view arguments) {
         const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - started);
 
+        if (suppress_result_.load(std::memory_order_relaxed)) {
+            return;
+        }
+
         std::ostringstream info;
         info << "info depth " << result.depth << " score ";
         if (result.score >= search_mate_threshold) {
@@ -302,6 +313,26 @@ bool UciSession::start_search(std::string_view arguments) {
         write_line("bestmove " + move_to_uci(result.best_move));
     });
     return true;
+}
+
+bool UciSession::handle_ponderhit() {
+    if (!pondering_) {
+        return true;
+    }
+
+    suppress_result_.store(true, std::memory_order_relaxed);
+    stop_search();
+    suppress_result_.store(false, std::memory_order_relaxed);
+    pondering_ = false;
+
+    const std::vector<std::string> tokens = split(ponder_arguments_);
+    std::ostringstream normal_arguments;
+    for (const std::string& token : tokens) {
+        if (token == "ponder") continue;
+        if (normal_arguments.tellp() > 0) normal_arguments << ' ';
+        normal_arguments << token;
+    }
+    return start_search(normal_arguments.str());
 }
 
 void UciSession::reset_position() {

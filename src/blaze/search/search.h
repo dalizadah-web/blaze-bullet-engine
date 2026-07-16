@@ -9,6 +9,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace blaze {
@@ -20,6 +21,7 @@ struct SearchLimits {
     int mate = 0;
     std::vector<Move> search_moves{};
     int threads = 1;
+    std::shared_ptr<std::atomic<std::uint64_t>> shared_node_budget{};
 };
 
 struct SearchResult {
@@ -62,6 +64,16 @@ private:
         const std::atomic<bool>* external_stop,
         const std::vector<std::uint64_t>& prior_keys);
 
+    [[nodiscard]] SearchResult search_window(
+        Position position,
+        const SearchLimits& limits,
+        int depth,
+        int alpha,
+        int beta,
+        const std::atomic<bool>* external_stop,
+        const std::vector<std::uint64_t>& prior_keys,
+        std::chrono::steady_clock::time_point start);
+
     [[nodiscard]] int negamax(
         Position& position,
         int depth,
@@ -79,6 +91,7 @@ private:
         Context& context,
         std::vector<Move>& pv);
     [[nodiscard]] bool should_stop(Context& context) const;
+    [[nodiscard]] bool consume_node(Context& context) const;
     [[nodiscard]] static bool is_repetition(const Context& context, std::uint64_t key);
 };
 

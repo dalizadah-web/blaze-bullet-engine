@@ -92,6 +92,16 @@ TEST_CASE(repeated_go_replaces_previous_worker_without_duplicate_results) {
     CHECK(output.str().find("readyok") != std::string::npos);
 }
 
+TEST_CASE(ponderhit_transitions_to_a_clocked_search_without_duplicate_bestmove) {
+    std::ostringstream output;
+    UciSession session(output);
+    CHECK(session.process_line("position startpos"));
+    CHECK(session.process_line("go ponder wtime 1000 btime 1000"));
+    CHECK(session.process_line("ponderhit"));
+    CHECK(session.process_line("stop"));
+    CHECK_EQ(occurrences(output.str(), "bestmove "), 1U);
+}
+
 TEST_CASE(malformed_commands_produce_diagnostics_without_killing_session) {
     std::istringstream input("position fen nonsense\ngo mystery 1\nisready\nquit\n");
     std::ostringstream output;
