@@ -72,6 +72,7 @@ int move_order_score(
             : position.piece_on(move.to());
         const Piece attacker = position.piece_on(move.from());
         score += 100'000 + victim_value(victim) * 16 - victim_value(attacker);
+        score += std::clamp(static_exchange_evaluation(position, move), -4'000, 4'000) / 8;
     }
     if (move.has_flag(MoveFlag::Promotion)) {
         score += 80'000 + victim_value(make_piece(position.side_to_move(), move.promotion()));
@@ -663,27 +664,6 @@ int Searcher::quiescence(
         if (!checked && !move.has_flag(MoveFlag::Capture) &&
             !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion)) {
             continue;
-        }
-        if (!checked && (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant)) &&
-            !move.has_flag(MoveFlag::Promotion)) {
-            constexpr int see_margin = 80;
-            const Piece victim = move.has_flag(MoveFlag::EnPassant)
-                ? make_piece(opposite(position.side_to_move()), PieceType::Pawn)
-                : position.piece_on(move.to());
-            const Piece attacker = position.piece_on(move.from());
-            if (victim_value(victim) < victim_value(attacker)) {
-                const int see = static_exchange_evaluation(position, move);
-                if (stand_pat + see + see_margin <= alpha) {
-                    StateInfo probe_state;
-                    const Color moving_side = position.side_to_move();
-                    if (position.make_move(move, probe_state)) {
-                        const bool legal = king_is_safe_after_move(position, moving_side);
-                        const bool gives_check = legal && in_check(position);
-                        position.unmake_move(move, probe_state);
-                        if (legal && !gives_check) continue;
-                    }
-                }
-            }
         }
         StateInfo state;
         if (!position.make_move(move, state)) {
