@@ -1,0 +1,258 @@
+#include "blaze/uci/session.h"
+
+#include "blaze/core/movegen.h"
+#include "blaze/search/search.h"
+#include "blaze/uci/limits.h"
+
+#include <charconv>
+#include <chrono>
+#include <sstream>
+#include <utility>
+
+namespace blaze {
+namespace {
+
+constexpr std::string_view start_fen =
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+std::vector<std::string> split(std::string_view text) {
+    std::istringstream stream{std::string(text)};
+    std::vector<std::string> result;
+    for (std::string token; stream >> token;) {
+        result.push_back(std::move(token));
+    }
+    return result;
+}
+
+std::string trim(std::string_view line) {
+    const std::size_t begin = line.find_first_not_of(" \t\r\n");
+    if (begin == std::string_view::npos) return {};
+    const std::size_t end = line.find_last_not_of(" \t\r\n");
+    std::string result(line.substr(begin, end - begin + 1));
+    if (result.size() >= 3 &&
+        static_cast<unsigned char>(result[0]) == 0xEF &&
+        static_cast<unsigned char>(result[1]) == 0xBB &&
+        static_cast<unsigned char>(result[2]) == 0xBF) {
+        result.erase(0, 3);
+    }
+    return result;
+}
+
+}  // namespace
+
+UciSession::UciSession(std::ostream& output) : output_(output) {
+    reset_position();
+}
+
+UciSession::~UciSession() {
+    stop_search();
+}
+
+void UciSession::run(std::istream& input) {
+    for (std::string line; std::getline(input, line);) {
+        const std::string command = trim(line);
+        static_cast<void>(process_line(command));
+        if (command == "quit") {
+            break;
+        }
+    }
+    stop_search();
+}
+
+bool UciSession::process_line(std::string_view raw_line) {
+    const std::string line = trim(raw_line);
+    const std::size_t separator = line.find_first_of(" \t");
+    const std::string command = line.substr(0, separator);
+    const std::string arguments = separator == std::string::npos
+        ? std::string{}
+        : trim(std::string_view(line).substr(separator + 1));
+
+    if (command.empty()) return true;
+    if (command == "uci") {
+        write_line("id name Blaze 0.1 clean-room");
+        write_line("id author Blaze project");
+        write_line("option name Hash type spin default 16 min 1 max 65536");
+        write_line("option name Threads type spin default 1 min 1 max 1");
+        write_line("option name Ponder type check default false");
+        write_line("uciok");
+        return true;
+    }
+    if (command == "isready") {
+        write_line("readyok");
+        return true;
+    }
+    if (command == "ucinewgame") {
+        stop_search();
+        table_.clear();
+        reset_position();
+        return true;
+    }
+    if (command == "position") return set_position(arguments);
+    if (command == "setoption") return set_option(arguments);
+    if (command == "go") return start_search(arguments);
+    if (command == "stop" || command == "ponderhit") {
+        stop_search();
+        return true;
+    }
+    if (command == "quit") {
+        stop_search();
+        return true;
+    }
+    write_line("info string unknown command: " + command);
+    return false;
+}
+
+void UciSession::write_line(const std::string& line) {
+    std::lock_guard lock(output_mutex_);
+    output_ << line << '\n';
+    output_.flush();
+}
+
+void UciSession::stop_search() {
+    stop_requested_.store(true, std::memory_order_relaxed);
+    if (worker_.joinable()) {
+        worker_.join();
+    }
+    stop_requested_.store(false, std::memory_order_relaxed);
+}
+
+bool UciSession::set_position(std::string_view arguments) {
+    const std::vector<std::string> tokens = split(arguments);
+    if (tokens.empty()) {
+        write_line("info string position requires startpos or fen");
+        return false;
+    }
+
+    std::size_t index = 0;
+    std::optional<Position> parsed;
+    if (tokens[index] == "startpos") {
+        parsed = Position::from_fen(start_fen);
+        ++index;
+    } else if (tokens[index] == "fen") {
+        if (tokens.size() < 7) {
+            write_line("info string position fen requires six fields");
+            return false;
+        }
+        std::string fen;
+        for (std::size_t field = 0; field < 6; ++field) {
+            if (field != 0) fen.push_back(' ');
+            fen += tokens[++index];
+        }
+        ++index;
+        parsed = Position::from_fen(fen);
+    } else {
+        write_line("info string position requires startpos or fen");
+        return false;
+    }
+    if (!parsed) {
+        write_line("info string invalid FEN");
+        return false;
+    }
+
+    Position proposed = *parsed;
+    std::vector<std::uint64_t> proposed_history{proposed.key()};
+    if (index < tokens.size()) {
+        if (tokens[index] != "moves") {
+            write_line("info string unexpected position token: " + tokens[index]);
+            return false;
+        }
+        ++index;
+    }
+    for (; index < tokens.size(); ++index) {
+        MoveList legal;
+        generate_legal(proposed, legal);
+        Move selected;
+        for (const Move move : legal) {
+            if (move_to_uci(move) == tokens[index]) {
+                selected = move;
+                break;
+            }
+        }
+        StateInfo state;
+        if (!selected.is_valid() || !proposed.make_move(selected, state)) {
+            write_line("info string illegal position move: " + tokens[index]);
+            return false;
+        }
+        proposed_history.push_back(proposed.key());
+    }
+
+    stop_search();
+    position_ = proposed;
+    history_ = std::move(proposed_history);
+    return true;
+}
+
+bool UciSession::set_option(std::string_view arguments) {
+    const std::vector<std::string> tokens = split(arguments);
+    if (tokens.size() == 4 && tokens[0] == "name" && tokens[1] == "Hash" && tokens[2] == "value") {
+        std::size_t megabytes = 0;
+        const auto parsed = std::from_chars(tokens[3].data(), tokens[3].data() + tokens[3].size(), megabytes);
+        if (parsed.ec != std::errc{} || parsed.ptr != tokens[3].data() + tokens[3].size() ||
+            megabytes < 1 || megabytes > 65536) {
+            write_line("info string Hash must be between 1 and 65536 MB");
+            return false;
+        }
+        stop_search();
+        table_.resize(megabytes);
+        return true;
+    }
+    if (tokens.size() == 4 && tokens[0] == "name" && tokens[1] == "Threads" &&
+        tokens[2] == "value" && tokens[3] == "1") {
+        return true;
+    }
+    if (tokens.size() == 4 && tokens[0] == "name" && tokens[1] == "Ponder" &&
+        tokens[2] == "value" && (tokens[3] == "true" || tokens[3] == "false")) {
+        return true;
+    }
+    write_line("info string unsupported setoption");
+    return false;
+}
+
+bool UciSession::start_search(std::string_view arguments) {
+    std::string error;
+    const auto go = parse_go(arguments, error);
+    if (!go) {
+        write_line("info string " + error);
+        return false;
+    }
+
+    stop_search();
+    const Position root = position_;
+    const SearchLimits limits = to_search_limits(*go, root.side_to_move());
+    std::vector<std::uint64_t> prior = history_;
+    if (!prior.empty() && prior.back() == root.key()) {
+        prior.pop_back();
+    }
+    worker_ = std::thread([this, root, limits, prior = std::move(prior)]() mutable {
+        const auto started = std::chrono::steady_clock::now();
+        Searcher searcher(table_);
+        const SearchResult result = searcher.search(root, limits, &stop_requested_, prior);
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - started);
+
+        std::ostringstream info;
+        info << "info depth " << result.depth << " score ";
+        if (result.score >= search_mate_threshold) {
+            info << "mate " << (search_mate_score - result.score + 1) / 2;
+        } else if (result.score <= -search_mate_threshold) {
+            info << "mate -" << (search_mate_score + result.score + 1) / 2;
+        } else {
+            info << "cp " << result.score;
+        }
+        info << " nodes " << result.nodes << " time " << elapsed.count();
+        if (!result.pv.empty()) {
+            info << " pv";
+            for (const Move move : result.pv) info << ' ' << move_to_uci(move);
+        }
+        write_line(info.str());
+        write_line("bestmove " + move_to_uci(result.best_move));
+    });
+    return true;
+}
+
+void UciSession::reset_position() {
+    position_ = *Position::from_fen(start_fen);
+    history_ = {position_.key()};
+}
+
+}  // namespace blaze

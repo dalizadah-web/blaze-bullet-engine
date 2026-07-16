@@ -40,7 +40,7 @@ foreach ($entry in @($manifest.compiled_dependencies) + @($manifest.shipped_data
     }
 }
 
-$dryRun = (& mingw32-make -B -n -f Makefile.blaze test perft-driver 2>&1) -join "`n"
+$dryRun = (& mingw32-make -B -n -f Makefile.blaze test perft-driver blaze 2>&1) -join "`n"
 if ($LASTEXITCODE -ne 0) {
     Fail "could not inspect the build dependency graph"
 }
@@ -73,7 +73,7 @@ if ($forbiddenNetworks) {
     Fail "forbidden evaluation network inside the Blaze source tree"
 }
 
-foreach ($binaryName in "build/blaze/blaze_tests.exe", "build/blaze/perft_driver.exe") {
+foreach ($binaryName in "build/blaze/blaze_tests.exe", "build/blaze/perft_driver.exe", "build/blaze/blaze.exe") {
     $binaryPath = Join-Path $root $binaryName
     if (-not (Test-Path -LiteralPath $binaryPath -PathType Leaf)) {
         Fail "expected verification binary is missing: $binaryName"

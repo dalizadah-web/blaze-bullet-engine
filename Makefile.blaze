@@ -3,12 +3,13 @@ CXXFLAGS := -std=c++20 -O2 -Wall -Wextra -Wpedantic -Werror -Isrc -Itests
 BUILD_DIR := build/blaze
 TEST_BIN := $(BUILD_DIR)/blaze_tests.exe
 PERFT_BIN := $(BUILD_DIR)/perft_driver.exe
+BLAZE_BIN := $(BUILD_DIR)/blaze.exe
 TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp) \
 	$(wildcard tests/eval/*.cpp) $(wildcard tests/search/*.cpp) $(wildcard tests/uci/*.cpp)
 ENGINE_SOURCES := $(wildcard src/blaze/core/*.cpp) $(wildcard src/blaze/eval/*.cpp) \
 	$(wildcard src/blaze/search/*.cpp) $(wildcard src/blaze/uci/*.cpp)
 
-.PHONY: all test perft-driver verify-clean-room clean
+.PHONY: all test blaze perft-driver verify-clean-room clean
 
 all: test
 
@@ -21,12 +22,17 @@ $(TEST_BIN): $(TEST_SOURCES) $(ENGINE_SOURCES) | $(BUILD_DIR)
 test: $(TEST_BIN)
 	$(TEST_BIN)
 
+$(BLAZE_BIN): src/blaze/main.cpp $(ENGINE_SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) src/blaze/main.cpp $(ENGINE_SOURCES) -o $(BLAZE_BIN)
+
+blaze: $(BLAZE_BIN)
+
 $(PERFT_BIN): tools/perft_driver.cpp $(ENGINE_SOURCES) | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) tools/perft_driver.cpp $(ENGINE_SOURCES) -o $(PERFT_BIN)
 
 perft-driver: $(PERFT_BIN)
 
-verify-clean-room: $(TEST_BIN) $(PERFT_BIN)
+verify-clean-room: $(TEST_BIN) $(PERFT_BIN) $(BLAZE_BIN)
 	powershell -NoProfile -ExecutionPolicy Bypass -File tools/verify_clean_room.ps1
 
 clean:
