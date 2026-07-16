@@ -61,7 +61,8 @@ int move_order_score(
     Move tt_move,
     Move first_killer,
     Move second_killer,
-    const std::array<std::array<int, 64>, 64>& history) {
+    const std::array<std::array<int, 64>, 64>& history,
+    Move counter_move) {
     if (tt_move.is_valid() && move == tt_move) {
         return 1'000'000;
     }
@@ -84,6 +85,7 @@ int move_order_score(
     } else if (quiet && move == second_killer) {
         score += 89'000;
     } else if (quiet) {
+        if (counter_move.is_valid() && move == counter_move) score += 85'000;
         score += history[static_cast<std::size_t>(square_index(move.from()))]
                         [static_cast<std::size_t>(square_index(move.to()))];
     }
@@ -96,12 +98,13 @@ MoveList ordered_moves(
     Move tt_move,
     Move first_killer,
     Move second_killer,
-    const std::array<std::array<int, 64>, 64>& history) {
+    const std::array<std::array<int, 64>, 64>& history,
+    Move counter_move = Move{}) {
     MoveList result = list;
     std::array<int, MoveList::capacity> scores;
     for (std::size_t index = 0; index < result.size(); ++index) {
         scores[index] = move_order_score(
-            position, result[index], tt_move, first_killer, second_killer, history);
+            position, result[index], tt_move, first_killer, second_killer, history, counter_move);
     }
     for (std::size_t index = 1; index < result.size(); ++index) {
         const Move move = result[index];
@@ -129,6 +132,7 @@ SearchResult Searcher::search(
         return search_parallel(position, limits, external_stop, prior_keys);
     }
     killers_ = {};
+    countermoves_ = {};
     history_ = {};
 
     MoveList generated_moves;
@@ -397,6 +401,7 @@ SearchResult Searcher::search_window(
     const std::vector<std::uint64_t>& prior_keys,
     std::chrono::steady_clock::time_point start) {
     killers_ = {};
+    countermoves_ = {};
     history_ = {};
 
     Context context;
@@ -563,7 +568,11 @@ int Searcher::negamax(
              tt_move,
              first_killer,
              second_killer,
-             history_[color_index])) {
+             history_[color_index],
+             context.previous_move.is_valid()
+                 ? countermoves_[square_index(context.previous_move.from())]
+                     [square_index(context.previous_move.to())]
+                 : Move{})) {
         StateInfo state;
         if (!position.make_move(move, state)) {
             continue;
@@ -650,6 +659,10 @@ int Searcher::negamax(
                     [static_cast<std::size_t>(square_index(move.from()))]
                     [static_cast<std::size_t>(square_index(move.to()))];
                 history = std::min(history + depth * depth * 16, 80'000);
+                if (context.previous_move.is_valid()) {
+                    countermoves_[square_index(context.previous_move.from())]
+                        [square_index(context.previous_move.to())] = move;
+                }
             }
             break;
         }

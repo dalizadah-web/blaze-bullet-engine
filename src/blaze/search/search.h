@@ -67,6 +67,7 @@ private:
     const NetworkEvaluator* network_ = nullptr;
     mutable std::array<EvalCacheEntry, 4096> eval_cache_{};
     std::array<std::array<Move, 2>, 128> killers_{};
+    std::array<std::array<Move, 64>, 64> countermoves_{};
     std::array<std::array<std::array<int, 64>, 64>, 2> history_{};
 
     [[nodiscard]] SearchResult search_parallel(
