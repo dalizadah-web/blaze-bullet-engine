@@ -64,15 +64,14 @@ Bitboard color_occupancy(const Position& position, Color color) {
 
 int mobility(const Position& position, Color color, Bitboard own) {
     int score = 0;
-    for (int index = 0; index < 64; ++index) {
-        const Square square = static_cast<Square>(index);
-        const Piece piece = position.piece_on(square);
-        if (piece == Piece::None || color_of(piece) != color) {
-            continue;
-        }
-
+    for (const PieceType type : {PieceType::Knight, PieceType::Bishop,
+                                 PieceType::Rook, PieceType::Queen}) {
+        Bitboard pieces = position.pieces(color, type);
+        while (pieces != 0) {
+            const Square square = static_cast<Square>(std::countr_zero(pieces));
+            pieces &= pieces - 1;
         Bitboard attacks = 0;
-        switch (type_of(piece)) {
+        switch (type) {
             case PieceType::Knight: attacks = Attacks::knight(square); break;
             case PieceType::Bishop: attacks = Attacks::bishop(square, position.occupied()); break;
             case PieceType::Rook: attacks = Attacks::rook(square, position.occupied()); break;
@@ -80,6 +79,7 @@ int mobility(const Position& position, Color color, Bitboard own) {
             default: break;
         }
         score += std::popcount(attacks & ~own);
+        }
     }
     return score * 2;
 }
@@ -87,45 +87,35 @@ int mobility(const Position& position, Color color, Bitboard own) {
 int pawn_structure(const Position& position, Color color) {
     const Bitboard pawns = position.pieces(color, PieceType::Pawn);
     const Bitboard enemy_pawns = position.pieces(opposite(color), PieceType::Pawn);
+    constexpr Bitboard file_a = 0x0101010101010101ULL;
     int score = 0;
     for (int file = 0; file < 8; ++file) {
-        int count = 0;
-        for (int rank = 0; rank < 8; ++rank) {
-            count += (pawns & square_bit(make_square(file, rank))) != 0 ? 1 : 0;
-        }
+        const Bitboard file_mask = file_a << file;
+        const int count = std::popcount(pawns & file_mask);
         if (count > 1) {
             score -= (count - 1) * 12;
         }
         if (count > 0) {
-            const bool left = file > 0 && (pawns & (Bitboard{0x0101010101010101} << (file - 1))) != 0;
-            const bool right = file < 7 && (pawns & (Bitboard{0x0101010101010101} << (file + 1))) != 0;
+            const bool left = file > 0 && (pawns & (file_a << (file - 1))) != 0;
+            const bool right = file < 7 && (pawns & (file_a << (file + 1))) != 0;
             if (!left && !right) {
                 score -= count * 10;
             }
         }
     }
     constexpr std::array<int, 8> passed_bonus = {0, 5, 10, 20, 35, 60, 100, 0};
-    for (int index = 0; index < 64; ++index) {
-        const Square square = static_cast<Square>(index);
-        if ((pawns & square_bit(square)) == 0) {
-            continue;
-        }
-        bool passed = true;
-        for (int enemy_index = 0; enemy_index < 64; ++enemy_index) {
-            const Square enemy = static_cast<Square>(enemy_index);
-            if ((enemy_pawns & square_bit(enemy)) == 0 ||
-                std::abs(file_of(enemy) - file_of(square)) > 1) {
-                continue;
-            }
-            const bool ahead = color == Color::White
-                ? rank_of(enemy) > rank_of(square)
-                : rank_of(enemy) < rank_of(square);
-            if (ahead) {
-                passed = false;
-                break;
-            }
-        }
-        if (passed) {
+    Bitboard remaining = pawns;
+    while (remaining != 0) {
+        const Square square = static_cast<Square>(std::countr_zero(remaining));
+        remaining &= remaining - 1;
+        Bitboard adjacent_files = file_a << file_of(square);
+        if (file_of(square) > 0) adjacent_files |= file_a << (file_of(square) - 1);
+        if (file_of(square) < 7) adjacent_files |= file_a << (file_of(square) + 1);
+        const int rank = rank_of(square);
+        const Bitboard ahead = color == Color::White
+            ? (rank == 7 ? 0 : ~((Bitboard{1} << ((rank + 1) * 8)) - 1))
+            : (rank == 0 ? 0 : (Bitboard{1} << (rank * 8)) - 1);
+        if ((enemy_pawns & adjacent_files & ahead) == 0) {
             score += passed_bonus[static_cast<std::size_t>(relative_rank(color, square))];
         }
     }
@@ -181,15 +171,16 @@ int rook_files(const Position& position, Color color) {
 
 int score_color(const Position& position, Color color, int phase) {
     int score = 0;
-    for (int index = 0; index < 64; ++index) {
-        const Square square = static_cast<Square>(index);
-        const Piece piece = position.piece_on(square);
-        if (piece == Piece::None || color_of(piece) != color) {
-            continue;
+    for (int type_value = static_cast<int>(PieceType::Pawn);
+         type_value <= static_cast<int>(PieceType::King); ++type_value) {
+        const PieceType type = static_cast<PieceType>(type_value);
+        Bitboard pieces = position.pieces(color, type);
+        while (pieces != 0) {
+            const Square square = static_cast<Square>(std::countr_zero(pieces));
+            pieces &= pieces - 1;
+            score += material[static_cast<std::size_t>(type)];
+            score += positional_value(type, color, square, phase);
         }
-        const PieceType type = type_of(piece);
-        score += material[static_cast<std::size_t>(type)];
-        score += positional_value(type, color, square, phase);
     }
     const Bitboard own = color_occupancy(position, color);
     score += mobility(position, color, own);
