@@ -89,7 +89,11 @@ std::optional<GoParameters> parse_go(std::string_view arguments, std::string& er
     return result;
 }
 
-SearchLimits to_search_limits(const GoParameters& go, Color side_to_move) {
+SearchLimits to_search_limits(
+    const GoParameters& go,
+    Color side_to_move,
+    LatencyBudget latency,
+    int game_ply) {
     SearchLimits limits;
     limits.depth = go.depth;
     limits.nodes = go.nodes;
@@ -105,23 +109,25 @@ SearchLimits to_search_limits(const GoParameters& go, Color side_to_move) {
         return limits;
     }
     if (go.move_time.count() > 0) {
+        limits.target_time = go.move_time;
         limits.move_time = go.move_time;
         return limits;
     }
 
     const auto remaining = side_to_move == Color::White ? go.white_time : go.black_time;
     const auto increment = side_to_move == Color::White ? go.white_increment : go.black_increment;
-    if (remaining.count() <= 0) {
+    if (remaining.count() <= 0 && increment.count() <= 0) {
         return limits;
     }
 
-    const auto reserve = std::chrono::milliseconds(
-        std::clamp<std::int64_t>(remaining.count() / 20, 5, 50));
-    const auto usable = std::max(remaining - reserve, std::chrono::milliseconds(1));
-    const int moves = go.moves_to_go > 0 ? go.moves_to_go : 12;
-    auto budget = usable / moves + increment * 3 / 4;
-    budget = std::min(budget, usable / 2);
-    limits.move_time = std::max(budget, std::chrono::milliseconds(1));
+    const MoveBudget budget = BulletTimeManager::allocate(
+        ClockState{remaining, increment, go.moves_to_go, game_ply},
+        latency,
+        SearchTelemetry{});
+    limits.target_time = budget.target;
+    limits.move_time = budget.hard;
+    limits.regime = budget.regime;
+    limits.recommended_threads = budget.workers;
     return limits;
 }
 

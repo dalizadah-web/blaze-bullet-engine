@@ -46,6 +46,31 @@ TEST_CASE(clock_budget_uses_side_to_move_and_never_consumes_entire_clock) {
     CHECK(black.move_time.count() < 2000);
 }
 
+TEST_CASE(pure_increment_go_command_receives_a_search_deadline) {
+    std::string error;
+    const auto one_second = parse_go("wtime 0 btime 0 winc 1000 binc 1000", error);
+    const auto two_seconds = parse_go("wtime 0 btime 0 winc 2000 binc 2000", error);
+    CHECK(one_second.has_value());
+    CHECK(two_seconds.has_value());
+
+    const SearchLimits one_second_limits = to_search_limits(*one_second, Color::White);
+    const SearchLimits two_second_limits = to_search_limits(*two_seconds, Color::White);
+    CHECK(one_second_limits.move_time.count() > 0);
+    CHECK(one_second_limits.move_time.count() < 1000);
+    CHECK(two_second_limits.move_time > one_second_limits.move_time);
+}
+
+TEST_CASE(uci_clock_budget_uses_configured_and_measured_latency) {
+    std::string error;
+    const auto go = parse_go("wtime 1000 btime 1000", error);
+    CHECK(go.has_value());
+    const SearchLimits limits = to_search_limits(
+        *go, Color::White,
+        LatencyBudget{std::chrono::milliseconds(25), std::chrono::milliseconds(80)});
+    CHECK(limits.move_time <= std::chrono::milliseconds(920));
+    CHECK(limits.target_time < limits.move_time);
+}
+
 TEST_CASE(infinite_and_ponder_searches_have_no_clock_deadline) {
     std::string error;
     const auto infinite = parse_go("infinite", error);

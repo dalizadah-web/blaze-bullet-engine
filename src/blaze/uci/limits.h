@@ -31,7 +31,12 @@ struct GoParameters {
 [[nodiscard]] std::optional<GoParameters> parse_go(
     std::string_view arguments,
     std::string& error);
-[[nodiscard]] SearchLimits to_search_limits(const GoParameters& go, Color side_to_move);
+[[nodiscard]] SearchLimits to_search_limits(
+    const GoParameters& go,
+    Color side_to_move,
+    LatencyBudget latency = LatencyBudget{std::chrono::milliseconds(30),
+                                          std::chrono::milliseconds(0)},
+    int game_ply = 0);
 
 }  // namespace blaze
 

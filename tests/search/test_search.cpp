@@ -86,6 +86,20 @@ TEST_CASE(search_honors_node_and_external_stop_limits) {
     CHECK(parallel_limited.nodes <= 200);
 }
 
+TEST_CASE(search_finishes_cleanly_between_iterations_at_the_soft_target) {
+    Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 64};
+    limits.target_time = std::chrono::milliseconds(1);
+    limits.move_time = std::chrono::milliseconds(100);
+
+    const SearchResult result = searcher.search(root, limits);
+    CHECK(result.depth >= 1);
+    CHECK(result.depth < 64);
+    CHECK(!result.stopped);
+}
+
 TEST_CASE(search_treats_rule50_position_as_draw) {
     Position root = position("4k3/8/8/8/8/8/3Q4/4K3 b - - 100 1");
     TranspositionTable table(1);

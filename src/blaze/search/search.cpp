@@ -204,6 +204,10 @@ SearchResult Searcher::search(
         if (score >= search_mate_threshold || score <= -search_mate_threshold) {
             break;
         }
+        if (limits.target_time.count() > 0 &&
+            std::chrono::steady_clock::now() - context.start >= limits.target_time) {
+            break;
+        }
     }
 
     result.nodes = context.nodes;
@@ -262,6 +266,10 @@ SearchResult Searcher::search_parallel(
         if (depth == 1) {
             result.depth = 1;
             result.score = evaluate_position(position);
+            if (limits.target_time.count() > 0 &&
+                std::chrono::steady_clock::now() - search_start >= limits.target_time) {
+                break;
+            }
             continue;
         }
 
@@ -384,6 +392,10 @@ SearchResult Searcher::search_parallel(
         result.pv = best->pv;
         result.depth = depth;
         if (result.score >= search_mate_threshold || result.score <= -search_mate_threshold) {
+            break;
+        }
+        if (limits.target_time.count() > 0 &&
+            std::chrono::steady_clock::now() - search_start >= limits.target_time) {
             break;
         }
     }

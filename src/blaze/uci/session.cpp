@@ -75,6 +75,7 @@ bool UciSession::process_line(std::string_view raw_line) {
         write_line("id author Blaze project");
         write_line("option name Hash type spin default 16 min 1 max 65536");
         write_line("option name Threads type spin default 1 min 1 max 8");
+        write_line("option name Move Overhead type spin default 30 min 0 max 1000");
         write_line("option name Ponder type check default false");
         write_line("option name UseNNUE type check default false");
         write_line("option name EvalFile type string default <empty>");
@@ -217,6 +218,19 @@ bool UciSession::set_option(std::string_view arguments) {
         threads_ = threads;
         return true;
     }
+    if (tokens.size() == 5 && tokens[0] == "name" && tokens[1] == "Move" &&
+        tokens[2] == "Overhead" && tokens[3] == "value") {
+        int overhead = 0;
+        const auto parsed = std::from_chars(
+            tokens[4].data(), tokens[4].data() + tokens[4].size(), overhead);
+        if (parsed.ec != std::errc{} || parsed.ptr != tokens[4].data() + tokens[4].size() ||
+            overhead < 0 || overhead > 1000) {
+            write_line("info string Move Overhead must be between 0 and 1000 ms");
+            return false;
+        }
+        move_overhead_ = std::chrono::milliseconds(overhead);
+        return true;
+    }
     if (tokens.size() == 4 && tokens[0] == "name" && tokens[1] == "Ponder" &&
         tokens[2] == "value" && (tokens[3] == "true" || tokens[3] == "false")) {
         return true;
@@ -231,6 +245,7 @@ bool UciSession::set_option(std::string_view arguments) {
     if (tokens.size() >= 4 && tokens[0] == "name" && tokens[1] == "EvalFile" &&
         tokens[2] == "value") {
         stop_search();
+        network_evaluator_.reset();
         eval_file_.clear();
         for (std::size_t index = 3; index < tokens.size(); ++index) {
             if (!eval_file_.empty()) eval_file_.push_back(' ');
@@ -254,7 +269,7 @@ bool UciSession::start_search(std::string_view arguments) {
     pondering_ = go->ponder;
     ponder_arguments_ = std::string(arguments);
     const Position root = position_;
-    if (use_nnue_) {
+    if (use_nnue_ && !network_evaluator_) {
         std::string error;
         const auto network = NetworkLoader::load(eval_file_, error);
         if (!network) {
@@ -270,10 +285,14 @@ bool UciSession::start_search(std::string_view arguments) {
             write_line("bestmove 0000");
             return false;
         }
-    } else {
+    } else if (!use_nnue_) {
         network_evaluator_.reset();
     }
-    SearchLimits limits = to_search_limits(*go, root.side_to_move());
+    SearchLimits limits = to_search_limits(
+        *go,
+        root.side_to_move(),
+        LatencyBudget{move_overhead_, std::chrono::milliseconds(0)},
+        static_cast<int>(history_.empty() ? 0 : history_.size() - 1));
     limits.threads = threads_;
     if (!limits.search_moves.empty()) {
         MoveList legal;

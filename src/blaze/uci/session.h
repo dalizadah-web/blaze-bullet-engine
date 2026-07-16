@@ -6,6 +6,7 @@
 #include "blaze/uci/limits.h"
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <istream>
 #include <mutex>
@@ -40,6 +41,7 @@ private:
     std::atomic<bool> stop_requested_{false};
     std::atomic<bool> suppress_result_{false};
     int threads_ = 1;
+    std::chrono::milliseconds move_overhead_{30};
     bool use_nnue_ = false;
     std::string eval_file_;
     std::optional<NetworkEvaluator> network_evaluator_;

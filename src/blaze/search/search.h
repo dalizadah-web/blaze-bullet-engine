@@ -6,6 +6,7 @@
 #include "blaze/eval/network.h"
 #include "blaze/search/pv_line.h"
 #include "blaze/search/stack.h"
+#include "blaze/search/time_manager.h"
 #include "blaze/search/transposition_table.h"
 
 #include <atomic>
@@ -20,10 +21,13 @@ namespace blaze {
 struct SearchLimits {
     int depth = 0;
     std::uint64_t nodes = 0;
+    std::chrono::milliseconds target_time{0};
     std::chrono::milliseconds move_time{0};
     int mate = 0;
     std::vector<Move> search_moves{};
     int threads = 1;
+    SearchRegime regime = SearchRegime::Standard;
+    int recommended_threads = 1;
     std::shared_ptr<std::atomic<std::uint64_t>> shared_node_budget{};
 };
 
