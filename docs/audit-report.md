@@ -41,10 +41,10 @@ On ten deterministic legal positions at 1000 ms per move:
 
 | engine | average nodes | observed depth |
 | --- | ---: | ---: |
-| Blaze | 502,737 | 8-11 |
-| local Stockfish 17.1 | 1,312,781 | 20-25 |
+| Blaze | 427,596 | 8-10 |
+| local Stockfish 17.1 | 1,028,234 | 19-25 |
 
-Blaze therefore searches about 38% as many nodes as this local Stockfish build
+Blaze therefore searches about 42% as many nodes as this local Stockfish build
 at the same wall-clock budget. The latest pinned 2+0.02 smoke match completed
 10 games with 0 wins, 0 draws, and 10 losses for Blaze. This is not a formal Elo
 rating, but it is decisive evidence that the 2950/Stockfish-beating requirement
