@@ -6,7 +6,7 @@ PERFT_BIN := $(BUILD_DIR)/perft_driver.exe
 TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp)
 CORE_SOURCES := $(wildcard src/blaze/core/*.cpp)
 
-.PHONY: all test perft-driver clean
+.PHONY: all test perft-driver verify-clean-room clean
 
 all: test
 
@@ -23,6 +23,9 @@ $(PERFT_BIN): tools/perft_driver.cpp $(CORE_SOURCES) | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) tools/perft_driver.cpp $(CORE_SOURCES) -o $(PERFT_BIN)
 
 perft-driver: $(PERFT_BIN)
+
+verify-clean-room: $(TEST_BIN) $(PERFT_BIN)
+	powershell -NoProfile -ExecutionPolicy Bypass -File tools/verify_clean_room.ps1
 
 clean:
 	powershell -NoProfile -Command "if (Test-Path -LiteralPath '$(BUILD_DIR)') { Remove-Item -LiteralPath '$(BUILD_DIR)' -Recurse -Force }"

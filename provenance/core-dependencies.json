@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "scope": "Blaze position core, tests, and perft driver",
+  "compiled_dependencies": [],
+  "shipped_data_assets": [],
+  "notes": "This phase compiles only repository-authored Blaze sources and uses no shipped data assets. Project-source identity is supplied by the Git revision; imported files must be added here with SHA-256 before use."
+}
