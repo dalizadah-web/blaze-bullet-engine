@@ -7,7 +7,9 @@ Date: 2026-07-16
 Blaze is now a self-contained, warning-clean C++20 chess engine with strict UCI
 lifecycle handling, legal move generation, incremental make/unmake, a clustered
 transposition table, iterative alpha-beta/PVS search, selective null move/LMR,
-aspiration windows, check extensions, and a classical evaluation function.
+aspiration windows, check and recapture extensions, bounded ProbCut-style
+tactical probes, countermove/history ordering, and a classical evaluation
+function.
 
 The implementation is not a 2950-Elo engine and there is no evidence that it
 beats Stockfish. The current code is a sound platform for further engine work,
@@ -41,10 +43,10 @@ On ten deterministic legal positions at 1000 ms per move:
 
 | engine | average nodes | observed depth |
 | --- | ---: | ---: |
-| Blaze | 480,998 | 7-10 |
+| Blaze | 517,801 | 7-10 |
 | local Stockfish 17.1 | 1,040,599 | 19-24 |
 
-Blaze therefore searches about 46% as many nodes as this local Stockfish build
+Blaze therefore searches about 50% as many nodes as this local Stockfish build
 at the same wall-clock budget. The latest pinned 2+0.02 smoke match completed
 10 games with 0 wins, 0 draws, and 10 losses for Blaze. This is not a formal Elo
 rating, but it is decisive evidence that the 2950/Stockfish-beating requirement
