@@ -489,6 +489,9 @@ bool Position::make_move(Move move, StateInfo& state) {
 }
 
 void Position::unmake_move(Move move, const StateInfo& state) {
+    if (!move.is_valid()) {
+        return;
+    }
     side_to_move_ = state.side_to_move;
 
     if (move.has_flag(MoveFlag::CastleKing)) {
