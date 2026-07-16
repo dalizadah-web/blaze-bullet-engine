@@ -2,10 +2,11 @@ CXX := g++
 CXXFLAGS := -std=c++20 -O2 -Wall -Wextra -Wpedantic -Werror -Isrc -Itests
 BUILD_DIR := build/blaze
 TEST_BIN := $(BUILD_DIR)/blaze_tests.exe
+PERFT_BIN := $(BUILD_DIR)/perft_driver.exe
 TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp)
 CORE_SOURCES := $(wildcard src/blaze/core/*.cpp)
 
-.PHONY: all test clean
+.PHONY: all test perft-driver clean
 
 all: test
 
@@ -17,6 +18,11 @@ $(TEST_BIN): $(TEST_SOURCES) $(CORE_SOURCES) | $(BUILD_DIR)
 
 test: $(TEST_BIN)
 	$(TEST_BIN)
+
+$(PERFT_BIN): tools/perft_driver.cpp $(CORE_SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) tools/perft_driver.cpp $(CORE_SOURCES) -o $(PERFT_BIN)
+
+perft-driver: $(PERFT_BIN)
 
 clean:
 	powershell -NoProfile -Command "if (Test-Path -LiteralPath '$(BUILD_DIR)') { Remove-Item -LiteralPath '$(BUILD_DIR)' -Recurse -Force }"
