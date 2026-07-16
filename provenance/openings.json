@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "opening_suites": [
+    {
+      "path": "testdata/openings/smoke-v1.epd",
+      "sha256": "2c3ba57f3306350614f12c07ed55de3a8c4598ff56d16a2a6213acc04eff06f0",
+      "positions": 10,
+      "purpose": "lifecycle and paired-match harness smoke testing only",
+      "generator": "independently selected legal opening sequences converted with python-chess 1.11.2",
+      "seed": null,
+      "license": "CC0-1.0",
+      "stockfish_derived": false
+    }
+  ]
+}
