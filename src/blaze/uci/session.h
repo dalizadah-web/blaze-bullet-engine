@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <istream>
 #include <mutex>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -41,6 +42,7 @@ private:
     int threads_ = 1;
     bool use_nnue_ = false;
     std::string eval_file_;
+    std::optional<NetworkEvaluator> network_evaluator_;
     bool pondering_ = false;
     std::string ponder_arguments_;
 

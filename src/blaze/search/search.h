@@ -3,6 +3,7 @@
 
 #include "blaze/core/position.h"
 #include "blaze/eval/classical.h"
+#include "blaze/eval/network.h"
 #include "blaze/search/transposition_table.h"
 
 #include <atomic>
@@ -35,7 +36,8 @@ struct SearchResult {
 
 class Searcher {
 public:
-    explicit Searcher(TranspositionTable& table) : table_(table) {}
+    explicit Searcher(TranspositionTable& table, const NetworkEvaluator* network = nullptr)
+        : table_(table), network_(network) {}
 
     [[nodiscard]] SearchResult search(
         Position position,
@@ -55,6 +57,7 @@ private:
     };
 
     TranspositionTable& table_;
+    const NetworkEvaluator* network_ = nullptr;
     std::array<std::array<Move, 2>, 128> killers_{};
     std::array<std::array<std::array<int, 64>, 64>, 2> history_{};
 
@@ -92,6 +95,7 @@ private:
         std::vector<Move>& pv);
     [[nodiscard]] bool should_stop(Context& context) const;
     [[nodiscard]] bool consume_node(Context& context) const;
+    [[nodiscard]] int evaluate_position(const Position& position) const;
     [[nodiscard]] static bool is_repetition(const Context& context, std::uint64_t key);
 };
 

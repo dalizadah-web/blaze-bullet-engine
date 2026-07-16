@@ -225,6 +225,7 @@ bool UciSession::set_option(std::string_view arguments) {
         tokens[2] == "value" && (tokens[3] == "true" || tokens[3] == "false")) {
         stop_search();
         use_nnue_ = tokens[3] == "true";
+        if (!use_nnue_) network_evaluator_.reset();
         return true;
     }
     if (tokens.size() >= 4 && tokens[0] == "name" && tokens[1] == "EvalFile" &&
@@ -255,12 +256,22 @@ bool UciSession::start_search(std::string_view arguments) {
     const Position root = position_;
     if (use_nnue_) {
         std::string error;
-        if (!NetworkLoader::load(eval_file_, error)) {
+        const auto network = NetworkLoader::load(eval_file_, error);
+        if (!network) {
             pondering_ = false;
             write_line("info string critical NNUE unavailable: " + error);
             write_line("bestmove 0000");
             return false;
         }
+        network_evaluator_ = NetworkEvaluator::create(*network, error);
+        if (!network_evaluator_) {
+            pondering_ = false;
+            write_line("info string critical NNUE unavailable: " + error);
+            write_line("bestmove 0000");
+            return false;
+        }
+    } else {
+        network_evaluator_.reset();
     }
     SearchLimits limits = to_search_limits(*go, root.side_to_move());
     limits.threads = threads_;
@@ -286,7 +297,10 @@ bool UciSession::start_search(std::string_view arguments) {
     }
     worker_ = std::thread([this, root, limits, prior = std::move(prior)]() mutable {
         const auto started = std::chrono::steady_clock::now();
-        Searcher searcher(table_);
+        const NetworkEvaluator* network = network_evaluator_
+            ? &*network_evaluator_
+            : nullptr;
+        Searcher searcher(table_, network);
         const SearchResult result = searcher.search(root, limits, &stop_requested_, prior);
         const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - started);

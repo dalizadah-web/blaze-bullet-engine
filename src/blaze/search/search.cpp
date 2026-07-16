@@ -254,7 +254,7 @@ SearchResult Searcher::search_parallel(
         }
         if (depth == 1) {
             result.depth = 1;
-            result.score = evaluate(position);
+            result.score = evaluate_position(position);
             continue;
         }
 
@@ -453,7 +453,7 @@ int Searcher::negamax(
         legal_moves = restricted;
     }
     if (ply >= maximum_ply) {
-        return evaluate(position);
+        return evaluate_position(position);
     }
     const bool checked = in_check(position);
     if (position.rule50() >= 100 || is_repetition(context, position.key())) {
@@ -633,7 +633,7 @@ int Searcher::quiescence(
     MoveList legal_moves;
     generate_pseudo_legal(position, legal_moves);
     if (ply >= maximum_ply) {
-        return evaluate(position);
+        return evaluate_position(position);
     }
 
     const bool checked = in_check(position);
@@ -650,7 +650,7 @@ int Searcher::quiescence(
     }
     int stand_pat = -infinity;
     if (!checked) {
-        stand_pat = evaluate(position);
+        stand_pat = evaluate_position(position);
         if (stand_pat >= beta) {
             return stand_pat;
         }
@@ -674,7 +674,14 @@ int Searcher::quiescence(
             if (victim_value(victim) < victim_value(attacker)) {
                 const int see = static_exchange_evaluation(position, move);
                 if (stand_pat + see + see_margin <= alpha) {
-                    continue;
+                    StateInfo probe_state;
+                    const Color moving_side = position.side_to_move();
+                    if (position.make_move(move, probe_state)) {
+                        const bool legal = king_is_safe_after_move(position, moving_side);
+                        const bool gives_check = legal && in_check(position);
+                        position.unmake_move(move, probe_state);
+                        if (legal && !gives_check) continue;
+                    }
                 }
             }
         }
@@ -746,6 +753,10 @@ bool Searcher::consume_node(Context& context) const {
     }
     ++context.nodes;
     return true;
+}
+
+int Searcher::evaluate_position(const Position& position) const {
+    return network_ != nullptr ? network_->evaluate(position) : evaluate(position);
 }
 
 bool Searcher::is_repetition(const Context& context, std::uint64_t key) {

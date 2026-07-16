@@ -32,6 +32,7 @@ def run_one(
     milliseconds: int,
     threads: int,
     depth_limit: int,
+    nnue: Path | None,
 ) -> tuple[int, int, str, int]:
     process = subprocess.Popen(
         [str(engine)], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -71,6 +72,9 @@ def run_one(
         send("uci")
         wait_for("uciok")
         send(f"setoption name Threads value {threads}")
+        if nnue is not None:
+            send(f"setoption name EvalFile value {nnue}")
+            send("setoption name UseNNUE value true")
         send(f"position fen {fen}")
         started = time.monotonic()
         if depth_limit > 0:
@@ -105,6 +109,7 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=20260716)
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--depth", type=int, default=0)
+    parser.add_argument("--nnue", type=Path, default=None)
     args = parser.parse_args()
     fens = positions(args.positions, args.seed)
     for engine in args.engine:
@@ -112,7 +117,7 @@ def main() -> int:
         total_nodes = 0
         for index, fen in enumerate(fens, start=1):
             depth, nodes, best, elapsed = run_one(
-                engine, fen, args.milliseconds, args.threads, args.depth)
+                engine, fen, args.milliseconds, args.threads, args.depth, args.nnue)
             if chess.Move.from_uci(best) not in chess.Board(fen).legal_moves:
                 raise RuntimeError(f"{engine} returned illegal move {best} on position {index}")
             total_nodes += nodes

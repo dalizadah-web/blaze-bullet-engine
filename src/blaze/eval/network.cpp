@@ -1,6 +1,10 @@
 #include "blaze/eval/network.h"
 
+#include "blaze/eval/classical.h"
+
 #include <array>
+#include <algorithm>
+#include <bit>
 #include <filesystem>
 #include <fstream>
 
@@ -36,6 +40,70 @@ std::uint64_t checksum(const std::vector<std::uint8_t>& bytes, std::size_t begin
 }
 
 }  // namespace
+
+std::optional<NetworkEvaluator> NetworkEvaluator::create(
+    const Network& network,
+    std::string& error) {
+    error.clear();
+    if (network.version != 1 || network.features != feature_count ||
+        network.hidden != hidden_count || network.weights.size() != expected_payload_bytes) {
+        error = "network payload does not match Blaze inference layout";
+        return std::nullopt;
+    }
+
+    NetworkEvaluator evaluator;
+    evaluator.input_weights_.resize(feature_count * hidden_count);
+    std::size_t offset = 0;
+    for (std::int16_t& value : evaluator.input_weights_) {
+        const std::uint16_t raw = static_cast<std::uint16_t>(network.weights[offset]) |
+            (static_cast<std::uint16_t>(network.weights[offset + 1]) << 8U);
+        value = static_cast<std::int16_t>(raw);
+        offset += 2;
+    }
+    for (std::int32_t& value : evaluator.hidden_bias_) {
+        const std::uint32_t raw = static_cast<std::uint32_t>(network.weights[offset]) |
+            (static_cast<std::uint32_t>(network.weights[offset + 1]) << 8U) |
+            (static_cast<std::uint32_t>(network.weights[offset + 2]) << 16U) |
+            (static_cast<std::uint32_t>(network.weights[offset + 3]) << 24U);
+        value = static_cast<std::int32_t>(raw);
+        offset += 4;
+    }
+    for (std::int16_t& value : evaluator.output_weights_) {
+        const std::uint16_t raw = static_cast<std::uint16_t>(network.weights[offset]) |
+            (static_cast<std::uint16_t>(network.weights[offset + 1]) << 8U);
+        value = static_cast<std::int16_t>(raw);
+        offset += 2;
+    }
+    const std::uint32_t raw_bias = static_cast<std::uint32_t>(network.weights[offset]) |
+        (static_cast<std::uint32_t>(network.weights[offset + 1]) << 8U) |
+        (static_cast<std::uint32_t>(network.weights[offset + 2]) << 16U) |
+        (static_cast<std::uint32_t>(network.weights[offset + 3]) << 24U);
+    evaluator.output_bias_ = static_cast<std::int32_t>(raw_bias);
+    return evaluator;
+}
+
+int NetworkEvaluator::evaluate(const Position& position) const {
+    std::array<std::int32_t, hidden_count> hidden = hidden_bias_;
+    for (int square_index = 0; square_index < 64; ++square_index) {
+        const Piece piece = position.piece_on(static_cast<Square>(square_index));
+        if (piece == Piece::None) continue;
+        const std::size_t feature = static_cast<std::size_t>(piece_index(piece)) * 64U +
+            static_cast<std::size_t>(square_index);
+        const std::size_t base = feature * hidden_count;
+        for (std::size_t hidden_index = 0; hidden_index < hidden_count; ++hidden_index) {
+            hidden[hidden_index] += input_weights_[base + hidden_index];
+        }
+    }
+
+    std::int64_t output = output_bias_;
+    for (std::size_t hidden_index = 0; hidden_index < hidden_count; ++hidden_index) {
+        const std::int32_t activation = std::clamp(hidden[hidden_index], 0, 32'767);
+        output += static_cast<std::int64_t>(activation) * output_weights_[hidden_index];
+    }
+    int score = static_cast<int>(output / 4096);
+    if (position.side_to_move() == Color::Black) score = -score;
+    return std::clamp(score, -search_mate_threshold + 1, search_mate_threshold - 1);
+}
 
 std::optional<Network> NetworkLoader::load(std::string_view path) {
     std::string ignored;

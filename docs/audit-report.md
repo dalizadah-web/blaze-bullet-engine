@@ -27,8 +27,9 @@ trained evaluation network.
 - UCI stress gate: 1000/1000 cycles return one legal best move, including stop,
   infinite, ponder, and readiness traffic.
 - The network loader rejects missing, malformed, dimension-mismatched, and
-  checksum-invalid files. `UseNNUE=true` fails closed rather than silently using
-  an unvalidated fallback.
+  checksum-invalid files. `UseNNUE=true` now constructs the independently
+  specified quantized evaluator and fails closed rather than silently using an
+  unvalidated fallback.
 
 ## Measured strength/performance
 
@@ -64,6 +65,6 @@ small tuning change. The next high-value engineering stages are:
    Stockfish binary before accepting any Elo claim.
 
 No Stockfish source, network, book, or tablebase asset is used by the clean-room
-engine. The Polyglot reader and network format are validation adapters only and
-are disabled unless explicitly configured.
-
+engine. The Polyglot reader and network evaluator are disabled unless explicitly
+configured; the trainer generates optional local networks from generated legal
+positions and a transparent teacher.
