@@ -90,6 +90,30 @@ TEST_CASE(all_four_quiet_promotions_are_generated) {
     CHECK(contains_uci(moves, "a7a8n"));
 }
 
+TEST_CASE(capture_and_quiet_generation_modes_partition_all_moves) {
+    auto position = position_from("4k3/P7/8/3pP3/8/8/7P/4K3 w - d6 0 1");
+    blaze::MoveList all;
+    blaze::MoveList tactical;
+    blaze::MoveList quiet;
+    blaze::generate_pseudo_legal(position, all);
+    blaze::generate_pseudo_legal(position, tactical, blaze::GenType::Captures);
+    blaze::generate_pseudo_legal(position, quiet, blaze::GenType::Quiets);
+
+    CHECK_EQ(tactical.size() + quiet.size(), all.size());
+    for (const blaze::Move move : tactical) {
+        CHECK(move.has_flag(blaze::MoveFlag::Capture) ||
+              move.has_flag(blaze::MoveFlag::EnPassant) ||
+              move.has_flag(blaze::MoveFlag::Promotion));
+        for (const blaze::Move quiet_move : quiet) CHECK(move != quiet_move);
+    }
+    for (const blaze::Move move : all) {
+        bool found = false;
+        for (const blaze::Move tactical_move : tactical) found = found || move == tactical_move;
+        for (const blaze::Move quiet_move : quiet) found = found || move == quiet_move;
+        CHECK(found);
+    }
+}
+
 TEST_CASE(checkmate_has_no_legal_moves_and_is_check) {
     auto position = position_from("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1");
     blaze::MoveList moves;

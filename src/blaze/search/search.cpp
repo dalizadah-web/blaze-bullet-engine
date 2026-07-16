@@ -691,15 +691,20 @@ int Searcher::quiescence(
         return 0;
     }
 
-    MoveList legal_moves;
-    generate_pseudo_legal(position, legal_moves);
     if (ply >= maximum_ply) {
         return evaluate_position(position);
     }
 
     const bool checked = in_check(position);
+    MoveList legal_moves;
+    generate_pseudo_legal(
+        position,
+        legal_moves,
+        checked ? GenType::All : GenType::Captures);
     if (!checked && !has_any_legal_move(position, legal_moves)) {
-        return 0;
+        MoveList quiet_moves;
+        generate_pseudo_legal(position, quiet_moves, GenType::Quiets);
+        if (!has_any_legal_move(position, quiet_moves)) return 0;
     }
     if (position.rule50() >= 100 || is_repetition(context, position.key())) {
         if (!checked) {

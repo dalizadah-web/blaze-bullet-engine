@@ -10,6 +10,12 @@
 
 namespace blaze {
 
+enum class GenType {
+    Captures,
+    Quiets,
+    All,
+};
+
 class MoveList {
 public:
     static constexpr std::size_t capacity = 256;
@@ -40,6 +46,7 @@ private:
 };
 
 void generate_pseudo_legal(const Position& position, MoveList& moves);
+void generate_pseudo_legal(const Position& position, MoveList& moves, GenType type);
 void generate_legal(Position& position, MoveList& moves);
 [[nodiscard]] bool is_square_attacked(const Position& position, Square square, Color by_color);
 [[nodiscard]] bool in_check(const Position& position);

@@ -40,7 +40,8 @@ void add_piece_moves(
     Bitboard pieces,
     Bitboard own,
     Bitboard enemy,
-    PieceType type) {
+    PieceType type,
+    GenType generation_type) {
     while (pieces != 0) {
         const Square from = pop_first(pieces);
         Bitboard targets = 0;
@@ -54,6 +55,11 @@ void add_piece_moves(
             case PieceType::Pawn: break;
         }
         targets &= ~own;
+        if (generation_type == GenType::Captures) {
+            targets &= enemy;
+        } else if (generation_type == GenType::Quiets) {
+            targets &= ~enemy;
+        }
         while (targets != 0) {
             const Square to = pop_first(targets);
             const Piece target_piece = position.piece_on(to);
@@ -71,7 +77,8 @@ void add_piece_moves(
 void add_pawn_moves(
     const Position& position,
     MoveList& moves,
-    Bitboard enemy) {
+    Bitboard enemy,
+    GenType generation_type) {
     const Color side = position.side_to_move();
     Bitboard pawns = position.pieces(side, PieceType::Pawn);
     const int step = side == Color::White ? 8 : -8;
@@ -85,8 +92,10 @@ void add_pawn_moves(
             const Square forward = static_cast<Square>(forward_index);
             if (position.piece_on(forward) == Piece::None) {
                 if (rank_of(from) == promotion_rank) {
-                    add_promotions(moves, from, forward, MoveFlag::Quiet);
-                } else {
+                    if (generation_type != GenType::Quiets) {
+                        add_promotions(moves, from, forward, MoveFlag::Quiet);
+                    }
+                } else if (generation_type != GenType::Captures) {
                     moves.push(Move{from, forward});
                     if (rank_of(from) == start_rank) {
                         const Square double_to = static_cast<Square>(forward_index + step);
@@ -98,25 +107,27 @@ void add_pawn_moves(
             }
         }
 
-        Bitboard captures = Attacks::pawn(side, from) & enemy;
-        while (captures != 0) {
-            const Square to = pop_first(captures);
-            if (type_of(position.piece_on(to)) == PieceType::King) {
-                continue;
+        if (generation_type != GenType::Quiets) {
+            Bitboard captures = Attacks::pawn(side, from) & enemy;
+            while (captures != 0) {
+                const Square to = pop_first(captures);
+                if (type_of(position.piece_on(to)) == PieceType::King) {
+                    continue;
+                }
+                if (rank_of(from) == promotion_rank) {
+                    add_promotions(moves, from, to, MoveFlag::Capture);
+                } else {
+                    moves.push(Move{from, to, MoveFlag::Capture});
+                }
             }
-            if (rank_of(from) == promotion_rank) {
-                add_promotions(moves, from, to, MoveFlag::Capture);
-            } else {
-                moves.push(Move{from, to, MoveFlag::Capture});
-            }
-        }
 
-        if (position.ep_square() != Square::None &&
-            (Attacks::pawn(side, from) & square_bit(position.ep_square())) != 0) {
-            moves.push(Move{
-                from,
-                position.ep_square(),
-                MoveFlag::Capture | MoveFlag::EnPassant});
+            if (position.ep_square() != Square::None &&
+                (Attacks::pawn(side, from) & square_bit(position.ep_square())) != 0) {
+                moves.push(Move{
+                    from,
+                    position.ep_square(),
+                    MoveFlag::Capture | MoveFlag::EnPassant});
+            }
         }
     }
 }
@@ -195,19 +206,23 @@ bool in_check(const Position& position) {
 }
 
 void generate_pseudo_legal(const Position& position, MoveList& moves) {
+    generate_pseudo_legal(position, moves, GenType::All);
+}
+
+void generate_pseudo_legal(const Position& position, MoveList& moves, GenType type) {
     moves.clear();
     const Color side = position.side_to_move();
     const Color enemy_side = opposite(side);
     const Bitboard own = color_occupancy(position, side);
     const Bitboard enemy = color_occupancy(position, enemy_side);
 
-    add_pawn_moves(position, moves, enemy);
-    add_piece_moves(position, moves, position.pieces(side, PieceType::Knight), own, enemy, PieceType::Knight);
-    add_piece_moves(position, moves, position.pieces(side, PieceType::Bishop), own, enemy, PieceType::Bishop);
-    add_piece_moves(position, moves, position.pieces(side, PieceType::Rook), own, enemy, PieceType::Rook);
-    add_piece_moves(position, moves, position.pieces(side, PieceType::Queen), own, enemy, PieceType::Queen);
-    add_piece_moves(position, moves, position.pieces(side, PieceType::King), own, enemy, PieceType::King);
-    add_castles(position, moves);
+    add_pawn_moves(position, moves, enemy, type);
+    add_piece_moves(position, moves, position.pieces(side, PieceType::Knight), own, enemy, PieceType::Knight, type);
+    add_piece_moves(position, moves, position.pieces(side, PieceType::Bishop), own, enemy, PieceType::Bishop, type);
+    add_piece_moves(position, moves, position.pieces(side, PieceType::Rook), own, enemy, PieceType::Rook, type);
+    add_piece_moves(position, moves, position.pieces(side, PieceType::Queen), own, enemy, PieceType::Queen, type);
+    add_piece_moves(position, moves, position.pieces(side, PieceType::King), own, enemy, PieceType::King, type);
+    if (type != GenType::Captures) add_castles(position, moves);
 }
 
 void generate_legal(Position& position, MoveList& moves) {
