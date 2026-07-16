@@ -87,7 +87,7 @@ SearchLimits to_search_limits(const GoParameters& go, Color side_to_move) {
     const auto reserve = std::chrono::milliseconds(
         std::clamp<std::int64_t>(remaining.count() / 20, 5, 50));
     const auto usable = std::max(remaining - reserve, std::chrono::milliseconds(1));
-    const int moves = go.moves_to_go > 0 ? go.moves_to_go : 30;
+    const int moves = go.moves_to_go > 0 ? go.moves_to_go : 20;
     auto budget = usable / moves + increment * 3 / 4;
     budget = std::min(budget, usable / 2);
     limits.move_time = std::max(budget, std::chrono::milliseconds(1));
