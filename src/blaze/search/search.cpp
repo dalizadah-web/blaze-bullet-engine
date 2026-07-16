@@ -174,7 +174,17 @@ SearchResult Searcher::search(
     const int maximum_depth = limits.depth > 0 ? limits.depth : 64;
     for (int depth = 1; depth <= maximum_depth; ++depth) {
         std::vector<Move> pv;
-        const int score = negamax(position, depth, -infinity, infinity, 0, context, pv);
+        int alpha = -infinity;
+        int beta = infinity;
+        if (depth >= 4 && result.depth >= 3) {
+            alpha = std::max(-infinity, result.score - 50);
+            beta = std::min(infinity, result.score + 50);
+        }
+        int score = negamax(position, depth, alpha, beta, 0, context, pv);
+        if (!context.stopped && (score <= alpha || score >= beta)) {
+            pv.clear();
+            score = negamax(position, depth, -infinity, infinity, 0, context, pv);
+        }
         if (context.stopped) {
             break;
         }
