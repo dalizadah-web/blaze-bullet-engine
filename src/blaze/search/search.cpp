@@ -97,20 +97,23 @@ MoveList ordered_moves(
     Move first_killer,
     Move second_killer,
     const std::array<std::array<int, 64>, 64>& history) {
-    std::vector<std::pair<int, Move>> scored;
-    scored.reserve(list.size());
-    for (const Move move : list) {
-        scored.emplace_back(
-            move_order_score(position, move, tt_move, first_killer, second_killer, history),
-            move);
+    MoveList result = list;
+    std::array<int, MoveList::capacity> scores;
+    for (std::size_t index = 0; index < result.size(); ++index) {
+        scores[index] = move_order_score(
+            position, result[index], tt_move, first_killer, second_killer, history);
     }
-    std::stable_sort(scored.begin(), scored.end(), [](const auto& left, const auto& right) {
-        return left.first > right.first;
-    });
-    MoveList result;
-    for (const auto& [score, move] : scored) {
-        static_cast<void>(score);
-        result.push(move);
+    for (std::size_t index = 1; index < result.size(); ++index) {
+        const Move move = result[index];
+        const int score = scores[index];
+        std::size_t insertion = index;
+        while (insertion > 0 && scores[insertion - 1] < score) {
+            result[insertion] = result[insertion - 1];
+            scores[insertion] = scores[insertion - 1];
+            --insertion;
+        }
+        result[insertion] = move;
+        scores[insertion] = score;
     }
     return result;
 }

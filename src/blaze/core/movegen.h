@@ -29,6 +29,10 @@ public:
         assert(index < size_);
         return moves_[index];
     }
+    [[nodiscard]] Move& operator[](std::size_t index) {
+        assert(index < size_);
+        return moves_[index];
+    }
 
 private:
     std::array<Move, capacity> moves_{};
