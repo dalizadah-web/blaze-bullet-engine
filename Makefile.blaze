@@ -10,7 +10,7 @@ TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp) \
 ENGINE_SOURCES := $(wildcard src/blaze/core/*.cpp) $(wildcard src/blaze/eval/*.cpp) \
 	$(wildcard src/blaze/search/*.cpp) $(wildcard src/blaze/uci/*.cpp)
 
-.PHONY: all test blaze perft-driver uci-stress repeated-start verify-clean-room clean
+.PHONY: all test blaze perft-driver train-network uci-stress repeated-start verify-clean-room clean
 
 all: test blaze
 
@@ -27,6 +27,9 @@ $(BLAZE_BIN): src/blaze/main.cpp $(ENGINE_SOURCES) | $(BUILD_DIR)
 	$(CXX) $(RELEASE_FLAGS) src/blaze/main.cpp $(ENGINE_SOURCES) -o $(BLAZE_BIN)
 
 blaze: $(BLAZE_BIN)
+
+train-network:
+	python tools/train_network.py --output $(BUILD_DIR)/trained.blaze-net
 
 uci-stress: $(BLAZE_BIN)
 	python tools/uci_stress.py --engine $(BLAZE_BIN) --cycles 1000

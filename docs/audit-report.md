@@ -64,6 +64,10 @@ small tuning change. The next high-value engineering stages are:
 4. Add a reproducible self-play tournament and SPRT gate against a pinned
    Stockfish binary before accepting any Elo claim.
 
+An optional local network can be generated with `mingw32-make -f Makefile.blaze
+train-network` and enabled through UCI `EvalFile` plus `UseNNUE`; it is not part
+of the default release binary.
+
 No Stockfish source, network, book, or tablebase asset is used by the clean-room
 engine. The Polyglot reader and network evaluator are disabled unless explicitly
 configured; the trainer generates optional local networks from generated legal
