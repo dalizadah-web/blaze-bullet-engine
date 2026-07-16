@@ -38,6 +38,18 @@ enum class Piece : std::uint8_t {
     BlackKing,
 };
 
+[[nodiscard]] constexpr Piece make_piece(Color color, PieceType type) {
+    if (type == PieceType::None) {
+        return Piece::None;
+    }
+    const unsigned color_offset = color == Color::White ? 0U : 6U;
+    return static_cast<Piece>(color_offset + static_cast<unsigned>(type));
+}
+
+[[nodiscard]] constexpr int piece_index(Piece piece) {
+    return piece == Piece::None ? -1 : static_cast<int>(piece) - 1;
+}
+
 enum class Square : std::uint8_t {
     A1 = 0, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,
@@ -70,6 +82,12 @@ enum class Square : std::uint8_t {
     return file >= 0 && file < 8 && rank >= 0 && rank < 8
         ? static_cast<Square>(rank * 8 + file)
         : Square::None;
+}
+
+[[nodiscard]] constexpr Bitboard square_bit(Square square) {
+    return is_valid_square(square)
+        ? (Bitboard{1} << static_cast<unsigned>(square_index(square)))
+        : Bitboard{0};
 }
 
 }  // namespace blaze
