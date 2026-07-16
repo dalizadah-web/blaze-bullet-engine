@@ -83,6 +83,17 @@ TEST_CASE(search_treats_rule50_position_as_draw) {
     CHECK_EQ(result.score, 0);
 }
 
+TEST_CASE(search_honors_root_searchmoves_restriction) {
+    Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    TranspositionTable table(2);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 2};
+    limits.search_moves = {Move(Square::E2, Square::E4, MoveFlag::DoublePush)};
+    const SearchResult result = searcher.search(root, limits);
+    CHECK_EQ(result.best_move, limits.search_moves.front());
+    CHECK_EQ(result.pv.front(), limits.search_moves.front());
+}
+
 TEST_CASE(search_start_position_depth_five_stays_under_node_regression_budget) {
     Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     TranspositionTable table(8);

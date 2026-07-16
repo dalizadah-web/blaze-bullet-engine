@@ -123,8 +123,23 @@ SearchResult Searcher::search(
     killers_ = {};
     history_ = {};
 
+    MoveList generated_moves;
+    generate_legal(position, generated_moves);
     MoveList legal_moves;
-    generate_legal(position, legal_moves);
+    if (limits.search_moves.empty()) {
+        legal_moves = generated_moves;
+    } else {
+        for (const Move requested : limits.search_moves) {
+            for (const Move legal : generated_moves) {
+                if (legal == requested ||
+                    (legal.from() == requested.from() && legal.to() == requested.to() &&
+                     legal.promotion() == requested.promotion())) {
+                    legal_moves.push(legal);
+                    break;
+                }
+            }
+        }
+    }
 
     SearchResult result;
     if (legal_moves.empty()) {
@@ -144,6 +159,7 @@ SearchResult Searcher::search(
     context.start = std::chrono::steady_clock::now();
     context.keys = prior_keys;
     context.keys.push_back(position.key());
+    context.root_moves.assign(legal_moves.begin(), legal_moves.end());
 
     if (should_stop(context)) {
         result.stopped = true;
@@ -194,6 +210,20 @@ int Searcher::negamax(
 
     MoveList legal_moves;
     generate_pseudo_legal(position, legal_moves);
+    if (ply == 0 && !context.root_moves.empty()) {
+        MoveList restricted;
+        for (const Move candidate : legal_moves) {
+            for (const Move requested : context.root_moves) {
+                if (candidate.from() == requested.from() &&
+                    candidate.to() == requested.to() &&
+                    candidate.promotion() == requested.promotion()) {
+                    restricted.push(candidate);
+                    break;
+                }
+            }
+        }
+        legal_moves = restricted;
+    }
     if (ply >= maximum_ply) {
         return evaluate(position);
     }

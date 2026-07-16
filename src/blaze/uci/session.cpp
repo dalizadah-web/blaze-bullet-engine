@@ -4,6 +4,7 @@
 #include "blaze/search/search.h"
 #include "blaze/uci/limits.h"
 
+#include <algorithm>
 #include <charconv>
 #include <chrono>
 #include <sstream>
@@ -219,6 +220,22 @@ bool UciSession::start_search(std::string_view arguments) {
     stop_search();
     const Position root = position_;
     const SearchLimits limits = to_search_limits(*go, root.side_to_move());
+    if (!limits.search_moves.empty()) {
+        MoveList legal;
+        Position validation = root;
+        generate_legal(validation, legal);
+        for (const Move requested : limits.search_moves) {
+            const bool found = std::any_of(legal.begin(), legal.end(), [&](Move candidate) {
+                return candidate.from() == requested.from() &&
+                    candidate.to() == requested.to() &&
+                    candidate.promotion() == requested.promotion();
+            });
+            if (!found) {
+                write_line("info string searchmoves contains an illegal move");
+                return false;
+            }
+        }
+    }
     std::vector<std::uint64_t> prior = history_;
     if (!prior.empty() && prior.back() == root.key()) {
         prior.pop_back();

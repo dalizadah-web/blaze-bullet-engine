@@ -17,6 +17,8 @@ struct SearchLimits {
     int depth = 0;
     std::uint64_t nodes = 0;
     std::chrono::milliseconds move_time{0};
+    int mate = 0;
+    std::vector<Move> search_moves{};
 };
 
 struct SearchResult {
@@ -46,6 +48,7 @@ private:
         std::uint64_t nodes = 0;
         bool stopped = false;
         std::vector<std::uint64_t> keys;
+        std::vector<Move> root_moves;
     };
 
     TranspositionTable& table_;

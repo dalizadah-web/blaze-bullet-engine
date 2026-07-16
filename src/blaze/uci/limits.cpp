@@ -18,6 +18,13 @@ bool parse_positive_or_zero(const std::string& text, Integer& value) {
     return parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size();
 }
 
+bool is_go_keyword(const std::string& token) {
+    return token == "wtime" || token == "btime" || token == "winc" ||
+        token == "binc" || token == "movetime" || token == "movestogo" ||
+        token == "depth" || token == "nodes" || token == "mate" ||
+        token == "searchmoves" || token == "infinite" || token == "ponder";
+}
+
 }  // namespace
 
 std::optional<GoParameters> parse_go(std::string_view arguments, std::string& error) {
@@ -36,6 +43,21 @@ std::optional<GoParameters> parse_go(std::string_view arguments, std::string& er
         }
         if (name == "ponder") {
             result.ponder = true;
+            continue;
+        }
+        if (name == "searchmoves") {
+            if (index + 1 >= tokens.size() || is_go_keyword(tokens[index + 1])) {
+                error = "searchmoves requires at least one move";
+                return std::nullopt;
+            }
+            while (index + 1 < tokens.size() && !is_go_keyword(tokens[index + 1])) {
+                const std::string& move = tokens[++index];
+                if (!move_from_uci(move)) {
+                    error = "invalid searchmoves move: " + move;
+                    return std::nullopt;
+                }
+                result.search_moves.push_back(move);
+            }
             continue;
         }
         if (index + 1 >= tokens.size()) {
@@ -57,6 +79,7 @@ std::optional<GoParameters> parse_go(std::string_view arguments, std::string& er
         else if (name == "movestogo" && parsed > 0 && parsed <= 1000) result.moves_to_go = static_cast<int>(parsed);
         else if (name == "depth" && parsed > 0 && parsed <= 128) result.depth = static_cast<int>(parsed);
         else if (name == "nodes" && parsed > 0) result.nodes = parsed;
+        else if (name == "mate" && parsed > 0 && parsed <= 64) result.mate = static_cast<int>(parsed);
         else {
             error = "unsupported or out-of-range go parameter: " + name;
             return std::nullopt;
@@ -70,6 +93,14 @@ SearchLimits to_search_limits(const GoParameters& go, Color side_to_move) {
     SearchLimits limits;
     limits.depth = go.depth;
     limits.nodes = go.nodes;
+    limits.mate = go.mate;
+    limits.search_moves.reserve(go.search_moves.size());
+    for (const std::string& move : go.search_moves) {
+        limits.search_moves.push_back(*move_from_uci(move));
+    }
+    if (limits.depth == 0 && limits.mate > 0) {
+        limits.depth = limits.mate * 2;
+    }
     if (go.infinite || go.ponder) {
         return limits;
     }

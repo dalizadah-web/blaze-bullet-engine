@@ -56,5 +56,18 @@ TEST_CASE(infinite_and_ponder_searches_have_no_clock_deadline) {
     CHECK_EQ(to_search_limits(*ponder, Color::White).move_time.count(), 0);
 }
 
+TEST_CASE(go_parser_preserves_searchmoves_and_mate_requests) {
+    std::string error;
+    const auto go = parse_go("searchmoves e2e4 d2d4 mate 3", error);
+    CHECK(go.has_value());
+    CHECK_EQ(go->search_moves.size(), 2U);
+    CHECK_EQ(go->search_moves[0], "e2e4");
+    CHECK_EQ(go->search_moves[1], "d2d4");
+    CHECK_EQ(go->mate, 3);
+    const SearchLimits limits = to_search_limits(*go, Color::White);
+    CHECK_EQ(limits.mate, 3);
+    CHECK_EQ(limits.depth, 6);
+}
+
 }  // namespace
 }  // namespace blaze

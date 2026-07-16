@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace blaze {
 
@@ -21,6 +22,8 @@ struct GoParameters {
     int moves_to_go = 0;
     int depth = 0;
     std::uint64_t nodes = 0;
+    int mate = 0;
+    std::vector<std::string> search_moves;
     bool infinite = false;
     bool ponder = false;
 };
