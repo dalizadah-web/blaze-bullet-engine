@@ -4,13 +4,71 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
+import platform
 import queue
 import random
+import statistics
 import subprocess
 import time
 from pathlib import Path
 
 import chess
+
+
+DEFAULT_COMPILER_FLAGS = "-std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Isrc"
+
+
+def summarize_rates(rates: list[float]) -> dict[str, float]:
+    if not rates:
+        raise ValueError("benchmark requires at least one NPS sample")
+    if len(rates) == 1:
+        q1 = q3 = rates[0]
+    else:
+        q1, _, q3 = statistics.quantiles(rates, n=4, method="inclusive")
+    return {
+        "median_nps": statistics.median(rates),
+        "q1_nps": q1,
+        "q3_nps": q3,
+        "iqr_nps": q3 - q1,
+    }
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def cpu_name() -> str:
+    if platform.system() == "Windows":
+        try:
+            import winreg
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+            ) as key:
+                return str(winreg.QueryValueEx(key, "ProcessorNameString")[0]).strip()
+        except OSError:
+            pass
+    return platform.processor() or platform.machine()
+
+
+def compiler_identity() -> str:
+    try:
+        completed = subprocess.run(
+            ["g++", "--version"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        return completed.stdout.splitlines()[0]
+    except (OSError, subprocess.SubprocessError, IndexError):
+        return "unknown"
 
 
 def positions(count: int, seed: int) -> list[str]:
@@ -110,19 +168,50 @@ def main() -> int:
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--depth", type=int, default=0)
     parser.add_argument("--nnue", type=Path, default=None)
+    parser.add_argument("--repetitions", type=int, default=3)
+    parser.add_argument("--compiler-flags", default=DEFAULT_COMPILER_FLAGS)
     args = parser.parse_args()
+    if args.positions < 1 or args.repetitions < 1:
+        parser.error("positions and repetitions must be positive")
     fens = positions(args.positions, args.seed)
     for engine in args.engine:
-        print(f"engine={engine}")
+        engine = engine.resolve()
+        metadata = {
+            "engine": str(engine),
+            "engine_sha256": sha256(engine),
+            "cpu": cpu_name(),
+            "compiler": compiler_identity(),
+            "compiler_flags": args.compiler_flags,
+            "positions": args.positions,
+            "repetitions": args.repetitions,
+            "milliseconds": args.milliseconds,
+            "depth": args.depth,
+            "threads": args.threads,
+            "seed": args.seed,
+        }
+        print("benchmark_metadata=" + json.dumps(metadata, sort_keys=True))
         total_nodes = 0
-        for index, fen in enumerate(fens, start=1):
-            depth, nodes, best, elapsed = run_one(
-                engine, fen, args.milliseconds, args.threads, args.depth, args.nnue)
-            if chess.Move.from_uci(best) not in chess.Board(fen).legal_moves:
-                raise RuntimeError(f"{engine} returned illegal move {best} on position {index}")
-            total_nodes += nodes
-            print(f"  {index:02d} depth={depth:2d} nodes={nodes:9d} elapsed_ms={elapsed:4d} best={best}")
-        print(f"  total_nodes={total_nodes} average_nodes={total_nodes / len(fens):.1f}")
+        rates: list[float] = []
+        for repetition in range(1, args.repetitions + 1):
+            for index, fen in enumerate(fens, start=1):
+                depth, nodes, best, elapsed = run_one(
+                    engine, fen, args.milliseconds, args.threads, args.depth, args.nnue)
+                if chess.Move.from_uci(best) not in chess.Board(fen).legal_moves:
+                    raise RuntimeError(
+                        f"{engine} returned illegal move {best} on position {index}")
+                total_nodes += nodes
+                nps = nodes * 1000.0 / max(elapsed, 1)
+                rates.append(nps)
+                print(
+                    f"  repetition={repetition:02d} position={index:02d} depth={depth:2d} "
+                    f"nodes={nodes:9d} elapsed_ms={elapsed:4d} nps={nps:10.1f} best={best}")
+        summary = summarize_rates(rates)
+        summary.update({
+            "samples": len(rates),
+            "total_nodes": total_nodes,
+            "average_nodes": total_nodes / len(rates),
+        })
+        print("benchmark_summary=" + json.dumps(summary, sort_keys=True))
     return 0
 
 

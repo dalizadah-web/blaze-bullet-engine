@@ -131,7 +131,6 @@ SearchResult Searcher::search(
     if (limits.threads > 1) {
         return search_parallel(position, limits, external_stop, prior_keys);
     }
-    killers_ = {};
     countermoves_ = {};
     history_ = {};
 
@@ -181,7 +180,7 @@ SearchResult Searcher::search(
     table_.new_search();
     const int maximum_depth = limits.depth > 0 ? limits.depth : 64;
     for (int depth = 1; depth <= maximum_depth; ++depth) {
-        std::vector<Move> pv;
+        PvLine pv;
         int alpha = -infinity;
         int beta = infinity;
         if (depth >= 4 && result.depth >= 3) {
@@ -198,7 +197,7 @@ SearchResult Searcher::search(
         }
         if (!pv.empty()) {
             result.best_move = pv.front();
-            result.pv = std::move(pv);
+            result.pv.assign(pv.span().begin(), pv.span().end());
         }
         result.score = score;
         result.depth = depth;
@@ -400,7 +399,6 @@ SearchResult Searcher::search_window(
     const std::atomic<bool>* external_stop,
     const std::vector<std::uint64_t>& prior_keys,
     std::chrono::steady_clock::time_point start) {
-    killers_ = {};
     countermoves_ = {};
     history_ = {};
 
@@ -412,12 +410,12 @@ SearchResult Searcher::search_window(
     context.keys.push_back(position.key());
 
     SearchResult result;
-    std::vector<Move> pv;
+    PvLine pv;
     const int score = negamax(position, depth, alpha, beta, 0, context, pv);
     if (!context.stopped) {
         result.score = score;
         result.depth = depth;
-        result.pv = std::move(pv);
+        result.pv.assign(pv.span().begin(), pv.span().end());
         if (!result.pv.empty()) result.best_move = result.pv.front();
     }
     result.nodes = context.nodes;
@@ -432,7 +430,7 @@ int Searcher::negamax(
     int beta,
     int ply,
     Context& context,
-    std::vector<Move>& pv,
+    PvLine& pv,
     bool allow_null) {
     pv.clear();
     if (depth <= 0) {
@@ -492,10 +490,9 @@ int Searcher::negamax(
         has_non_pawn_material(position, position.side_to_move())) {
         StateInfo null_state;
         position.make_null(null_state);
-        std::vector<Move> null_pv;
+        PvLine null_pv;
         const int reduction = depth >= 6 ? 3 : 2;
-        const Move saved_previous_move = context.previous_move;
-        context.previous_move = Move{};
+        context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
         const int null_score = -negamax(
             position,
             depth - 1 - reduction,
@@ -505,7 +502,6 @@ int Searcher::negamax(
             context,
             null_pv,
             false);
-        context.previous_move = saved_previous_move;
         position.unmake_null(null_state);
         if (context.stopped) {
             return 0;
@@ -535,9 +531,8 @@ int Searcher::negamax(
                 continue;
             }
             context.keys.push_back(position.key());
-            const Move saved_previous_move = context.previous_move;
-            context.previous_move = move;
-            std::vector<Move> probe_pv;
+            context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
+            PvLine probe_pv;
             const int probe_score = -negamax(
                 position,
                 depth - 4,
@@ -546,7 +541,6 @@ int Searcher::negamax(
                 ply + 1,
                 context,
                 probe_pv);
-            context.previous_move = saved_previous_move;
             context.keys.pop_back();
             position.unmake_move(move, state);
             if (context.stopped) return 0;
@@ -559,8 +553,11 @@ int Searcher::negamax(
     int best_score = -infinity;
     int legal_count = 0;
     const std::size_t color_index = static_cast<std::size_t>(position.side_to_move());
-    const Move first_killer = killers_[static_cast<std::size_t>(ply)][0];
-    const Move second_killer = killers_[static_cast<std::size_t>(ply)][1];
+    const Move previous_move = ply > 0
+        ? context.stack[static_cast<std::size_t>(ply)].current_move
+        : Move{};
+    const Move first_killer = context.stack[static_cast<std::size_t>(ply)].killers[0];
+    const Move second_killer = context.stack[static_cast<std::size_t>(ply)].killers[1];
     int move_count = 0;
     for (const Move move : ordered_moves(
              position,
@@ -569,9 +566,9 @@ int Searcher::negamax(
              first_killer,
              second_killer,
              history_[color_index],
-             context.previous_move.is_valid()
-                 ? countermoves_[square_index(context.previous_move.from())]
-                     [square_index(context.previous_move.to())]
+             previous_move.is_valid()
+                 ? countermoves_[square_index(previous_move.from())]
+                     [square_index(previous_move.to())]
                  : Move{})) {
         StateInfo state;
         if (!position.make_move(move, state)) {
@@ -583,17 +580,16 @@ int Searcher::negamax(
         }
         ++legal_count;
         context.keys.push_back(position.key());
-        std::vector<Move> child_pv;
+        PvLine child_pv;
         const bool gives_check = in_check(position);
-        const bool recaptures = context.previous_move.is_valid() &&
-            context.previous_move.to() == move.to() &&
-            (context.previous_move.has_flag(MoveFlag::Capture) ||
-             context.previous_move.has_flag(MoveFlag::EnPassant)) &&
+        const bool recaptures = previous_move.is_valid() &&
+            previous_move.to() == move.to() &&
+            (previous_move.has_flag(MoveFlag::Capture) ||
+             previous_move.has_flag(MoveFlag::EnPassant)) &&
             (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant));
         const int full_depth = depth - 1 + (gives_check ? 1 : 0) + (recaptures ? 1 : 0);
         int score = 0;
-        const Move saved_previous_move = context.previous_move;
-        context.previous_move = move;
+        context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
         if (move_count == 0) {
             score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
         } else {
@@ -629,7 +625,6 @@ int Searcher::negamax(
                 score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
             }
         }
-        context.previous_move = saved_previous_move;
         ++move_count;
         context.keys.pop_back();
         position.unmake_move(move, state);
@@ -643,14 +638,13 @@ int Searcher::negamax(
         }
         if (score > alpha) {
             alpha = score;
-            pv = {move};
-            pv.insert(pv.end(), child_pv.begin(), child_pv.end());
+            pv.prepend(move, child_pv);
         }
         if (alpha >= beta) {
             const bool quiet = !move.has_flag(MoveFlag::Capture) &&
                 !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
             if (quiet) {
-                auto& killers = killers_[static_cast<std::size_t>(ply)];
+                auto& killers = context.stack[static_cast<std::size_t>(ply)].killers;
                 if (move != killers[0]) {
                     killers[1] = killers[0];
                     killers[0] = move;
@@ -659,9 +653,9 @@ int Searcher::negamax(
                     [static_cast<std::size_t>(square_index(move.from()))]
                     [static_cast<std::size_t>(square_index(move.to()))];
                 history = std::min(history + depth * depth * 16, 80'000);
-                if (context.previous_move.is_valid()) {
-                    countermoves_[square_index(context.previous_move.from())]
-                        [square_index(context.previous_move.to())] = move;
+                if (previous_move.is_valid()) {
+                    countermoves_[square_index(previous_move.from())]
+                        [square_index(previous_move.to())] = move;
                 }
             }
             break;
@@ -688,7 +682,7 @@ int Searcher::quiescence(
     int beta,
     int ply,
     Context& context,
-    std::vector<Move>& pv) {
+    PvLine& pv) {
     pv.clear();
     if (should_stop(context)) {
         return 0;
@@ -741,7 +735,7 @@ int Searcher::quiescence(
         }
         ++legal_count;
         context.keys.push_back(position.key());
-        std::vector<Move> child_pv;
+        PvLine child_pv;
         const int score = -quiescence(position, -beta, -alpha, ply + 1, context, child_pv);
         context.keys.pop_back();
         position.unmake_move(move, state);
@@ -750,8 +744,7 @@ int Searcher::quiescence(
         }
         if (score > alpha) {
             alpha = score;
-            pv = {move};
-            pv.insert(pv.end(), child_pv.begin(), child_pv.end());
+            pv.prepend(move, child_pv);
             if (alpha >= beta) {
                 break;
             }
