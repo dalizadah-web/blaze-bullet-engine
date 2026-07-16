@@ -59,7 +59,8 @@ private:
         int beta,
         int ply,
         Context& context,
-        std::vector<Move>& pv);
+        std::vector<Move>& pv,
+        bool allow_null = true);
     [[nodiscard]] int quiescence(
         Position& position,
         int alpha,

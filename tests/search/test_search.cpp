@@ -92,5 +92,14 @@ TEST_CASE(search_start_position_depth_five_stays_under_node_regression_budget) {
     CHECK(result.nodes < 40000);
 }
 
+TEST_CASE(selective_search_keeps_depth_six_under_node_regression_budget) {
+    Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    TranspositionTable table(16);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 6});
+    CHECK_EQ(result.depth, 6);
+    CHECK(result.nodes < 30000);
+}
+
 }  // namespace
 }  // namespace blaze

@@ -15,6 +15,13 @@ constexpr int infinity = search_mate_score + 1;
 constexpr int maximum_ply = 128;
 const std::array<std::array<int, 64>, 64> empty_history{};
 
+bool has_non_pawn_material(const Position& position, Color color) {
+    return (position.pieces(color, PieceType::Knight) |
+            position.pieces(color, PieceType::Bishop) |
+            position.pieces(color, PieceType::Rook) |
+            position.pieces(color, PieceType::Queen)) != 0;
+}
+
 int victim_value(Piece piece) {
     constexpr std::array<int, 7> values = {0, 100, 320, 335, 500, 900, 20000};
     return values[static_cast<std::size_t>(type_of(piece))];
@@ -148,7 +155,8 @@ int Searcher::negamax(
     int beta,
     int ply,
     Context& context,
-    std::vector<Move>& pv) {
+    std::vector<Move>& pv,
+    bool allow_null) {
     pv.clear();
     if (depth <= 0) {
         return quiescence(position, alpha, beta, ply, context, pv);
@@ -169,6 +177,7 @@ int Searcher::negamax(
     if (ply >= maximum_ply) {
         return evaluate(position);
     }
+    const bool checked = in_check(position);
 
     Move tt_move;
     const auto tt_hit = table_.probe(position.key(), ply);
@@ -180,6 +189,31 @@ int Searcher::negamax(
                 (tt_hit->bound == Bound::Upper && tt_hit->score <= alpha)) {
                 return tt_hit->score;
             }
+        }
+    }
+
+    if (allow_null && depth >= 3 && !checked && position.rule50() < 99 &&
+        beta < search_mate_threshold &&
+        has_non_pawn_material(position, position.side_to_move())) {
+        StateInfo null_state;
+        position.make_null(null_state);
+        std::vector<Move> null_pv;
+        const int reduction = depth >= 6 ? 3 : 2;
+        const int null_score = -negamax(
+            position,
+            depth - 1 - reduction,
+            -beta,
+            -beta + 1,
+            ply + 1,
+            context,
+            null_pv,
+            false);
+        position.unmake_null(null_state);
+        if (context.stopped) {
+            return 0;
+        }
+        if (null_score >= beta) {
+            return null_score;
         }
     }
 
@@ -207,7 +241,35 @@ int Searcher::negamax(
         if (move_count == 0) {
             score = -negamax(position, depth - 1, -beta, -alpha, ply + 1, context, child_pv);
         } else {
-            score = -negamax(position, depth - 1, -alpha - 1, -alpha, ply + 1, context, child_pv);
+            const bool quiet = !move.has_flag(MoveFlag::Capture) &&
+                !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
+            const bool gives_check = in_check(position);
+            int reduction = 0;
+            if (depth >= 3 && move_count >= 3 && quiet && !checked && !gives_check) {
+                reduction = 1;
+                if (depth >= 5 && move_count >= 6) {
+                    ++reduction;
+                }
+                if (depth >= 8 && move_count >= 12) ++reduction;
+            }
+            score = -negamax(
+                position,
+                depth - 1 - reduction,
+                -alpha - 1,
+                -alpha,
+                ply + 1,
+                context,
+                child_pv);
+            if (!context.stopped && reduction > 0 && score > alpha) {
+                score = -negamax(
+                    position,
+                    depth - 1,
+                    -alpha - 1,
+                    -alpha,
+                    ply + 1,
+                    context,
+                    child_pv);
+            }
             if (!context.stopped && score > alpha && score < beta) {
                 score = -negamax(position, depth - 1, -beta, -alpha, ply + 1, context, child_pv);
             }
