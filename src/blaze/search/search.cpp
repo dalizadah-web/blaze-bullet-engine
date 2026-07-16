@@ -8,6 +8,7 @@
 #include <bit>
 #include <utility>
 #include <vector>
+#include <thread>
 
 namespace blaze {
 namespace {
@@ -120,6 +121,9 @@ SearchResult Searcher::search(
     const SearchLimits& limits,
     const std::atomic<bool>* external_stop,
     const std::vector<std::uint64_t>& prior_keys) {
+    if (limits.threads > 1) {
+        return search_parallel(position, limits, external_stop, prior_keys);
+    }
     killers_ = {};
     history_ = {};
 
@@ -187,6 +191,147 @@ SearchResult Searcher::search(
 
     result.nodes = context.nodes;
     result.stopped = context.stopped;
+    return result;
+}
+
+SearchResult Searcher::search_parallel(
+    Position position,
+    const SearchLimits& limits,
+    const std::atomic<bool>* external_stop,
+    const std::vector<std::uint64_t>& prior_keys) {
+    MoveList generated_moves;
+    generate_legal(position, generated_moves);
+    MoveList legal_moves;
+    if (limits.search_moves.empty()) {
+        legal_moves = generated_moves;
+    } else {
+        for (const Move requested : limits.search_moves) {
+            for (const Move legal : generated_moves) {
+                if (legal.from() == requested.from() && legal.to() == requested.to() &&
+                    legal.promotion() == requested.promotion()) {
+                    legal_moves.push(legal);
+                    break;
+                }
+            }
+        }
+    }
+
+    SearchResult result;
+    if (legal_moves.empty()) {
+        result.score = in_check(position) ? -search_mate_score : 0;
+        return result;
+    }
+    result.best_move = legal_moves[0];
+    result.pv = {result.best_move};
+    if (position.rule50() >= 100) {
+        return result;
+    }
+    if (external_stop != nullptr && external_stop->load(std::memory_order_relaxed)) {
+        result.stopped = true;
+        return result;
+    }
+
+    const int maximum_depth = limits.depth > 0 ? limits.depth : 64;
+    std::atomic<bool> parallel_stop = false;
+    for (int depth = 1; depth <= maximum_depth; ++depth) {
+        if (external_stop != nullptr && external_stop->load(std::memory_order_relaxed)) {
+            result.stopped = true;
+            break;
+        }
+        if (depth == 1) {
+            result.depth = 1;
+            result.score = evaluate(position);
+            continue;
+        }
+
+        struct TaskResult {
+            Move move;
+            int score = -infinity;
+            std::uint64_t nodes = 0;
+            std::vector<Move> pv;
+            bool complete = false;
+        };
+        std::vector<TaskResult> tasks(legal_moves.size());
+        for (std::size_t index = 0; index < legal_moves.size(); ++index) {
+            tasks[index].move = legal_moves[index];
+        }
+        std::atomic<std::size_t> next_task = 0;
+        const unsigned worker_count = std::min<unsigned>(
+            static_cast<unsigned>(limits.threads),
+            static_cast<unsigned>(legal_moves.size()));
+        std::vector<std::thread> workers;
+        workers.reserve(worker_count);
+        for (unsigned worker_index = 0; worker_index < worker_count; ++worker_index) {
+            workers.emplace_back([&, depth] {
+                while (!parallel_stop.load(std::memory_order_relaxed)) {
+                    if (external_stop != nullptr && external_stop->load(std::memory_order_relaxed)) {
+                        parallel_stop.store(true, std::memory_order_relaxed);
+                        break;
+                    }
+                    const std::size_t index = next_task.fetch_add(1, std::memory_order_relaxed);
+                    if (index >= tasks.size()) {
+                        break;
+                    }
+                    Position child = position;
+                    StateInfo state;
+                    const Move root_move = tasks[index].move;
+                    if (!child.make_move(root_move, state)) {
+                        continue;
+                    }
+                    SearchLimits child_limits = limits;
+                    child_limits.threads = 1;
+                    child_limits.depth = depth - 1;
+                    child_limits.search_moves.clear();
+                    if (limits.nodes > 0) {
+                        child_limits.nodes = limits.nodes / tasks.size() + 1;
+                    }
+                    std::vector<std::uint64_t> child_history = prior_keys;
+                    child_history.push_back(position.key());
+                    Searcher child_searcher(table_);
+                    const SearchResult child_result = child_searcher.search(
+                        child, child_limits, external_stop, child_history);
+                    TaskResult& task = tasks[index];
+                    task.score = -child_result.score;
+                    task.nodes = child_result.nodes;
+                    task.pv.push_back(root_move);
+                    task.pv.insert(task.pv.end(), child_result.pv.begin(), child_result.pv.end());
+                    task.complete = !child_result.stopped;
+                    if (child_result.stopped && external_stop != nullptr &&
+                        external_stop->load(std::memory_order_relaxed)) {
+                        parallel_stop.store(true, std::memory_order_relaxed);
+                    }
+                }
+            });
+        }
+        for (std::thread& worker : workers) {
+            worker.join();
+        }
+        if (external_stop != nullptr && external_stop->load(std::memory_order_relaxed)) {
+            result.stopped = true;
+            break;
+        }
+
+        const TaskResult* best = nullptr;
+        std::uint64_t searched_nodes = 0;
+        for (const TaskResult& task : tasks) {
+            searched_nodes += task.nodes;
+            if (task.complete && (best == nullptr || task.score > best->score)) {
+                best = &task;
+            }
+        }
+        result.nodes += searched_nodes;
+        if (best == nullptr) {
+            result.stopped = true;
+            break;
+        }
+        result.best_move = best->move;
+        result.score = best->score;
+        result.pv = best->pv;
+        result.depth = depth;
+        if (result.score >= search_mate_threshold || result.score <= -search_mate_threshold) {
+            break;
+        }
+    }
     return result;
 }
 

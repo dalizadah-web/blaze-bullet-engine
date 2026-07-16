@@ -36,6 +36,7 @@ private:
     std::vector<std::uint64_t> history_;
     std::thread worker_;
     std::atomic<bool> stop_requested_{false};
+    int threads_ = 1;
 
     void write_line(const std::string& line);
     void stop_search();

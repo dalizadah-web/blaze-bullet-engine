@@ -73,7 +73,7 @@ bool UciSession::process_line(std::string_view raw_line) {
         write_line("id name Blaze 0.1 clean-room");
         write_line("id author Blaze project");
         write_line("option name Hash type spin default 16 min 1 max 65536");
-        write_line("option name Threads type spin default 1 min 1 max 1");
+        write_line("option name Threads type spin default 1 min 1 max 8");
         write_line("option name Ponder type check default false");
         write_line("uciok");
         return true;
@@ -198,7 +198,16 @@ bool UciSession::set_option(std::string_view arguments) {
         return true;
     }
     if (tokens.size() == 4 && tokens[0] == "name" && tokens[1] == "Threads" &&
-        tokens[2] == "value" && tokens[3] == "1") {
+        tokens[2] == "value") {
+        int threads = 0;
+        const auto parsed = std::from_chars(tokens[3].data(), tokens[3].data() + tokens[3].size(), threads);
+        if (parsed.ec != std::errc{} || parsed.ptr != tokens[3].data() + tokens[3].size() ||
+            threads < 1 || threads > 8) {
+            write_line("info string Threads must be between 1 and 8");
+            return false;
+        }
+        stop_search();
+        threads_ = threads;
         return true;
     }
     if (tokens.size() == 4 && tokens[0] == "name" && tokens[1] == "Ponder" &&
@@ -219,7 +228,8 @@ bool UciSession::start_search(std::string_view arguments) {
 
     stop_search();
     const Position root = position_;
-    const SearchLimits limits = to_search_limits(*go, root.side_to_move());
+    SearchLimits limits = to_search_limits(*go, root.side_to_move());
+    limits.threads = threads_;
     if (!limits.search_moves.empty()) {
         MoveList legal;
         Position validation = root;

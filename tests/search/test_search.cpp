@@ -94,6 +94,20 @@ TEST_CASE(search_honors_root_searchmoves_restriction) {
     CHECK_EQ(result.pv.front(), limits.search_moves.front());
 }
 
+TEST_CASE(search_parallel_root_split_returns_a_legal_result) {
+    Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    TranspositionTable table(8);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 3};
+    limits.threads = 4;
+    const SearchResult result = searcher.search(root, limits);
+    CHECK(result.best_move.is_valid());
+    CHECK(root.is_legal(result.best_move));
+    CHECK(result.depth >= 1);
+    CHECK(result.nodes > 0);
+    CHECK(!result.stopped);
+}
+
 TEST_CASE(search_start_position_depth_five_stays_under_node_regression_budget) {
     Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     TranspositionTable table(8);

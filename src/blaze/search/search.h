@@ -19,6 +19,7 @@ struct SearchLimits {
     std::chrono::milliseconds move_time{0};
     int mate = 0;
     std::vector<Move> search_moves{};
+    int threads = 1;
 };
 
 struct SearchResult {
@@ -54,6 +55,12 @@ private:
     TranspositionTable& table_;
     std::array<std::array<Move, 2>, 128> killers_{};
     std::array<std::array<std::array<int, 64>, 64>, 2> history_{};
+
+    [[nodiscard]] SearchResult search_parallel(
+        Position position,
+        const SearchLimits& limits,
+        const std::atomic<bool>* external_stop,
+        const std::vector<std::uint64_t>& prior_keys);
 
     [[nodiscard]] int negamax(
         Position& position,
