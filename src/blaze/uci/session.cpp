@@ -1,6 +1,7 @@
 #include "blaze/uci/session.h"
 
 #include "blaze/core/movegen.h"
+#include "blaze/eval/network.h"
 #include "blaze/search/search.h"
 #include "blaze/uci/limits.h"
 
@@ -75,6 +76,8 @@ bool UciSession::process_line(std::string_view raw_line) {
         write_line("option name Hash type spin default 16 min 1 max 65536");
         write_line("option name Threads type spin default 1 min 1 max 8");
         write_line("option name Ponder type check default false");
+        write_line("option name UseNNUE type check default false");
+        write_line("option name EvalFile type string default <empty>");
         write_line("uciok");
         return true;
     }
@@ -214,6 +217,22 @@ bool UciSession::set_option(std::string_view arguments) {
         tokens[2] == "value" && (tokens[3] == "true" || tokens[3] == "false")) {
         return true;
     }
+    if (tokens.size() == 4 && tokens[0] == "name" && tokens[1] == "UseNNUE" &&
+        tokens[2] == "value" && (tokens[3] == "true" || tokens[3] == "false")) {
+        stop_search();
+        use_nnue_ = tokens[3] == "true";
+        return true;
+    }
+    if (tokens.size() >= 4 && tokens[0] == "name" && tokens[1] == "EvalFile" &&
+        tokens[2] == "value") {
+        stop_search();
+        eval_file_.clear();
+        for (std::size_t index = 3; index < tokens.size(); ++index) {
+            if (!eval_file_.empty()) eval_file_.push_back(' ');
+            eval_file_ += tokens[index];
+        }
+        return true;
+    }
     write_line("info string unsupported setoption");
     return false;
 }
@@ -228,6 +247,14 @@ bool UciSession::start_search(std::string_view arguments) {
 
     stop_search();
     const Position root = position_;
+    if (use_nnue_) {
+        std::string error;
+        if (!NetworkLoader::load(eval_file_, error)) {
+            write_line("info string critical NNUE unavailable: " + error);
+            write_line("bestmove 0000");
+            return false;
+        }
+    }
     SearchLimits limits = to_search_limits(*go, root.side_to_move());
     limits.threads = threads_;
     if (!limits.search_moves.empty()) {

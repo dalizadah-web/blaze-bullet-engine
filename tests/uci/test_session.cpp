@@ -26,8 +26,19 @@ TEST_CASE(uci_handshake_and_readiness_are_reported) {
     CHECK(transcript.find("id name Blaze") != std::string::npos);
     CHECK(transcript.find("option name Hash type spin") != std::string::npos);
     CHECK(transcript.find("option name Threads type spin default 1 min 1 max 8") != std::string::npos);
+    CHECK(transcript.find("option name UseNNUE type check default false") != std::string::npos);
     CHECK(transcript.find("uciok") != std::string::npos);
     CHECK(transcript.find("readyok") != std::string::npos);
+}
+
+TEST_CASE(required_nnue_reports_critical_failure_instead_of_playing_fallback) {
+    std::ostringstream output;
+    UciSession session(output);
+    CHECK(session.process_line("setoption name UseNNUE value true"));
+    CHECK(session.process_line("position startpos"));
+    CHECK(!session.process_line("go depth 1"));
+    CHECK(output.str().find("info string critical NNUE unavailable") != std::string::npos);
+    CHECK(output.str().find("bestmove 0000") != std::string::npos);
 }
 
 TEST_CASE(threads_option_is_accepted_and_starts_parallel_search) {

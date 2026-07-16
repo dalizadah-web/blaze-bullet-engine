@@ -37,6 +37,8 @@ private:
     std::thread worker_;
     std::atomic<bool> stop_requested_{false};
     int threads_ = 1;
+    bool use_nnue_ = false;
+    std::string eval_file_;
 
     void write_line(const std::string& line);
     void stop_search();
