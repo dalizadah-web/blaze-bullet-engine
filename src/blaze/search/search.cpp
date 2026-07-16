@@ -456,13 +456,14 @@ int Searcher::negamax(
         ++legal_count;
         context.keys.push_back(position.key());
         std::vector<Move> child_pv;
+        const bool gives_check = in_check(position);
+        const int full_depth = depth - 1 + (gives_check ? 1 : 0);
         int score = 0;
         if (move_count == 0) {
-            score = -negamax(position, depth - 1, -beta, -alpha, ply + 1, context, child_pv);
+            score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
         } else {
             const bool quiet = !move.has_flag(MoveFlag::Capture) &&
                 !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
-            const bool gives_check = in_check(position);
             int reduction = 0;
             if (depth >= 3 && move_count >= 3 && quiet && !checked && !gives_check) {
                 reduction = 1;
@@ -473,7 +474,7 @@ int Searcher::negamax(
             }
             score = -negamax(
                 position,
-                depth - 1 - reduction,
+                full_depth - reduction,
                 -alpha - 1,
                 -alpha,
                 ply + 1,
@@ -482,7 +483,7 @@ int Searcher::negamax(
             if (!context.stopped && reduction > 0 && score > alpha) {
                 score = -negamax(
                     position,
-                    depth - 1,
+                    full_depth,
                     -alpha - 1,
                     -alpha,
                     ply + 1,
@@ -490,7 +491,7 @@ int Searcher::negamax(
                     child_pv);
             }
             if (!context.stopped && score > alpha && score < beta) {
-                score = -negamax(position, depth - 1, -beta, -alpha, ply + 1, context, child_pv);
+                score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
             }
         }
         ++move_count;
