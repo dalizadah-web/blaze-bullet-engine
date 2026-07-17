@@ -62,8 +62,12 @@ jobs:
     outputs:
       matrix: ${{ steps.spec.outputs.matrix }}
       experiment_id: ${{ steps.spec.outputs.experiment_id }}
+      candidate_commit: ${{ steps.spec.outputs.candidate_commit }}
+      baseline_commit: ${{ steps.spec.outputs.baseline_commit }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
@@ -86,6 +90,7 @@ jobs:
             --time-control '${{ inputs.time_control }}' \
             --threads '${{ inputs.threads }}' \
             --hash-mb '${{ inputs.hash_mb }}' \
+            --repo-root . \
             --elo0 '${{ inputs.elo0 }}' \
             --elo1 '${{ inputs.elo1 }}' \
             --github-output "$GITHUB_OUTPUT"
@@ -107,12 +112,12 @@ jobs:
       - name: Checkout candidate
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.candidate_ref }}
+          ref: ${{ needs.prepare.outputs.candidate_commit }}
           path: candidate-src
       - name: Checkout baseline
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.baseline_ref }}
+          ref: ${{ needs.prepare.outputs.baseline_commit }}
           path: baseline-src
       - uses: actions/download-artifact@v4
         with:
@@ -161,6 +166,31 @@ jobs:
           shutil.copy2(source, destination)
           PY
           git -C candidate-src rev-parse HEAD > bundle/candidate-commit.txt
+          git -C baseline-src rev-parse HEAD > bundle/baseline-commit.txt
+          candidate_sha256="$(sha256sum bundle/candidate | awk '{print $1}')"
+          baseline_sha256="$(sha256sum bundle/baseline | awk '{print $1}')"
+          candidate_commit="$(cat bundle/candidate-commit.txt)"
+          baseline_commit="$(cat bundle/baseline-commit.txt)"
+          CANDIDATE_SHA256="$candidate_sha256" BASELINE_SHA256="$baseline_sha256" \
+            CANDIDATE_COMMIT="$candidate_commit" BASELINE_COMMIT="$baseline_commit" \
+            PYTHONPATH=farm-src python - <<'PY'
+          import os
+          from pathlib import Path
+          from tools.cloud_match.prepare import finalize_frozen_spec
+          from tools.cloud_match.spec import CloudMatchSpec
+
+          path = Path("bundle/spec.json")
+          prepared = CloudMatchSpec.from_json(path)
+          if prepared.candidate_commit != os.environ["CANDIDATE_COMMIT"]:
+              raise SystemExit("candidate checkout does not match prepared commit")
+          if prepared.baseline_commit != os.environ["BASELINE_COMMIT"]:
+              raise SystemExit("baseline checkout does not match prepared commit")
+          finalize_frozen_spec(
+              path,
+              candidate_sha256=os.environ["CANDIDATE_SHA256"],
+              baseline_sha256=os.environ["BASELINE_SHA256"],
+          )
+          PY
           chmod +x bundle/candidate bundle/baseline bundle/cutechess-cli
           tar -czf frozen-match.tar.gz -C bundle .
       - name: Verify frozen artifact hashes
@@ -169,6 +199,12 @@ jobs:
         with:
           name: frozen-match-${{ needs.prepare.outputs.experiment_id }}
           path: frozen-match.tar.gz
+          retention-days: 30
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: finalized-match-spec-${{ needs.prepare.outputs.experiment_id }}
+          path: bundle/spec.json
           retention-days: 30
           if-no-files-found: error
 
@@ -216,7 +252,7 @@ jobs:
 
   aggregate:
     if: ${{ always() && needs.shards.result == 'success' }}
-    needs: [prepare, shards]
+    needs: [prepare, build, shards]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -228,8 +264,8 @@ jobs:
       - run: pip install -r tools/cloud_match/requirements.txt
       - uses: actions/download-artifact@v4
         with:
-          name: match-spec-${{ needs.prepare.outputs.experiment_id }}
-          path: prepared
+          name: finalized-match-spec-${{ needs.prepare.outputs.experiment_id }}
+          path: finalized
       - uses: actions/download-artifact@v4
         with:
           pattern: shard-${{ needs.prepare.outputs.experiment_id }}-*
@@ -239,7 +275,7 @@ jobs:
         run: |
           mapfile -t manifests < <(find downloaded-shards -name shard.json -type f | sort)
           python -m tools.cloud_match.aggregate \
-            --spec prepared/spec.json \
+            --spec finalized/spec.json \
             --shards "${manifests[@]}" \
             --output summary
           cat summary/summary.md >> "$GITHUB_STEP_SUMMARY"

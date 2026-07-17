@@ -25,8 +25,8 @@ class AggregateShardsTests(unittest.TestCase):
                     "baseline_ref": "baseline",
                     "candidate_commit": _COMMIT_C,
                     "baseline_commit": _COMMIT_D,
-                    "candidate_sha256": "",
-                    "baseline_sha256": "",
+                    "candidate_sha256": "a" * 64,
+                    "baseline_sha256": "b" * 64,
                     "games": 8,
                     "shards": 2,
                     "concurrency": 2,
@@ -124,7 +124,7 @@ class AggregateShardsTests(unittest.TestCase):
         payload["candidate_commit"] = "f" * 40
         second.write_text(json.dumps(payload), encoding="utf-8")
 
-        with self.assertRaisesRegex(ValueError, "inconsistent candidate_commit across shards"):
+        with self.assertRaisesRegex(ValueError, "candidate_commit does not match frozen spec"):
             aggregate_shards([first, second], self.spec)
 
     def test_rejects_mismatched_baseline_sha256(self) -> None:
@@ -134,7 +134,29 @@ class AggregateShardsTests(unittest.TestCase):
         payload["baseline_sha256"] = "f" * 64
         second.write_text(json.dumps(payload), encoding="utf-8")
 
-        with self.assertRaisesRegex(ValueError, "inconsistent baseline_sha256 across shards"):
+        with self.assertRaisesRegex(ValueError, "baseline_sha256 does not match frozen spec"):
+            aggregate_shards([first, second], self.spec)
+
+    def test_rejects_consistent_candidate_hash_that_differs_from_frozen_spec(self) -> None:
+        first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        second = self._write_shard(1, {"wins2": 0, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 2})
+        for manifest in (first, second):
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+            payload["candidate_sha256"] = "f" * 64
+            manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+        with self.assertRaisesRegex(ValueError, "candidate_sha256 does not match frozen spec"):
+            aggregate_shards([first, second], self.spec)
+
+    def test_rejects_consistent_candidate_commit_that_differs_from_frozen_spec(self) -> None:
+        first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        second = self._write_shard(1, {"wins2": 0, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 2})
+        for manifest in (first, second):
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+            payload["candidate_commit"] = "f" * 40
+            manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+        with self.assertRaisesRegex(ValueError, "candidate_commit does not match frozen spec"):
             aggregate_shards([first, second], self.spec)
 
     def test_rejects_duplicate_shard_index(self) -> None:

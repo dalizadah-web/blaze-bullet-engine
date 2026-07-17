@@ -29,8 +29,8 @@ def _base_payload() -> dict[str, object]:
         "baseline_ref": "e5d7f7b",
         "candidate_commit": _COMMIT_C,
         "baseline_commit": _COMMIT_D,
-        "candidate_sha256": "",
-        "baseline_sha256": "",
+        "candidate_sha256": "a" * 64,
+        "baseline_sha256": "b" * 64,
         "games": 8,
         "shards": 2,
         "concurrency": 2,
@@ -117,7 +117,7 @@ class ExperimentIdentityPoolingTests(unittest.TestCase):
                                 "a" * 64, spec.opening_sha256)
         second = _shard_manifest(spec, 1, spec.candidate_commit,
                                   "e" * 64, spec.opening_sha256)
-        with self.assertRaisesRegex(ValueError, "inconsistent candidate_sha256"):
+        with self.assertRaisesRegex(ValueError, "candidate_sha256 does not match frozen spec"):
             aggregate_shards([first, second], spec)
 
     def test_mismatched_opening_hash_cannot_pool(self) -> None:

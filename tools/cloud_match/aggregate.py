@@ -49,6 +49,7 @@ def _validated_counts(raw: Any, path: Path) -> Pentanomial:
 def aggregate_shards(
     manifest_paths: Iterable[Path | str], spec: CloudMatchSpec
 ) -> dict[str, Any]:
+    spec.validate_frozen()
     paths = [Path(path).resolve() for path in manifest_paths]
     if len(paths) != spec.shards:
         raise ValueError(
@@ -108,6 +109,8 @@ def aggregate_shards(
             value = raw.get(key)
             if not isinstance(value, str) or not _GIT_SHA1.fullmatch(value):
                 raise ValueError(f"invalid {key} in {path}")
+            if value != getattr(spec, key):
+                raise ValueError(f"{key} does not match frozen spec in {path}")
             previous = common_hashes.setdefault(key, value)
             if previous != value:
                 raise ValueError(f"inconsistent {key} across shards")
@@ -115,6 +118,8 @@ def aggregate_shards(
             value = raw.get(key)
             if not isinstance(value, str) or not _SHA256.fullmatch(value):
                 raise ValueError(f"invalid {key} in {path}")
+            if key in ("candidate_sha256", "baseline_sha256") and value != getattr(spec, key):
+                raise ValueError(f"{key} does not match frozen spec in {path}")
             if key == "openings_sha256" and value != spec.opening_sha256:
                 raise ValueError(f"opening artifact mismatch in {path}")
             previous = common_hashes.setdefault(key, value)

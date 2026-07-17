@@ -132,6 +132,8 @@ def main() -> int:
         with args.github_output.open("a", encoding="utf-8") as stream:
             stream.write(f"matrix={encoded}\n")
             stream.write(f"experiment_id={spec.experiment_id()}\n")
+            stream.write(f"candidate_commit={spec.candidate_commit}\n")
+            stream.write(f"baseline_commit={spec.baseline_commit}\n")
     print(encoded)
     return 0
 
