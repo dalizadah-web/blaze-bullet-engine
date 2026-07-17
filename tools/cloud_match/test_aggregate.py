@@ -19,6 +19,10 @@ class AggregateShardsTests(unittest.TestCase):
                     "name": "test",
                     "candidate_ref": "candidate",
                     "baseline_ref": "baseline",
+                    "candidate_commit": "c" * 64,
+                    "baseline_commit": "d" * 64,
+                    "candidate_sha256": "a" * 64,
+                    "baseline_sha256": "b" * 64,
                     "games": 8,
                     "shards": 2,
                     "concurrency": 2,
@@ -47,6 +51,8 @@ class AggregateShardsTests(unittest.TestCase):
             "experiment_id": self.spec.experiment_id(),
             "shard_index": index,
             "shard_count": 2,
+            "candidate_commit": "c" * 64,
+            "baseline_commit": "d" * 64,
             "candidate_sha256": "a" * 64,
             "baseline_sha256": "b" * 64,
             "openings_sha256": "c" * 64,
@@ -106,6 +112,59 @@ class AggregateShardsTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "expected 2 shard manifests"):
             aggregate_shards([first], self.spec)
+
+    def test_rejects_mismatched_candidate_commit(self) -> None:
+        first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        second = self._write_shard(1, {"wins2": 0, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 2})
+        payload = json.loads(second.read_text(encoding="utf-8"))
+        payload["candidate_commit"] = "a" * 64
+        second.write_text(json.dumps(payload), encoding="utf-8")
+
+        with self.assertRaisesRegex(ValueError, "inconsistent candidate_commit across shards"):
+            aggregate_shards([first, second], self.spec)
+
+    def test_rejects_mismatched_baseline_sha256(self) -> None:
+        first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        second = self._write_shard(1, {"wins2": 0, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 2})
+        payload = json.loads(second.read_text(encoding="utf-8"))
+        payload["baseline_sha256"] = "f" * 64
+        second.write_text(json.dumps(payload), encoding="utf-8")
+
+        with self.assertRaisesRegex(ValueError, "inconsistent baseline_sha256 across shards"):
+            aggregate_shards([first, second], self.spec)
+
+    def test_rejects_duplicate_shard_index(self) -> None:
+        first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        second_dir = self.root / "shard-dup0"
+        second_dir.mkdir()
+        (second_dir / "games.pgn").write_text("pgn", encoding="utf-8")
+        pair_indexes = [0, 2]
+        payload = {
+            "schema_version": 1,
+            "experiment_id": self.spec.experiment_id(),
+            "shard_index": 0,
+            "shard_count": 2,
+            "candidate_commit": "c" * 64,
+            "baseline_commit": "d" * 64,
+            "candidate_sha256": "a" * 64,
+            "baseline_sha256": "b" * 64,
+            "openings_sha256": "c" * 64,
+            "runner_sha256": "d" * 64,
+            "expected_games": 4,
+            "pair_indexes": pair_indexes,
+            "game_ids": [
+                f"{self.spec.experiment_id()}-p{pair:06d}-w" for pair in pair_indexes
+            ] + [
+                f"{self.spec.experiment_id()}-p{pair:06d}-b" for pair in pair_indexes
+            ],
+            "counts": {"wins2": 0, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 2},
+            "pgn": "games.pgn",
+        }
+        second = second_dir / "shard.json"
+        second.write_text(json.dumps(payload), encoding="utf-8")
+
+        with self.assertRaisesRegex(ValueError, "duplicate shard index"):
+            aggregate_shards([first, second], self.spec)
 
 
 if __name__ == "__main__":

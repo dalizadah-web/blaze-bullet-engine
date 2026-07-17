@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "name": "aa50f42-vs-e5d7f7b",
+  "candidate_ref": "aa50f42331323ec06c05b4f5aa4d04437e3d57b9",
+  "baseline_ref": "e5d7f7b",
+  "candidate_commit": "aa50f42331323ec06c05b4f5aa4d04437e3d57b9",
+  "baseline_commit": "e5d7f7b43b2629492e20439734f6bf446d19d807",
+  "candidate_sha256": "",
+  "baseline_sha256": "",
+  "games": 8,
+  "shards": 2,
+  "concurrency": 2,
+  "time_control": "2+1",
+  "threads": 1,
+  "hash_mb": 16,
+  "openings": "testdata/openings/smoke-v1.epd",
+  "opening_sha256": "2c3ba57f3306350614f12c07ed55de3a8c4598ff56d16a2a6213acc04eff06f0",
+  "sprt": {
+    "elo0": 0.0,
+    "elo1": 5.0,
+    "alpha": 0.05,
+    "beta": 0.05
+  }
+}

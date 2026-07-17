@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 
 
 _SHA256 = re.compile(r"^[0-9a-fA-F]{64}$")
@@ -27,6 +28,10 @@ class CloudMatchSpec:
     name: str
     candidate_ref: str
     baseline_ref: str
+    candidate_commit: str
+    baseline_commit: str
+    candidate_sha256: str
+    baseline_sha256: str
     games: int
     shards: int
     concurrency: int
@@ -50,6 +55,10 @@ class CloudMatchSpec:
             name=str(raw.get("name", "")).strip(),
             candidate_ref=str(raw.get("candidate_ref", "")).strip(),
             baseline_ref=str(raw.get("baseline_ref", "")).strip(),
+            candidate_commit=str(raw.get("candidate_commit", "")).lower(),
+            baseline_commit=str(raw.get("baseline_commit", "")).lower(),
+            candidate_sha256=str(raw.get("candidate_sha256", "")).lower(),
+            baseline_sha256=str(raw.get("baseline_sha256", "")).lower(),
             games=raw.get("games"),
             shards=raw.get("shards"),
             concurrency=raw.get("concurrency"),
@@ -71,6 +80,14 @@ class CloudMatchSpec:
     def validate(self) -> None:
         if not self.name or not self.candidate_ref or not self.baseline_ref:
             raise ValueError("name, candidate_ref, and baseline_ref are required")
+        if not _SHA256.fullmatch(self.candidate_commit):
+            raise ValueError("candidate_commit must be a full SHA-256 digest")
+        if not _SHA256.fullmatch(self.baseline_commit):
+            raise ValueError("baseline_commit must be a full SHA-256 digest")
+        if not _SHA256.fullmatch(self.candidate_sha256):
+            raise ValueError("candidate_sha256 must be a SHA-256 digest")
+        if not _SHA256.fullmatch(self.baseline_sha256):
+            raise ValueError("baseline_sha256 must be a SHA-256 digest")
         if not isinstance(self.games, int) or self.games <= 0 or self.games % 2:
             raise ValueError("games must be a positive even number")
         if not isinstance(self.shards, int) or not 1 <= self.shards <= 20:
@@ -94,6 +111,30 @@ class CloudMatchSpec:
 
     def canonical_json(self) -> str:
         return json.dumps(asdict(self), sort_keys=True, separators=(",", ":"))
+
+    def resolve_commits(self, repo_root: Path | str) -> tuple[str, str, str, str]:
+        repo = Path(repo_root)
+        refs = (self.candidate_ref, self.baseline_ref)
+        commits = []
+        for ref in refs:
+            command = ["git", "-C", str(repo), "rev-parse", ref]
+            completed = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+            if completed.returncode != 0:
+                raise ValueError(f"cannot resolve ref {ref}: {completed.stderr.strip()}")
+            commits.append(completed.stdout.strip())
+        return (
+            commits[0],
+            commits[1],
+            f"sha256:{self.candidate_sha256}" if self.candidate_sha256 else "",
+            f"sha256:{self.baseline_sha256}" if self.baseline_sha256 else "",
+        )
 
     def experiment_id(self) -> str:
         return hashlib.sha256(self.canonical_json().encode("utf-8")).hexdigest()[:24]

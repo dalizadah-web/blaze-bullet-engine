@@ -97,6 +97,8 @@ def aggregate_shards(
         seen_game_ids.update(game_ids)
 
         for key in (
+            "candidate_commit",
+            "baseline_commit",
             "candidate_sha256",
             "baseline_sha256",
             "openings_sha256",
