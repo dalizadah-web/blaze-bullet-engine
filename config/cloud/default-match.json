@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "name": "blaze-cloud-regression",
+  "candidate_ref": "codex/bullet-beast",
+  "baseline_ref": "4d25363",
+  "games": 400,
+  "shards": 20,
+  "concurrency": 2,
+  "time_control": "0.5+0",
+  "threads": 1,
+  "hash_mb": 16,
+  "openings": "testdata/openings/smoke-v1.epd",
+  "opening_sha256": "2c3ba57f3306350614f12c07ed55de3a8c4598ff56d16a2a6213acc04eff06f0",
+  "sprt": {
+    "elo0": 0.0,
+    "elo1": 5.0,
+    "alpha": 0.05,
+    "beta": 0.05
+  }
+}
