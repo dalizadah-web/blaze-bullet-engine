@@ -53,6 +53,7 @@ def run_worker(
 ) -> dict[str, Any]:
     config_path = Path(spec_path).resolve()
     spec = CloudMatchSpec.from_json(config_path)
+    spec.validate_frozen()
     assigned_pairs = pair_indexes(spec.games, shard_index, spec.shards)
     if not assigned_pairs:
         raise ValueError(f"shard {shard_index} has no assigned pairs")
@@ -71,6 +72,10 @@ def run_worker(
     candidate_identity = ArtifactIdentity.from_path(candidate)
     baseline_identity = ArtifactIdentity.from_path(baseline)
     runner_identity = ArtifactIdentity.from_path(runner)
+    if candidate_identity.sha256 != spec.candidate_sha256:
+        raise ValueError("candidate binary SHA-256 does not match frozen spec")
+    if baseline_identity.sha256 != spec.baseline_sha256:
+        raise ValueError("baseline binary SHA-256 does not match frozen spec")
     match_spec = MatchSpec(
         schema_version=1,
         name=f"{spec.name}-shard-{shard_index:02d}",
