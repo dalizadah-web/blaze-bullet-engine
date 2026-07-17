@@ -22,20 +22,22 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 
 function Get-GitHubCli {
     $command = Get-Command gh -ErrorAction SilentlyContinue
-    if (-not $command) {
+    if ($command) {
+        $path = $command.Source
+    } else {
         $installed = Join-Path $env:ProgramFiles "GitHub CLI/gh.exe"
         if (Test-Path -LiteralPath $installed -PathType Leaf) {
-            $command = Get-Item -LiteralPath $installed
+            $path = $installed
         }
     }
-    if (-not $command) {
+    if (-not $path) {
         throw "GitHub CLI is required. Install it with: winget install --id GitHub.cli --exact --source winget"
     }
-    & $command.Source auth status 2>$null | Out-Null
+    & $path auth status 2>$null | Out-Null
     if ($LASTEXITCODE -ne 0) {
         throw "GitHub CLI is not signed in. Run: gh auth login --web"
     }
-    return $command.Source
+    return $path
 }
 
 function Resolve-Repo([string]$ExplicitRepo) {
