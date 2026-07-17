@@ -118,10 +118,26 @@ jobs:
         with:
           name: match-spec-${{ needs.prepare.outputs.experiment_id }}
           path: prepared
-      - name: Install compiler and frozen match runner
+      - name: Install compiler
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends g++ make cutechess
+          sudo apt-get install --yes --no-install-recommends g++ make
+      - name: Freeze official Cute Chess 1.5.1 runner
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 \
+            --output cutechess.AppImage \
+            https://github.com/cutechess/cutechess/releases/download/v1.5.1/Cute_Chess-1.5.1-x86_64.AppImage
+          echo 'd9448693e45bd57f1aeb32c46e94466894cd7cc5b6937effd285a02e871387b5  cutechess.AppImage' | sha256sum --check
+          chmod +x cutechess.AppImage
+          ./cutechess.AppImage --appimage-extract >/dev/null
+          runner="$(find squashfs-root -type f -name cutechess-cli -print -quit)"
+          test -n "$runner"
+          chmod +x "$runner"
+          mkdir -p bundle
+          mv squashfs-root bundle/cutechess-root
+          cp farm-src/tools/cloud_match/cutechess-appimage-wrapper.sh bundle/cutechess-cli
+          chmod +x bundle/cutechess-cli
       - name: Build candidate and baseline
         shell: bash
         run: |
@@ -130,7 +146,6 @@ jobs:
           make -C baseline-src -f Makefile.blaze blaze -j2
           cp candidate-src/build/blaze/blaze.exe bundle/candidate
           cp baseline-src/build/blaze/blaze.exe bundle/baseline
-          cp "$(command -v cutechess-cli)" bundle/cutechess-cli
           cp prepared/spec.json bundle/spec.json
           python - <<'PY'
           import json
