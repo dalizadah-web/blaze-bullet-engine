@@ -5,6 +5,7 @@
 #include "blaze/eval/classical.h"
 #include "blaze/eval/network.h"
 #include "blaze/search/pv_line.h"
+#include "blaze/search/selectivity.h"
 #include "blaze/search/stack.h"
 #include "blaze/search/transposition_table.h"
 
@@ -69,7 +70,10 @@ private:
     const NetworkEvaluator* network_ = nullptr;
     mutable std::array<EvalCacheEntry, 4096> eval_cache_{};
     std::array<std::array<Move, 64>, 64> countermoves_{};
-    std::array<std::array<std::array<int, 64>, 64>, 2> history_{};
+    std::array<MoveHistory, 2> history_{};
+    std::array<MoveHistory, 2> capture_history_{};
+    std::array<ContinuationHistory, 2> continuation_history_{};
+    std::array<std::array<int, 16'384>, 2> correction_history_{};
 
     [[nodiscard]] SearchResult search_parallel(
         Position position,
@@ -95,7 +99,8 @@ private:
         int ply,
         Context& context,
         PvLine& pv,
-        bool allow_null = true);
+        bool allow_null = true,
+        Move excluded_move = Move{});
     [[nodiscard]] int quiescence(
         Position& position,
         int alpha,

@@ -16,7 +16,7 @@ namespace {
 
 constexpr int infinity = search_mate_score + 1;
 constexpr int maximum_ply = 128;
-const std::array<std::array<int, 64>, 64> empty_history{};
+const MoveHistory empty_history{};
 
 bool has_non_pawn_material(const Position& position, Color color) {
     return (position.pieces(color, PieceType::Knight) |
@@ -61,8 +61,10 @@ int move_order_score(
     Move tt_move,
     Move first_killer,
     Move second_killer,
-    const std::array<std::array<int, 64>, 64>& history,
-    Move counter_move) {
+    const MoveHistory& history,
+    Move counter_move,
+    const MoveHistory& capture_history = empty_history,
+    const ContinuationSlice* continuation_history = nullptr) {
     if (tt_move.is_valid() && move == tt_move) {
         return 1'000'000;
     }
@@ -74,6 +76,8 @@ int move_order_score(
         const Piece attacker = position.piece_on(move.from());
         score += 100'000 + victim_value(victim) * 16 - victim_value(attacker);
         score += std::clamp(static_exchange_evaluation(position, move), -4'000, 4'000) / 8;
+        score += capture_history[static_cast<std::size_t>(square_index(move.from()))]
+                                [static_cast<std::size_t>(square_index(move.to()))] / 8;
     }
     if (move.has_flag(MoveFlag::Promotion)) {
         score += 80'000 + victim_value(make_piece(position.side_to_move(), move.promotion()));
@@ -88,6 +92,9 @@ int move_order_score(
         if (counter_move.is_valid() && move == counter_move) score += 85'000;
         score += history[static_cast<std::size_t>(square_index(move.from()))]
                         [static_cast<std::size_t>(square_index(move.to()))];
+        if (continuation_history != nullptr) {
+            score += (*continuation_history)[static_cast<std::size_t>(square_index(move.to()))];
+        }
     }
     return score;
 }
@@ -98,13 +105,16 @@ MoveList ordered_moves(
     Move tt_move,
     Move first_killer,
     Move second_killer,
-    const std::array<std::array<int, 64>, 64>& history,
-    Move counter_move = Move{}) {
+    const MoveHistory& history,
+    Move counter_move = Move{},
+    const MoveHistory& capture_history = empty_history,
+    const ContinuationSlice* continuation_history = nullptr) {
     MoveList result = list;
     std::array<int, MoveList::capacity> scores;
     for (std::size_t index = 0; index < result.size(); ++index) {
         scores[index] = move_order_score(
-            position, result[index], tt_move, first_killer, second_killer, history, counter_move);
+            position, result[index], tt_move, first_killer, second_killer, history, counter_move,
+            capture_history, continuation_history);
     }
     for (std::size_t index = 1; index < result.size(); ++index) {
         const Move move = result[index];
@@ -133,6 +143,9 @@ SearchResult Searcher::search(
     }
     countermoves_ = {};
     history_ = {};
+    capture_history_ = {};
+    continuation_history_ = {};
+    correction_history_ = {};
 
     MoveList generated_moves;
     generate_legal(position, generated_moves);
@@ -401,6 +414,9 @@ SearchResult Searcher::search_window(
     std::chrono::steady_clock::time_point start) {
     countermoves_ = {};
     history_ = {};
+    capture_history_ = {};
+    continuation_history_ = {};
+    correction_history_ = {};
 
     Context context;
     context.limits = limits;
@@ -431,7 +447,8 @@ int Searcher::negamax(
     int ply,
     Context& context,
     PvLine& pv,
-    bool allow_null) {
+    bool allow_null,
+    Move excluded_move) {
     pv.clear();
     if (depth <= 0) {
         return quiescence(position, alpha, beta, ply, context, pv);
@@ -476,7 +493,7 @@ int Searcher::negamax(
     const auto tt_hit = table_.probe(position.key(), ply);
     if (tt_hit) {
         tt_move = tt_hit->move;
-        if (tt_hit->depth >= depth) {
+        if (!excluded_move.is_valid() && tt_hit->depth >= depth) {
             if (tt_hit->bound == Bound::Exact ||
                 (tt_hit->bound == Bound::Lower && tt_hit->score >= beta) ||
                 (tt_hit->bound == Bound::Upper && tt_hit->score <= alpha)) {
@@ -485,13 +502,31 @@ int Searcher::negamax(
         }
     }
 
-    if (allow_null && depth >= 3 && !checked && position.rule50() < 99 &&
+    const bool pv_node = beta - alpha > 1;
+    const std::size_t color_index = static_cast<std::size_t>(position.side_to_move());
+    const std::size_t correction_index = static_cast<std::size_t>(position.key() & 16'383U);
+    const int raw_static_evaluation = evaluate_position(position);
+    const int static_evaluation = raw_static_evaluation +
+        correction_history_[color_index][correction_index] / 32;
+    context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_evaluation;
+    const bool improving = ply >= 2 &&
+        static_evaluation > context.stack[static_cast<std::size_t>(ply - 2)].static_evaluation;
+
+    if (!excluded_move.is_valid() && should_razor(depth, static_evaluation, alpha, pv_node, checked)) {
+        return quiescence(position, alpha, beta, ply, context, pv);
+    }
+    if (!excluded_move.is_valid() &&
+        should_reverse_futility(depth, static_evaluation, beta, pv_node, checked)) {
+        return static_evaluation;
+    }
+
+    if (allow_null && !excluded_move.is_valid() && !pv_node && depth >= 3 && !checked && position.rule50() < 99 &&
         beta < search_mate_threshold &&
         has_non_pawn_material(position, position.side_to_move())) {
         StateInfo null_state;
         position.make_null(null_state);
         PvLine null_pv;
-        const int reduction = depth >= 6 ? 3 : 2;
+        const int reduction = null_move_reduction(depth, static_evaluation, beta);
         context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
         const int null_score = -negamax(
             position,
@@ -507,11 +542,25 @@ int Searcher::negamax(
             return 0;
         }
         if (null_score >= beta) {
-            return null_score;
+            if (depth < 7) {
+                return null_score;
+            }
+            PvLine verification_pv;
+            const int verification_score = negamax(
+                position,
+                std::max(1, depth - reduction),
+                -beta,
+                -beta + 1,
+                ply,
+                context,
+                verification_pv,
+                false);
+            if (context.stopped) return 0;
+            if (verification_score >= beta) return verification_score;
         }
     }
 
-    if (depth >= 5 && !checked && beta < search_mate_threshold - 180) {
+    if (!excluded_move.is_valid() && depth >= 5 && !checked && beta < search_mate_threshold - 180) {
         constexpr int probcut_margin = 180;
         MoveList tactical_moves;
         generate_pseudo_legal(position, tactical_moves);
@@ -552,12 +601,14 @@ int Searcher::negamax(
     Move best_move;
     int best_score = -infinity;
     int legal_count = 0;
-    const std::size_t color_index = static_cast<std::size_t>(position.side_to_move());
     const Move previous_move = ply > 0
         ? context.stack[static_cast<std::size_t>(ply)].current_move
         : Move{};
     const Move first_killer = context.stack[static_cast<std::size_t>(ply)].killers[0];
     const Move second_killer = context.stack[static_cast<std::size_t>(ply)].killers[1];
+    ContinuationSlice* continuation = previous_move.is_valid()
+        ? &continuation_history_[color_index][static_cast<std::size_t>(square_index(previous_move.to()))]
+        : nullptr;
     int move_count = 0;
     for (const Move move : ordered_moves(
              position,
@@ -569,7 +620,28 @@ int Searcher::negamax(
              previous_move.is_valid()
                  ? countermoves_[square_index(previous_move.from())]
                      [square_index(previous_move.to())]
-                 : Move{})) {
+                 : Move{},
+             capture_history_[color_index],
+             continuation)) {
+        if (excluded_move.is_valid() && move == excluded_move) continue;
+        int singular_extension = 0;
+        if (move == tt_move && tt_hit && should_try_singular_extension(
+                depth, pv_node, tt_hit->depth, tt_hit->score, alpha)) {
+            const int singular_beta = tt_hit->score - 2 * depth;
+            PvLine alternative_pv;
+            const int alternative_score = negamax(
+                position,
+                std::max(1, depth / 2),
+                singular_beta - 1,
+                singular_beta,
+                ply,
+                context,
+                alternative_pv,
+                false,
+                move);
+            if (context.stopped) return 0;
+            if (alternative_score < singular_beta) singular_extension = 1;
+        }
         StateInfo state;
         if (!position.make_move(move, state)) {
             continue;
@@ -582,27 +654,48 @@ int Searcher::negamax(
         context.keys.push_back(position.key());
         PvLine child_pv;
         const bool gives_check = in_check(position);
+        const bool quiet = !move.has_flag(MoveFlag::Capture) &&
+            !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
+        const int move_history = history_[color_index]
+            [static_cast<std::size_t>(square_index(move.from()))]
+            [static_cast<std::size_t>(square_index(move.to()))] +
+            (continuation == nullptr ? 0 : (*continuation)
+                [static_cast<std::size_t>(square_index(move.to()))]);
+        if (!pv_node && quiet &&
+            (should_late_move_prune(depth, move_count, move_history, gives_check, false) ||
+             should_futility_prune(depth, static_evaluation, alpha, move_history, gives_check))) {
+            ++move_count;
+            context.keys.pop_back();
+            position.unmake_move(move, state);
+            continue;
+        }
         const bool recaptures = previous_move.is_valid() &&
             previous_move.to() == move.to() &&
             (previous_move.has_flag(MoveFlag::Capture) ||
              previous_move.has_flag(MoveFlag::EnPassant)) &&
             (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant));
-        const int full_depth = depth - 1 + (gives_check ? 1 : 0) + (recaptures ? 1 : 0);
+        const int requested_extension = (gives_check ? 1 : 0) + (recaptures ? 1 : 0) +
+            singular_extension;
+        const int parent_extensions = context.stack[static_cast<std::size_t>(ply)].extension_count;
+        const int extension = std::min(requested_extension, std::max(0, 2 - parent_extensions));
+        const int full_depth = depth - 1 + extension;
         int score = 0;
         context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
+        context.stack[static_cast<std::size_t>(ply + 1)].extension_count =
+            parent_extensions + extension;
         if (move_count == 0) {
             score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
         } else {
-            const bool quiet = !move.has_flag(MoveFlag::Capture) &&
-                !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
-            int reduction = 0;
-            if (depth >= 3 && move_count >= 3 && quiet && !checked && !gives_check) {
-                reduction = 1;
-                if (depth >= 5 && move_count >= 6) {
-                    ++reduction;
-                }
-                if (depth >= 8 && move_count >= 12) ++reduction;
-            }
+            const int reduction = quiet && !checked
+                ? late_move_reduction(SelectivityFeatures{
+                    .depth = depth,
+                    .move_count = move_count,
+                    .pv_node = pv_node,
+                    .improving = improving,
+                    .history = move_history,
+                    .gives_check = gives_check,
+                    .expected_cutoff = tt_hit && tt_hit->bound == Bound::Lower})
+                : 0;
             score = -negamax(
                 position,
                 full_depth - reduction,
@@ -641,8 +734,6 @@ int Searcher::negamax(
             pv.prepend(move, child_pv);
         }
         if (alpha >= beta) {
-            const bool quiet = !move.has_flag(MoveFlag::Capture) &&
-                !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
             if (quiet) {
                 auto& killers = context.stack[static_cast<std::size_t>(ply)].killers;
                 if (move != killers[0]) {
@@ -653,16 +744,28 @@ int Searcher::negamax(
                     [static_cast<std::size_t>(square_index(move.from()))]
                     [static_cast<std::size_t>(square_index(move.to()))];
                 history = std::min(history + depth * depth * 16, 80'000);
+                if (continuation != nullptr) {
+                    int& continuation_score = (*continuation)
+                        [static_cast<std::size_t>(square_index(move.to()))];
+                    continuation_score = std::min(
+                        continuation_score + depth * depth * 8, 50'000);
+                }
                 if (previous_move.is_valid()) {
                     countermoves_[square_index(previous_move.from())]
                         [square_index(previous_move.to())] = move;
                 }
+            } else {
+                int& capture_score = capture_history_[color_index]
+                    [static_cast<std::size_t>(square_index(move.from()))]
+                    [static_cast<std::size_t>(square_index(move.to()))];
+                capture_score = std::min(capture_score + depth * depth * 8, 50'000);
             }
             break;
         }
     }
 
     if (legal_count == 0) {
+        if (excluded_move.is_valid()) return alpha;
         return checked ? -search_mate_score + ply : 0;
     }
 
@@ -671,6 +774,11 @@ int Searcher::negamax(
         bound = Bound::Upper;
     } else if (best_score >= beta) {
         bound = Bound::Lower;
+    }
+    if (best_score > -search_mate_threshold && best_score < search_mate_threshold) {
+        const int error = std::clamp(best_score - raw_static_evaluation, -1'024, 1'024);
+        int& correction = correction_history_[color_index][correction_index];
+        correction = std::clamp(correction + error * 4, -32'000, 32'000);
     }
     table_.store(position.key(), best_move, best_score, depth, bound, ply);
     return best_score;
@@ -694,7 +802,6 @@ int Searcher::quiescence(
     if (ply >= maximum_ply) {
         return evaluate_position(position);
     }
-
     const bool checked = in_check(position);
     MoveList legal_moves;
     generate_pseudo_legal(
@@ -714,20 +821,41 @@ int Searcher::quiescence(
             ? 0
             : -search_mate_score + ply;
     }
+    Move tt_move;
+    const auto tt_hit = table_.probe(position.key(), ply);
+    if (tt_hit) {
+        tt_move = tt_hit->move;
+        if (tt_hit->depth >= 0 &&
+            (tt_hit->bound == Bound::Exact ||
+             (tt_hit->bound == Bound::Lower && tt_hit->score >= beta) ||
+             (tt_hit->bound == Bound::Upper && tt_hit->score <= alpha))) {
+            return tt_hit->score;
+        }
+    }
+    const int original_alpha = alpha;
     int stand_pat = -infinity;
     if (!checked) {
         stand_pat = evaluate_position(position);
         if (stand_pat >= beta) {
+            table_.store(position.key(), tt_move, stand_pat, 0, Bound::Lower, ply);
             return stand_pat;
         }
         alpha = std::max(alpha, stand_pat);
     }
 
     int legal_count = 0;
+    Move best_move;
     for (const Move move : ordered_moves(
-             position, legal_moves, Move{}, Move{}, Move{}, empty_history)) {
+             position, legal_moves, tt_move, Move{}, Move{}, empty_history)) {
         if (!checked && !move.has_flag(MoveFlag::Capture) &&
             !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion)) {
+            continue;
+        }
+        const bool tactical = move.has_flag(MoveFlag::Capture) ||
+            move.has_flag(MoveFlag::EnPassant) || move.has_flag(MoveFlag::Promotion);
+        const int see = tactical ? static_exchange_evaluation(position, move) : 0;
+        if (!checked && tactical && !move.has_flag(MoveFlag::Promotion) &&
+            stand_pat + std::max(0, see) + quiescence_delta_margin(ply) < alpha) {
             continue;
         }
         StateInfo state;
@@ -735,6 +863,11 @@ int Searcher::quiescence(
             continue;
         }
         if (!king_is_safe_after_move(position, opposite(position.side_to_move()))) {
+            position.unmake_move(move, state);
+            continue;
+        }
+        const bool gives_check = in_check(position);
+        if (!checked && tactical && !gives_check && !move.has_flag(MoveFlag::Promotion) && see < 0) {
             position.unmake_move(move, state);
             continue;
         }
@@ -749,8 +882,10 @@ int Searcher::quiescence(
         }
         if (score > alpha) {
             alpha = score;
+            best_move = move;
             pv.prepend(move, child_pv);
             if (alpha >= beta) {
+                table_.store(position.key(), best_move, alpha, 0, Bound::Lower, ply);
                 break;
             }
         }
@@ -758,6 +893,8 @@ int Searcher::quiescence(
     if (checked && legal_count == 0) {
         return -search_mate_score + ply;
     }
+    const Bound bound = alpha <= original_alpha ? Bound::Upper : Bound::Exact;
+    table_.store(position.key(), best_move, alpha, 0, bound, ply);
     return alpha;
 }
 
