@@ -7,6 +7,19 @@ from tools.experiment.pentanomial import (
 )
 
 
+def score_percentage(counts: Pentanomial) -> float:
+    pairs = counts.pairs
+    if pairs <= 0:
+        return 0.0
+    numerator = (
+        counts.wins2 * 2
+        + counts.wins1_draw1 * 1.5
+        + counts.draws2 * 1.0
+        + counts.losses1_draw1 * 0.5
+    )
+    return numerator / (pairs * 2) * 100
+
+
 class PentanomialTests(unittest.TestCase):
     def test_color_swapped_pair_mapping(self) -> None:
         counts = Pentanomial.from_pair_scores(
@@ -49,6 +62,17 @@ class PentanomialTests(unittest.TestCase):
         )
 
         self.assertEqual(decision, "reject")
+
+    def test_official_pentanomial_scores(self) -> None:
+        cases = [
+            (Pentanomial(9, 22, 36, 23, 10), 49.25),
+            (Pentanomial(10, 21, 34, 23, 12), 48.50),
+            (Pentanomial(7, 30, 32, 23, 8), 51.25),
+            (Pentanomial(13, 21, 26, 28, 12), 48.75),
+        ]
+        for counts, expected in cases:
+            with self.subTest(counts=counts.as_tuple()):
+                self.assertAlmostEqual(score_percentage(counts), expected, places=2)
 
 
 if __name__ == "__main__":

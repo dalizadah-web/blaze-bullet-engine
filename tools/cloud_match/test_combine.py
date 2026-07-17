@@ -42,6 +42,13 @@ class CombineLanesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "incompatible lane configuration"):
             combine_lanes([cloud, local])
 
+    def test_rejects_incompatible_sprt_parameters(self) -> None:
+        cloud = lane("c", 1, 0)
+        local = lane("l", 1, 0)
+        local["configuration"]["sprt"] = {"elo0": 0.0, "elo1": 10.0, "alpha": 0.05, "beta": 0.05}
+        with self.assertRaisesRegex(ValueError, "incompatible lane configuration"):
+            combine_lanes([cloud, local])
+
 
 if __name__ == "__main__":
     unittest.main()
