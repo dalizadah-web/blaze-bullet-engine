@@ -11,7 +11,7 @@ on:
       baseline_ref:
         description: Baseline branch, tag, or commit
         required: true
-        default: 4d25363
+        default: 4d25363fef79ff2025670e248ed07b3d81747d3a
         type: string
       games:
         description: Total games (even; pairs must divide by shards)
