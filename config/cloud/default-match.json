@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "blaze-cloud-regression",
   "candidate_ref": "codex/bullet-beast",
-  "baseline_ref": "4d25363",
+  "baseline_ref": "4d25363fef79ff2025670e248ed07b3d81747d3a",
   "games": 400,
   "shards": 20,
   "concurrency": 2,

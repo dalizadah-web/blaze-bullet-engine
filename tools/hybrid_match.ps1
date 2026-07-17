@@ -3,7 +3,7 @@ param(
     [string]$Repo = "",
     [string]$WorkflowRef = "codex/bullet-beast",
     [string]$CandidateRef = "codex/bullet-beast",
-    [string]$BaselineRef = "4d25363",
+    [string]$BaselineRef = "4d25363fef79ff2025670e248ed07b3d81747d3a",
     [ValidateRange(2, 1000000)][int]$CloudGames = 400,
     [ValidateRange(2, 1000000)][int]$LocalGames = 400,
     [ValidateRange(1, 20)][int]$CloudShards = 20,
