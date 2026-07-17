@@ -1,8 +1,19 @@
-"""Immutable public-runner match specification."""
+"""Immutable public-runner match specification.
+
+Identity model (two-stage freeze):
+  Stage 1 (prepare): resolve mutable ref text to 40-char Git SHA-1 commit
+    IDs. The spec is valid for planning once commits are resolved.
+  Stage 2 (after build): record the built candidate/baseline binary
+    SHA-256 digests. Aggregation requires these so mismatched binaries
+    can never be pooled.
+
+A Git commit is a 40-character SHA-1; an artifact hash is a 64-character
+SHA-256. The implementation deliberately separates the two.
+"""
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import hashlib
 import json
 from pathlib import Path
@@ -10,7 +21,8 @@ import re
 import subprocess
 
 
-_SHA256 = re.compile(r"^[0-9a-fA-F]{64}$")
+_GIT_SHA1 = re.compile(r"^[0-9a-f]{40}$")
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _TIME_CONTROL = re.compile(r"^[0-9]+(?:\.[0-9]+)?\+[0-9]+(?:\.[0-9]+)?$")
 
 
@@ -77,17 +89,29 @@ class CloudMatchSpec:
         spec.validate()
         return spec
 
+    def with_resolved_commits(self, candidate_commit: str, baseline_commit: str) -> "CloudMatchSpec":
+        return replace(
+            self,
+            candidate_commit=candidate_commit.lower(),
+            baseline_commit=baseline_commit.lower(),
+        )
+
+    def with_binary_hashes(self, candidate_sha256: str, baseline_sha256: str) -> "CloudMatchSpec":
+        return replace(
+            self,
+            candidate_sha256=candidate_sha256.lower(),
+            baseline_sha256=baseline_sha256.lower(),
+        )
+
     def validate(self) -> None:
         if not self.name or not self.candidate_ref or not self.baseline_ref:
             raise ValueError("name, candidate_ref, and baseline_ref are required")
-        if not _SHA256.fullmatch(self.candidate_commit):
-            raise ValueError("candidate_commit must be a full SHA-256 digest")
-        if not _SHA256.fullmatch(self.baseline_commit):
-            raise ValueError("baseline_commit must be a full SHA-256 digest")
-        if not _SHA256.fullmatch(self.candidate_sha256):
-            raise ValueError("candidate_sha256 must be a SHA-256 digest")
-        if not _SHA256.fullmatch(self.baseline_sha256):
-            raise ValueError("baseline_sha256 must be a SHA-256 digest")
+        # Resolved Git commits are 40-char SHA-1. They are required for any
+        # spec that has advanced past planning (commits must be frozen).
+        if not _GIT_SHA1.fullmatch(self.candidate_commit):
+            raise ValueError("candidate_commit must be a 40-char Git SHA-1")
+        if not _GIT_SHA1.fullmatch(self.baseline_commit):
+            raise ValueError("baseline_commit must be a 40-char Git SHA-1")
         if not isinstance(self.games, int) or self.games <= 0 or self.games % 2:
             raise ValueError("games must be a positive even number")
         if not isinstance(self.shards, int) or not 1 <= self.shards <= 20:
@@ -109,14 +133,22 @@ class CloudMatchSpec:
         if not 0 < self.sprt.alpha < 1 or not 0 < self.sprt.beta < 1:
             raise ValueError("sprt alpha and beta must be between 0 and 1")
 
+    def validate_frozen(self) -> None:
+        """Strict check used before/after a cloud run: binary hashes required."""
+        self.validate()
+        if not _SHA256.fullmatch(self.candidate_sha256):
+            raise ValueError("candidate_sha256 must be a 64-char SHA-256 digest")
+        if not _SHA256.fullmatch(self.baseline_sha256):
+            raise ValueError("baseline_sha256 must be a 64-char SHA-256 digest")
+
     def canonical_json(self) -> str:
         return json.dumps(asdict(self), sort_keys=True, separators=(",", ":"))
 
-    def resolve_commits(self, repo_root: Path | str) -> tuple[str, str, str, str]:
+    def resolve_commits(self, repo_root: Path | str) -> tuple[str, str]:
+        """Resolve the mutable candidate/baseline refs to Git SHA-1 IDs."""
         repo = Path(repo_root)
-        refs = (self.candidate_ref, self.baseline_ref)
-        commits = []
-        for ref in refs:
+        commits: list[str] = []
+        for ref in (self.candidate_ref, self.baseline_ref):
             command = ["git", "-C", str(repo), "rev-parse", ref]
             completed = subprocess.run(
                 command,
@@ -127,14 +159,14 @@ class CloudMatchSpec:
                 check=False,
             )
             if completed.returncode != 0:
-                raise ValueError(f"cannot resolve ref {ref}: {completed.stderr.strip()}")
-            commits.append(completed.stdout.strip())
-        return (
-            commits[0],
-            commits[1],
-            f"sha256:{self.candidate_sha256}" if self.candidate_sha256 else "",
-            f"sha256:{self.baseline_sha256}" if self.baseline_sha256 else "",
-        )
+                raise ValueError(
+                    f"cannot resolve ref {ref!r}: {completed.stderr.strip()}"
+                )
+            value = completed.stdout.strip()
+            if not _GIT_SHA1.fullmatch(value):
+                raise ValueError(f"ref {ref!r} did not resolve to a Git SHA-1: {value!r}")
+            commits.append(value)
+        return commits[0], commits[1]
 
     def experiment_id(self) -> str:
         return hashlib.sha256(self.canonical_json().encode("utf-8")).hexdigest()[:24]

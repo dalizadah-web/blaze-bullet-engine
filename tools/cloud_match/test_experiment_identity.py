@@ -17,16 +17,20 @@ from tools.cloud_match.aggregate import aggregate_shards
 from tools.cloud_match.spec import CloudMatchSpec
 
 
+_COMMIT_C = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+_COMMIT_D = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+
 def _base_payload() -> dict[str, object]:
     return {
         "schema_version": 1,
         "name": "id-test",
         "candidate_ref": "aa50f42331323ec06c05b4f5aa4d04437e3d57b9",
         "baseline_ref": "e5d7f7b",
-        "candidate_commit": "aa50f42331323ec06c05b4f5aa4d04437e3d57b9" + "0" * 24,
-        "baseline_commit": "e5d7f7b43b2629492e20439734f6bf446d19d807" + "0" * 24,
-        "candidate_sha256": "a" * 64,
-        "baseline_sha256": "b" * 64,
+        "candidate_commit": _COMMIT_C,
+        "baseline_commit": _COMMIT_D,
+        "candidate_sha256": "",
+        "baseline_sha256": "",
         "games": 8,
         "shards": 2,
         "concurrency": 2,
@@ -59,7 +63,7 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
         "shard_index": index,
         "shard_count": 2,
         "candidate_commit": commit,
-        "baseline_commit": "e5d7f7b43b2629492e20439734f6bf446d19d807" + "0" * 24,
+        "baseline_commit": _COMMIT_D,
         "candidate_sha256": candidate_sha,
         "baseline_sha256": "b" * 64,
         "openings_sha256": opening_sha,
@@ -89,29 +93,28 @@ class ExperimentIdentityPoolingTests(unittest.TestCase):
     def test_same_identity_pools(self) -> None:
         spec = _make_spec(_base_payload())
         first = _shard_manifest(spec, 0, spec.candidate_commit,
-                                spec.candidate_sha256, spec.opening_sha256)
+                                "a" * 64, spec.opening_sha256)
         second = _shard_manifest(spec, 1, spec.candidate_commit,
-                                 spec.candidate_sha256, spec.opening_sha256)
+                                 "a" * 64, spec.opening_sha256)
         result = aggregate_shards([first, second], spec)
         self.assertEqual(result["pairs"], 4)
 
     def test_different_resolved_commit_cannot_pool(self) -> None:
         spec = _make_spec(_base_payload())
-        # Same mutable ref text, different resolved commit.
         other = _make_spec(_base_payload())
         other = other.__class__(**{**other.__dict__,
-                                   "candidate_commit": "f" * 64})
+                                   "candidate_commit": "f" * 40})
         first = _shard_manifest(spec, 0, spec.candidate_commit,
-                                spec.candidate_sha256, spec.opening_sha256)
-        second = _shard_manifest(other, 1, "f" * 64,
-                                  spec.candidate_sha256, spec.opening_sha256)
+                                "a" * 64, spec.opening_sha256)
+        second = _shard_manifest(other, 1, "f" * 40,
+                                  "a" * 64, spec.opening_sha256)
         with self.assertRaisesRegex(ValueError, "experiment ID mismatch"):
             aggregate_shards([first, second], other)
 
     def test_mismatched_binary_hash_cannot_pool(self) -> None:
         spec = _make_spec(_base_payload())
         first = _shard_manifest(spec, 0, spec.candidate_commit,
-                                spec.candidate_sha256, spec.opening_sha256)
+                                "a" * 64, spec.opening_sha256)
         second = _shard_manifest(spec, 1, spec.candidate_commit,
                                   "e" * 64, spec.opening_sha256)
         with self.assertRaisesRegex(ValueError, "inconsistent candidate_sha256"):
@@ -120,9 +123,9 @@ class ExperimentIdentityPoolingTests(unittest.TestCase):
     def test_mismatched_opening_hash_cannot_pool(self) -> None:
         spec = _make_spec(_base_payload())
         first = _shard_manifest(spec, 0, spec.candidate_commit,
-                                spec.candidate_sha256, spec.opening_sha256)
+                                "a" * 64, spec.opening_sha256)
         second = _shard_manifest(spec, 1, spec.candidate_commit,
-                                 spec.candidate_sha256, "f" * 64)
+                                 "a" * 64, "f" * 64)
         with self.assertRaisesRegex(ValueError, "opening artifact mismatch"):
             aggregate_shards([first, second], spec)
 
@@ -132,9 +135,9 @@ class ExperimentIdentityPoolingTests(unittest.TestCase):
         other_payload["time_control"] = "2+1"
         other = _make_spec(other_payload)
         first = _shard_manifest(spec, 0, spec.candidate_commit,
-                                spec.candidate_sha256, spec.opening_sha256)
+                                "a" * 64, spec.opening_sha256)
         second = _shard_manifest(other, 1, other.candidate_commit,
-                                  other.candidate_sha256, other.opening_sha256)
+                                  "a" * 64, other.opening_sha256)
         with self.assertRaisesRegex(ValueError, "experiment ID mismatch"):
             aggregate_shards([first, second], other)
 
@@ -145,23 +148,23 @@ class ExperimentIdentityPoolingTests(unittest.TestCase):
                                  "alpha": 0.05, "beta": 0.05}
         other = _make_spec(other_payload)
         first = _shard_manifest(spec, 0, spec.candidate_commit,
-                                spec.candidate_sha256, spec.opening_sha256)
+                                "a" * 64, spec.opening_sha256)
         second = _shard_manifest(other, 1, other.candidate_commit,
-                                  other.candidate_sha256, other.opening_sha256)
+                                  "a" * 64, other.opening_sha256)
         with self.assertRaisesRegex(ValueError, "experiment ID mismatch"):
             aggregate_shards([first, second], other)
 
     def test_incomplete_shard_set_fails(self) -> None:
         spec = _make_spec(_base_payload())
         first = _shard_manifest(spec, 0, spec.candidate_commit,
-                                spec.candidate_sha256, spec.opening_sha256)
+                                "a" * 64, spec.opening_sha256)
         with self.assertRaisesRegex(ValueError, "expected 2 shard manifests"):
             aggregate_shards([first], spec)
 
     def test_duplicate_shard_set_fails(self) -> None:
         spec = _make_spec(_base_payload())
         first = _shard_manifest(spec, 0, spec.candidate_commit,
-                                spec.candidate_sha256, spec.opening_sha256)
+                                "a" * 64, spec.opening_sha256)
         second_dir = Path(tempfile.mkdtemp()) / "shard-dup"
         second_dir.mkdir()
         (second_dir / "games.pgn").write_text("pgn", encoding="utf-8")
