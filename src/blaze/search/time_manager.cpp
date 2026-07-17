@@ -63,9 +63,9 @@ MoveBudget BulletTimeManager::allocate(
     // volatile position may use more of the allowance, but never risks the clock.
     result.hard = std::min(
         usable, std::max(scaled(base, 1.65), base + Milliseconds(1)));
-    if (clock.increment > Milliseconds(0) && bankroll <= Milliseconds(10000)) {
+    if (clock.increment > Milliseconds(0) && bankroll <= Milliseconds(2000)) {
         const Milliseconds growth_cap =
-            scaled(clock.increment, 0.50) + scaled(clock.remaining, 0.05);
+            scaled(clock.increment, 0.55) + scaled(clock.remaining, 0.06);
         result.hard = std::min(
             result.hard, std::max(growth_cap, base + Milliseconds(1)));
     }
