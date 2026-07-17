@@ -14,11 +14,21 @@ param(
     [double]$Elo0 = 0,
     [double]$Elo1 = 5,
     [long]$RunId = 0,
-    [string]$Output = "artifacts/cloud-match"
+    [string]$Output = "artifacts/cloud-match",
+    [switch]$CloudOnly
 )
 
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
+
+if ($Action -eq "Run" -and -not $CloudOnly) {
+    & (Join-Path $PSScriptRoot "hybrid_match.ps1") -Repo $Repo `
+        -WorkflowRef $WorkflowRef -CandidateRef $CandidateRef -BaselineRef $BaselineRef `
+        -CloudGames $Games -LocalGames $Games -CloudShards $Shards `
+        -LocalConcurrency 8 -TimeControl $TimeControl -Threads $Threads `
+        -HashMb $HashMb -Elo0 $Elo0 -Elo1 $Elo1
+    exit $LASTEXITCODE
+}
 
 function Get-GitHubCli {
     $command = Get-Command gh -ErrorAction SilentlyContinue
@@ -100,7 +110,11 @@ switch ($Action) {
     }
     "Download" {
         $id = Resolve-RunId $gh $repository $RunId
-        $destination = Join-Path $ProjectRoot $Output
+        if ([System.IO.Path]::IsPathRooted($Output)) {
+            $destination = [System.IO.Path]::GetFullPath($Output)
+        } else {
+            $destination = [System.IO.Path]::GetFullPath((Join-Path $ProjectRoot $Output))
+        }
         New-Item -ItemType Directory -Force -Path $destination | Out-Null
         & $gh run download $id --repo $repository --dir $destination
         if ($LASTEXITCODE -ne 0) { throw "Could not download cloud match $id." }

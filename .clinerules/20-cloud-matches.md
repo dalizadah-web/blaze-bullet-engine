@@ -5,7 +5,8 @@ Use the repository's GitHub Actions match farm for high-throughput candidate-ver
 ## Operating contract
 
 - Treat `config/cloud/default-match.json` as the canonical default.
-- Launch with `powershell -File tools/cloud_match.ps1 -Action Run`.
+- Launch with `powershell -File tools/cloud_match.ps1 -Action Run`. This defaults to the 48-way hybrid lane.
+- Add `-CloudOnly` only when the local PC must remain free.
 - To use all available compute, launch `powershell -File tools/hybrid_match.ps1`; this combines 20 four-vCPU GitHub runners with 8 concurrent local games on the 16-thread PC.
 - Inspect with `-Action Status`, wait with `-Action Watch`, and fetch evidence with `-Action Download`.
 - Use complete color-swapped pairs. Games must be even and `(games / 2)` must divide evenly by 1-20 shards.

@@ -9,6 +9,10 @@ param(
     [ValidateRange(1, 20)][int]$CloudShards = 20,
     [ValidateRange(1, 64)][int]$LocalConcurrency = 8,
     [string]$TimeControl = "0.5+0",
+    [ValidateRange(1, 2)][int]$Threads = 1,
+    [ValidateRange(1, 65536)][int]$HashMb = 16,
+    [double]$Elo0 = 0,
+    [double]$Elo1 = 5,
     [string]$Output = ""
 )
 
@@ -50,7 +54,8 @@ New-Item -ItemType Directory -Force -Path $OutputRoot, $BuildRoot | Out-Null
 Write-Host "Dispatching cloud lane: up to $($CloudShards * 2) simultaneous games."
 & (Join-Path $PSScriptRoot "cloud_match.ps1") -Action Run -Repo $Repo `
     -WorkflowRef $WorkflowRef -CandidateRef $CandidateRef -BaselineRef $BaselineRef `
-    -Games $CloudGames -Shards $CloudShards -TimeControl $TimeControl
+    -Games $CloudGames -Shards $CloudShards -TimeControl $TimeControl `
+    -Threads $Threads -HashMb $HashMb -Elo0 $Elo0 -Elo1 $Elo1 -CloudOnly
 if ($LASTEXITCODE -ne 0) { throw "Cloud lane dispatch failed." }
 
 try {
@@ -89,6 +94,7 @@ try {
         --candidate $candidateBin --baseline $baselineBin --runner $frozenRunner `
         --output (Join-Path $OutputRoot "local") --games $LocalGames `
         --concurrency $LocalConcurrency --time-control $TimeControl `
+        --threads $Threads --hash-mb $HashMb --elo0 $Elo0 --elo1 $Elo1 `
         --source-commit $candidateCommit
     if ($LASTEXITCODE -ne 0) { throw "Local match lane failed." }
 }

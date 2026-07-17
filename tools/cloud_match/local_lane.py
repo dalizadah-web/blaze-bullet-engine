@@ -24,6 +24,10 @@ def main() -> int:
     parser.add_argument("--games", type=int, required=True)
     parser.add_argument("--concurrency", type=int, default=8)
     parser.add_argument("--time-control", required=True)
+    parser.add_argument("--threads", type=int, default=1)
+    parser.add_argument("--hash-mb", type=int, default=16)
+    parser.add_argument("--elo0", type=float, default=0.0)
+    parser.add_argument("--elo1", type=float, default=5.0)
     parser.add_argument("--source-commit", required=True)
     args = parser.parse_args()
 
@@ -44,14 +48,19 @@ def main() -> int:
         games=args.games,
         concurrency=args.concurrency,
         time_control=args.time_control,
-        threads=base.threads,
-        hash_mb=base.hash_mb,
+        threads=args.threads,
+        hash_mb=args.hash_mb,
         repeat=True,
         opening_format="epd",
         openings=str(openings),
         opening_sha256=base.opening_sha256,
         opponent_sha256=baseline_identity.sha256,
-        sprt=SprtSpec(**asdict(base.sprt)),
+        sprt=SprtSpec(
+            elo0=args.elo0,
+            elo1=args.elo1,
+            alpha=base.sprt.alpha,
+            beta=base.sprt.beta,
+        ),
     )
     result = run_match(
         spec,
@@ -71,6 +80,9 @@ def main() -> int:
             games=args.games,
             shards=1,
             time_control=args.time_control,
+            threads=args.threads,
+            hash_mb=args.hash_mb,
+            sprt=replace(base.sprt, elo0=args.elo0, elo1=args.elo1),
         )
     )
     summary = {
