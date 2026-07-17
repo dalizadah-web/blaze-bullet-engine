@@ -1,0 +1,64 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Hybrid Match: Run cloud + all 16 local threads",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/tools/hybrid_match.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Cloud Match: Run 400 games",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/tools/cloud_match.ps1",
+        "-Action", "Run"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Cloud Match: Status",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/tools/cloud_match.ps1",
+        "-Action", "Status"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Cloud Match: Watch latest",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/tools/cloud_match.ps1",
+        "-Action", "Watch"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Cloud Match: Download latest",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/tools/cloud_match.ps1",
+        "-Action", "Download"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
