@@ -15,7 +15,13 @@ from tools.experiment.pentanomial import Pentanomial, sprt_decision, sprt_llr
 
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_GIT_SHA1 = re.compile(r"^[0-9a-f]{40}$")
 _COUNT_KEYS = ("wins2", "wins1_draw1", "draws2", "losses1_draw1", "losses2")
+
+# Commit identifiers are 40-char Git SHA-1; binary/opening/runner identities
+# are 64-char SHA-256. Map each required shard key to its digest regex.
+_COMMIT_KEYS = ("candidate_commit", "baseline_commit")
+_HASH_KEYS = ("candidate_sha256", "baseline_sha256", "openings_sha256", "runner_sha256")
 
 
 def _load_manifest(path: Path) -> dict[str, Any]:
@@ -96,14 +102,16 @@ def aggregate_shards(
             raise ValueError(f"duplicate game ID in {path}: {min(duplicates)}")
         seen_game_ids.update(game_ids)
 
-        for key in (
-            "candidate_commit",
-            "baseline_commit",
-            "candidate_sha256",
-            "baseline_sha256",
-            "openings_sha256",
-            "runner_sha256",
-        ):
+        # Frozen identity checks: every shard must carry resolved commits and
+        # binary hashes, and they must be consistent across all shards.
+        for key in _COMMIT_KEYS:
+            value = raw.get(key)
+            if not isinstance(value, str) or not _GIT_SHA1.fullmatch(value):
+                raise ValueError(f"invalid {key} in {path}")
+            previous = common_hashes.setdefault(key, value)
+            if previous != value:
+                raise ValueError(f"inconsistent {key} across shards")
+        for key in _HASH_KEYS:
             value = raw.get(key)
             if not isinstance(value, str) or not _SHA256.fullmatch(value):
                 raise ValueError(f"invalid {key} in {path}")

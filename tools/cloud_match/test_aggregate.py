@@ -7,6 +7,10 @@ from tools.cloud_match.aggregate import aggregate_shards
 from tools.cloud_match.spec import CloudMatchSpec
 
 
+_COMMIT_C = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+_COMMIT_D = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+
 class AggregateShardsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
@@ -19,10 +23,10 @@ class AggregateShardsTests(unittest.TestCase):
                     "name": "test",
                     "candidate_ref": "candidate",
                     "baseline_ref": "baseline",
-                    "candidate_commit": "c" * 64,
-                    "baseline_commit": "d" * 64,
-                    "candidate_sha256": "a" * 64,
-                    "baseline_sha256": "b" * 64,
+                    "candidate_commit": _COMMIT_C,
+                    "baseline_commit": _COMMIT_D,
+                    "candidate_sha256": "",
+                    "baseline_sha256": "",
                     "games": 8,
                     "shards": 2,
                     "concurrency": 2,
@@ -51,8 +55,8 @@ class AggregateShardsTests(unittest.TestCase):
             "experiment_id": self.spec.experiment_id(),
             "shard_index": index,
             "shard_count": 2,
-            "candidate_commit": "c" * 64,
-            "baseline_commit": "d" * 64,
+            "candidate_commit": _COMMIT_C,
+            "baseline_commit": _COMMIT_D,
             "candidate_sha256": "a" * 64,
             "baseline_sha256": "b" * 64,
             "openings_sha256": "c" * 64,
@@ -117,7 +121,7 @@ class AggregateShardsTests(unittest.TestCase):
         first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
         second = self._write_shard(1, {"wins2": 0, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 2})
         payload = json.loads(second.read_text(encoding="utf-8"))
-        payload["candidate_commit"] = "a" * 64
+        payload["candidate_commit"] = "f" * 40
         second.write_text(json.dumps(payload), encoding="utf-8")
 
         with self.assertRaisesRegex(ValueError, "inconsistent candidate_commit across shards"):
@@ -144,8 +148,8 @@ class AggregateShardsTests(unittest.TestCase):
             "experiment_id": self.spec.experiment_id(),
             "shard_index": 0,
             "shard_count": 2,
-            "candidate_commit": "c" * 64,
-            "baseline_commit": "d" * 64,
+            "candidate_commit": _COMMIT_C,
+            "baseline_commit": _COMMIT_D,
             "candidate_sha256": "a" * 64,
             "baseline_sha256": "b" * 64,
             "openings_sha256": "c" * 64,

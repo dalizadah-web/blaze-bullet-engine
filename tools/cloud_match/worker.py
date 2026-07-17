@@ -117,6 +117,8 @@ def run_worker(
         "experiment_id": experiment_id,
         "shard_index": shard_index,
         "shard_count": spec.shards,
+        "candidate_commit": spec.candidate_commit,
+        "baseline_commit": spec.baseline_commit,
         "candidate_sha256": candidate_identity.sha256,
         "baseline_sha256": baseline_identity.sha256,
         "openings_sha256": spec.opening_sha256,

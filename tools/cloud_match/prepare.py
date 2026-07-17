@@ -1,4 +1,12 @@
-"""Create a validated immutable match spec from workflow inputs."""
+"""Create a validated immutable match spec from workflow inputs.
+
+Two-stage freeze:
+  1. prepare_spec resolves the mutable candidate/baseline refs to 40-char
+     Git SHA-1 commit IDs (requires the repo checkout).
+  2. After the binaries are built, call finalize_frozen_spec (or pass
+     --candidate-sha256 / --baseline-sha256) to embed the binary SHA-256
+     digests. Aggregation requires the frozen spec.
+"""
 
 from __future__ import annotations
 
@@ -21,8 +29,11 @@ def prepare_spec(
     time_control: str,
     threads: int,
     hash_mb: int,
+    repo_root: Path | str | None = None,
     openings: str | None = None,
     opening_sha256: str | None = None,
+    candidate_sha256: str | None = None,
+    baseline_sha256: str | None = None,
     elo0: float | None = None,
     elo1: float | None = None,
 ) -> dict[str, list[int]]:
@@ -45,6 +56,13 @@ def prepare_spec(
             beta=base.sprt.beta,
         ),
     )
+    # Stage 1: freeze the mutable refs to resolved Git SHA-1 commit IDs.
+    if repo_root is not None:
+        candidate_commit, baseline_commit = spec.resolve_commits(repo_root)
+        spec = spec.with_resolved_commits(candidate_commit, baseline_commit)
+    # Stage 2 (optional here, normally after build): embed binary hashes.
+    if candidate_sha256:
+        spec = spec.with_binary_hashes(candidate_sha256.lower(), baseline_sha256.lower() if baseline_sha256 else "")
     spec.validate()
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -52,6 +70,22 @@ def prepare_spec(
         json.dumps(asdict(spec), indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return {"shard": list(range(spec.shards))}
+
+
+def finalize_frozen_spec(
+    spec_path: Path | str,
+    *,
+    candidate_sha256: str,
+    baseline_sha256: str,
+) -> CloudMatchSpec:
+    """Apply post-build binary hashes and persist the frozen spec."""
+    spec = CloudMatchSpec.from_json(spec_path)
+    spec = spec.with_binary_hashes(candidate_sha256.lower(), baseline_sha256.lower())
+    spec.validate_frozen()
+    Path(spec_path).write_text(
+        json.dumps(asdict(spec), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return spec
 
 
 def main() -> int:
@@ -65,8 +99,11 @@ def main() -> int:
     parser.add_argument("--time-control", required=True)
     parser.add_argument("--threads", type=int, required=True)
     parser.add_argument("--hash-mb", type=int, required=True)
+    parser.add_argument("--repo-root", type=Path)
     parser.add_argument("--openings")
     parser.add_argument("--opening-sha256")
+    parser.add_argument("--candidate-sha256")
+    parser.add_argument("--baseline-sha256")
     parser.add_argument("--elo0", type=float)
     parser.add_argument("--elo1", type=float)
     parser.add_argument("--github-output", type=Path)
@@ -81,8 +118,11 @@ def main() -> int:
         time_control=args.time_control,
         threads=args.threads,
         hash_mb=args.hash_mb,
+        repo_root=args.repo_root,
         openings=args.openings,
         opening_sha256=args.opening_sha256,
+        candidate_sha256=args.candidate_sha256,
+        baseline_sha256=args.baseline_sha256,
         elo0=args.elo0,
         elo1=args.elo1,
     )
