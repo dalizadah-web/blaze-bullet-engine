@@ -23,6 +23,12 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 function Get-GitHubCli {
     $command = Get-Command gh -ErrorAction SilentlyContinue
     if (-not $command) {
+        $installed = Join-Path $env:ProgramFiles "GitHub CLI/gh.exe"
+        if (Test-Path -LiteralPath $installed -PathType Leaf) {
+            $command = Get-Item -LiteralPath $installed
+        }
+    }
+    if (-not $command) {
         throw "GitHub CLI is required. Install it with: winget install --id GitHub.cli --exact --source winget"
     }
     & $command.Source auth status 2>$null | Out-Null
@@ -38,8 +44,8 @@ function Resolve-Repo([string]$ExplicitRepo) {
     if ($LASTEXITCODE -ne 0 -or -not $remote) {
         throw "No origin remote exists. Pass -Repo owner/repository or add the GitHub origin."
     }
-    if ($remote -match "github\.com[/:]([^/]+)/([^/]+?)(?:\.git)?$") {
-        return "$($Matches[1])/$($Matches[2])"
+    if ($remote -match "github\.com[/:]([^/]+)/([^/]+)$") {
+        return "$($Matches[1])/$($Matches[2] -replace '\.git$', '')"
     }
     throw "Origin is not a GitHub repository: $remote"
 }

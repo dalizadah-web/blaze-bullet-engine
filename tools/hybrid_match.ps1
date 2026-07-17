@@ -34,7 +34,11 @@ if ($runner) {
 } else {
     $commonDir = git -C $ProjectRoot rev-parse --git-common-dir
     if ($LASTEXITCODE -ne 0) { throw "Cannot locate the Git common directory." }
-    $commonDir = [System.IO.Path]::GetFullPath((Join-Path $ProjectRoot $commonDir))
+    if ([System.IO.Path]::IsPathRooted($commonDir)) {
+        $commonDir = [System.IO.Path]::GetFullPath($commonDir)
+    } else {
+        $commonDir = [System.IO.Path]::GetFullPath((Join-Path $ProjectRoot $commonDir))
+    }
     $runnerPath = Join-Path (Split-Path -Parent $commonDir) "cutechess-cli.exe"
 }
 if (-not (Test-Path -LiteralPath $runnerPath -PathType Leaf)) {
