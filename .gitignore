@@ -1,5 +1,6 @@
 .worktrees/
 build/
+artifacts/
 *.o
 *.obj
 *.exe

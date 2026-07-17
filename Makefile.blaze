@@ -10,7 +10,7 @@ TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp) \
 ENGINE_SOURCES := $(wildcard src/blaze/core/*.cpp) $(wildcard src/blaze/eval/*.cpp) \
 	$(wildcard src/blaze/search/*.cpp) $(wildcard src/blaze/uci/*.cpp)
 
-.PHONY: all test blaze perft-driver train-network experiment-test uci-stress repeated-start verify-clean-room clean
+.PHONY: all test blaze perft-driver train-network experiment-test cloud-test uci-stress repeated-start bullet-latency verify-clean-room clean
 
 all: test blaze
 
@@ -33,6 +33,9 @@ train-network:
 
 experiment-test:
 	python -m unittest discover -s tools/experiment -p "test_*.py" -v
+
+cloud-test:
+	python -m unittest discover -s tools/cloud_match -p "test_*.py" -v
 
 uci-stress: $(BLAZE_BIN)
 	python tools/uci_stress.py --engine $(BLAZE_BIN) --cycles 1000
