@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Hybrid Match: Run cloud + all 16 local threads",
+      "label": "Default Match: Run 48-way hybrid",
       "type": "shell",
       "command": "powershell",
       "args": [
@@ -13,14 +13,15 @@
       "problemMatcher": []
     },
     {
-      "label": "Cloud Match: Run 400 games",
+      "label": "Cloud Only: Run 400 games",
       "type": "shell",
       "command": "powershell",
       "args": [
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
         "-File", "${workspaceFolder}/tools/cloud_match.ps1",
-        "-Action", "Run"
+        "-Action", "Run",
+        "-CloudOnly"
       ],
       "problemMatcher": []
     },

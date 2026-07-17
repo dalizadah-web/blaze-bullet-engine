@@ -10,13 +10,13 @@
 
 4. Dispatch a 40-game cloud smoke test:
 
-   `powershell -File tools/cloud_match.ps1 -Action Run -Games 40 -Shards 20 -CandidateRef <candidate> -BaselineRef <baseline>`
+   `powershell -File tools/cloud_match.ps1 -Action Run -CloudOnly -Games 40 -Shards 20 -CandidateRef <candidate> -BaselineRef <baseline>`
 
 5. Wait for it:
 
    `powershell -File tools/cloud_match.ps1 -Action Watch`
 
-6. If infrastructure and engine health are clean, dispatch the full default test:
+6. If infrastructure and engine health are clean, dispatch the full 48-way hybrid test:
 
    `powershell -File tools/cloud_match.ps1 -Action Run -CandidateRef <candidate> -BaselineRef <baseline>`
 

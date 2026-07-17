@@ -24,9 +24,9 @@ Public repositories receive free, unlimited use of standard GitHub-hosted runner
 
 ## Daily use
 
-From VS Code, run `Terminal > Run Task` and choose `Cloud Match: Run 400 games`. Status, watch, and download tasks are beside it.
+From VS Code, run `Terminal > Run Task` and choose `Default Match: Run 48-way hybrid`. Status, watch, download, and cloud-only tasks are beside it.
 
-To use every available CPU, choose `Hybrid Match: Run cloud + all 16 local threads`, or run:
+To use every available CPU directly, run:
 
 ```powershell
 powershell -File tools/hybrid_match.ps1
@@ -34,7 +34,7 @@ powershell -File tools/hybrid_match.ps1
 
 The hybrid command dispatches the 20-runner cloud lane first, builds committed local candidate and baseline refs, runs eight local games concurrently, waits for cloud completion, downloads all evidence, and writes `artifacts/hybrid/<timestamp>/hybrid-summary.json`. Windows and Linux artifacts remain separate in the report; only compatible game outcomes are pooled.
 
-The equivalent commands are:
+The default run command automatically uses both lanes (about 48 simultaneous games). The equivalent commands are:
 
 ```powershell
 powershell -File tools/cloud_match.ps1 -Action Run
@@ -42,6 +42,8 @@ powershell -File tools/cloud_match.ps1 -Action Status
 powershell -File tools/cloud_match.ps1 -Action Watch
 powershell -File tools/cloud_match.ps1 -Action Download
 ```
+
+To run only the 40-way GitHub lane and leave the local CPU free, add `-CloudOnly`.
 
 Run a different bullet control or candidate explicitly:
 
