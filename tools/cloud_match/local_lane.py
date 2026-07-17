@@ -28,9 +28,15 @@ def main() -> int:
     args = parser.parse_args()
 
     base = CloudMatchSpec.from_json(args.base_spec)
-    openings = Path(base.openings).resolve(strict=True)
+    source_openings = Path(base.openings).resolve(strict=True)
+    openings = source_openings
     if sha256_file(openings) != base.opening_sha256:
-        raise ValueError("opening SHA-256 mismatch")
+        normalized = source_openings.read_bytes().replace(b"\r\n", b"\n")
+        openings = args.output.with_name(args.output.name + "-openings.epd").resolve()
+        openings.parent.mkdir(parents=True, exist_ok=True)
+        openings.write_bytes(normalized)
+        if sha256_file(openings) != base.opening_sha256:
+            raise ValueError("opening SHA-256 mismatch after newline normalization")
     baseline_identity = ArtifactIdentity.from_path(args.baseline)
     spec = MatchSpec(
         schema_version=1,
