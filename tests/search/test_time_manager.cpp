@@ -42,6 +42,7 @@ TEST_CASE(increment_bullet_keeps_a_clock_growth_and_jitter_reserve) {
         ClockState{2000ms, 1000ms, 0, 0}, LatencyBudget{30ms, 0ms}, SearchTelemetry{});
 
     CHECK(one_plus_one.target <= 550ms);
+    CHECK(one_plus_one.hard >= 600ms);
     CHECK(one_plus_one.hard <= 700ms);
     CHECK(two_plus_one.hard <= 800ms);
     CHECK(one_plus_one.hard < 1000ms - one_plus_one.submit_reserve);
