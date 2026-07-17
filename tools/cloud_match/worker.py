@@ -34,7 +34,7 @@ def write_shard_openings(
 
 def _resolve_openings(spec_path: Path, openings: str) -> Path:
     supplied = Path(openings)
-    candidates = [supplied] if supplied.is_absolute() else [Path.cwd() / supplied, spec_path.parent / supplied]
+    candidates = [supplied] if supplied.is_absolute() else [spec_path.parent / supplied, Path.cwd() / supplied]
     for candidate in candidates:
         if candidate.is_file():
             return candidate.resolve()

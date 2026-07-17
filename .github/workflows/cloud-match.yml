@@ -1,0 +1,235 @@
+name: Distributed bullet match
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_ref:
+        description: Candidate branch, tag, or commit
+        required: true
+        default: codex/bullet-beast
+        type: string
+      baseline_ref:
+        description: Baseline branch, tag, or commit
+        required: true
+        default: 4d25363
+        type: string
+      games:
+        description: Total games (even; pairs must divide by shards)
+        required: true
+        default: 400
+        type: number
+      shards:
+        description: Parallel runners (1-20)
+        required: true
+        default: 20
+        type: number
+      time_control:
+        description: CuteChess base+increment in seconds
+        required: true
+        default: 0.5+0
+        type: string
+      threads:
+        description: Threads per engine (1-2)
+        required: true
+        default: 1
+        type: number
+      hash_mb:
+        description: Hash MB per engine
+        required: true
+        default: 16
+        type: number
+      elo0:
+        description: SPRT lower Elo hypothesis
+        required: true
+        default: 0
+        type: number
+      elo1:
+        description: SPRT upper Elo hypothesis
+        required: true
+        default: 5
+        type: number
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-match-${{ github.ref }}-${{ inputs.candidate_ref }}-${{ inputs.baseline_ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.spec.outputs.matrix }}
+      experiment_id: ${{ steps.spec.outputs.experiment_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tools/cloud_match/requirements.txt
+      - run: pip install -r tools/cloud_match/requirements.txt
+      - name: Validate cloud tooling
+        run: python -m unittest discover -s tools/cloud_match -p "test_*.py" -v
+      - name: Freeze match specification
+        id: spec
+        shell: bash
+        run: |
+          python -m tools.cloud_match.prepare \
+            --base config/cloud/default-match.json \
+            --output prepared/spec.json \
+            --candidate-ref '${{ inputs.candidate_ref }}' \
+            --baseline-ref '${{ inputs.baseline_ref }}' \
+            --games '${{ inputs.games }}' \
+            --shards '${{ inputs.shards }}' \
+            --time-control '${{ inputs.time_control }}' \
+            --threads '${{ inputs.threads }}' \
+            --hash-mb '${{ inputs.hash_mb }}' \
+            --elo0 '${{ inputs.elo0 }}' \
+            --elo1 '${{ inputs.elo1 }}' \
+            --github-output "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: match-spec-${{ steps.spec.outputs.experiment_id }}
+          path: prepared/spec.json
+          retention-days: 30
+          if-no-files-found: error
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout workflow tools
+        uses: actions/checkout@v4
+        with:
+          path: farm-src
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_ref }}
+          path: candidate-src
+      - name: Checkout baseline
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.baseline_ref }}
+          path: baseline-src
+      - uses: actions/download-artifact@v4
+        with:
+          name: match-spec-${{ needs.prepare.outputs.experiment_id }}
+          path: prepared
+      - name: Install compiler and frozen match runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends g++ make cutechess
+      - name: Build candidate and baseline
+        shell: bash
+        run: |
+          mkdir -p candidate-src/build/blaze baseline-src/build/blaze bundle
+          make -C candidate-src -f Makefile.blaze blaze -j2
+          make -C baseline-src -f Makefile.blaze blaze -j2
+          cp candidate-src/build/blaze/blaze.exe bundle/candidate
+          cp baseline-src/build/blaze/blaze.exe bundle/baseline
+          cp "$(command -v cutechess-cli)" bundle/cutechess-cli
+          cp prepared/spec.json bundle/spec.json
+          python - <<'PY'
+          import json
+          import shutil
+          from pathlib import Path
+          spec = json.loads(Path('prepared/spec.json').read_text(encoding='utf-8'))
+          source = (Path('candidate-src') / spec['openings']).resolve()
+          if not source.is_file() or Path('candidate-src').resolve() not in source.parents:
+              raise SystemExit(f"invalid opening path: {source}")
+          destination = Path('bundle') / spec['openings']
+          destination.parent.mkdir(parents=True, exist_ok=True)
+          shutil.copy2(source, destination)
+          PY
+          git -C candidate-src rev-parse HEAD > bundle/candidate-commit.txt
+          chmod +x bundle/candidate bundle/baseline bundle/cutechess-cli
+          tar -czf frozen-match.tar.gz -C bundle .
+      - name: Verify frozen artifact hashes
+        run: sha256sum bundle/candidate bundle/baseline bundle/cutechess-cli frozen-match.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frozen-match-${{ needs.prepare.outputs.experiment_id }}
+          path: frozen-match.tar.gz
+          retention-days: 30
+          if-no-files-found: error
+
+  shards:
+    needs: [prepare, build]
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tools/cloud_match/requirements.txt
+      - run: pip install -r tools/cloud_match/requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: frozen-match-${{ needs.prepare.outputs.experiment_id }}
+          path: frozen
+      - name: Unpack immutable artifacts
+        run: |
+          mkdir bundle
+          tar -xzf frozen/frozen-match.tar.gz -C bundle
+          chmod +x bundle/candidate bundle/baseline bundle/cutechess-cli
+      - name: Run shard ${{ matrix.shard }}
+        shell: bash
+        run: |
+          python -m tools.cloud_match.worker \
+            --spec bundle/spec.json \
+            --shard-index '${{ matrix.shard }}' \
+            --candidate bundle/candidate \
+            --baseline bundle/baseline \
+            --runner bundle/cutechess-cli \
+            --output 'shard-${{ matrix.shard }}' \
+            --source-commit "$(cat bundle/candidate-commit.txt)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ needs.prepare.outputs.experiment_id }}-${{ matrix.shard }}
+          path: shard-${{ matrix.shard }}
+          retention-days: 30
+          if-no-files-found: error
+
+  aggregate:
+    if: ${{ always() && needs.shards.result == 'success' }}
+    needs: [prepare, shards]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tools/cloud_match/requirements.txt
+      - run: pip install -r tools/cloud_match/requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: match-spec-${{ needs.prepare.outputs.experiment_id }}
+          path: prepared
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shard-${{ needs.prepare.outputs.experiment_id }}-*
+          path: downloaded-shards
+      - name: Strictly aggregate every shard
+        shell: bash
+        run: |
+          mapfile -t manifests < <(find downloaded-shards -name shard.json -type f | sort)
+          python -m tools.cloud_match.aggregate \
+            --spec prepared/spec.json \
+            --shards "${manifests[@]}" \
+            --output summary
+          cat summary/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: result-${{ needs.prepare.outputs.experiment_id }}
+          path: summary
+          retention-days: 90
+          if-no-files-found: error
