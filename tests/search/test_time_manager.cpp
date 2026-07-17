@@ -35,6 +35,19 @@ TEST_CASE(pure_increment_bullet_banks_most_of_each_increment) {
     CHECK(two_seconds.hard <= 1500ms);
 }
 
+TEST_CASE(increment_bullet_keeps_a_clock_growth_and_jitter_reserve) {
+    const MoveBudget one_plus_one = BulletTimeManager::allocate(
+        ClockState{1000ms, 1000ms, 0, 0}, LatencyBudget{30ms, 0ms}, SearchTelemetry{});
+    const MoveBudget two_plus_one = BulletTimeManager::allocate(
+        ClockState{2000ms, 1000ms, 0, 0}, LatencyBudget{30ms, 0ms}, SearchTelemetry{});
+
+    CHECK(one_plus_one.target <= 550ms);
+    CHECK(one_plus_one.hard <= 700ms);
+    CHECK(two_plus_one.hard <= 800ms);
+    CHECK(one_plus_one.hard < 1000ms - one_plus_one.submit_reserve);
+    CHECK(two_plus_one.hard < 1000ms);
+}
+
 TEST_CASE(clock_budget_keeps_the_measured_submission_reserve) {
     const MoveBudget budget = BulletTimeManager::allocate(
         ClockState{1000ms, 0ms, 0, 12}, LatencyBudget{25ms, 80ms}, SearchTelemetry{});
