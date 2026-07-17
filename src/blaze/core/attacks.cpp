@@ -26,7 +26,7 @@ template <std::size_t Size>
     Square square,
     const std::array<std::pair<int, int>, Size>& steps) {
     Bitboard result = 0;
-    for (const auto [file_delta, rank_delta] : steps) {
+    for (const auto& [file_delta, rank_delta] : steps) {
         result |= bit_at(file_of(square) + file_delta, rank_of(square) + rank_delta);
     }
     return result;
