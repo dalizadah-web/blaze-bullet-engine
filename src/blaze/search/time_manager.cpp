@@ -65,7 +65,7 @@ MoveBudget BulletTimeManager::allocate(
         usable, std::max(scaled(base, 1.65), base + Milliseconds(1)));
     if (clock.increment > Milliseconds(0) && bankroll <= Milliseconds(10000)) {
         const Milliseconds growth_cap =
-            scaled(clock.increment, 0.60) + scaled(clock.remaining, 0.08);
+            scaled(clock.increment, 0.50) + scaled(clock.remaining, 0.05);
         result.hard = std::min(
             result.hard, std::max(growth_cap, base + Milliseconds(1)));
     }
