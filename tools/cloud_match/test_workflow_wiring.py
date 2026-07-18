@@ -7,6 +7,7 @@ import unittest
 
 
 WORKFLOW = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "cloud-match.yml"
+HYBRID_RUNNER = Path(__file__).resolve().parents[2] / "tools" / "hybrid_match.ps1"
 
 
 class CloudWorkflowWiringTests(unittest.TestCase):
@@ -18,6 +19,12 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertIn("finalize_frozen_spec", workflow)
         self.assertIn("finalized-match-spec-${{ needs.prepare.outputs.experiment_id }}", workflow)
         self.assertIn("--spec finalized/spec.json", workflow)
+
+    def test_local_freeze_copies_windows_runner_dependencies(self) -> None:
+        script = HYBRID_RUNNER.read_text(encoding="utf-8")
+
+        self.assertIn('-Filter "*.dll"', script)
+        self.assertIn("Copy-Item -LiteralPath $dependency.FullName -Destination $frozen", script)
 
 
 if __name__ == "__main__":

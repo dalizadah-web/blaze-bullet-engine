@@ -66,6 +66,10 @@ int move_order_score(
     Move counter_move,
     const MoveHistory& capture_history = empty_history,
     const ContinuationSlice* continuation_history = nullptr) {
+    if (!move.is_valid()) return -1'000'000;
+    const std::size_t from_index = static_cast<std::size_t>(square_index(move.from()));
+    const std::size_t to_index = static_cast<std::size_t>(square_index(move.to()));
+    if (from_index >= 64U || to_index >= 64U) return -1'000'000;
     if (tt_move.is_valid() && move == tt_move) {
         return 1'000'000;
     }
@@ -77,8 +81,7 @@ int move_order_score(
         const Piece attacker = position.piece_on(move.from());
         score += 100'000 + victim_value(victim) * 16 - victim_value(attacker);
         score += std::clamp(static_exchange_evaluation(position, move), -4'000, 4'000) / 8;
-        score += capture_history[static_cast<std::size_t>(square_index(move.from()))]
-                                [static_cast<std::size_t>(square_index(move.to()))] / 8;
+        score += capture_history[from_index][to_index] / 8;
     }
     if (move.has_flag(MoveFlag::Promotion)) {
         score += 80'000 + victim_value(make_piece(position.side_to_move(), move.promotion()));
@@ -91,10 +94,9 @@ int move_order_score(
         score += 89'000;
     } else if (quiet) {
         if (counter_move.is_valid() && move == counter_move) score += 85'000;
-        score += history[static_cast<std::size_t>(square_index(move.from()))]
-                        [static_cast<std::size_t>(square_index(move.to()))];
+        score += history[from_index][to_index];
         if (continuation_history != nullptr) {
-            score += (*continuation_history)[static_cast<std::size_t>(square_index(move.to()))];
+            score += (*continuation_history)[to_index];
         }
     }
     return score;

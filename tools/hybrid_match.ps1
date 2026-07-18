@@ -85,6 +85,11 @@ try {
     Copy-Item -LiteralPath (Join-Path $candidateSource "build/blaze/blaze.exe") -Destination $candidateBin
     Copy-Item -LiteralPath (Join-Path $baselineSource "build/blaze/blaze.exe") -Destination $baselineBin
     Copy-Item -LiteralPath $runnerPath -Destination $frozenRunner
+    $runnerDirectory = Split-Path -Parent $runnerPath
+    Get-ChildItem -LiteralPath $runnerDirectory -File -Filter "*.dll" | ForEach-Object {
+        $dependency = $_
+        Copy-Item -LiteralPath $dependency.FullName -Destination $frozen
+    }
 
     $candidateCommit = git -C $ProjectRoot rev-parse $CandidateRef
     Write-Host "Running local lane: $LocalConcurrency simultaneous games using up to $($LocalConcurrency * 2) engine threads."
