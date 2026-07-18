@@ -29,6 +29,9 @@ struct SearchLimits {
     SearchRegime regime = SearchRegime::Standard;
     int recommended_threads = 1;
     std::shared_ptr<std::atomic<std::uint64_t>> shared_node_budget{};
+#ifndef NDEBUG
+    bool enable_probcut = true;
+#endif
 };
 
 struct SearchResult {
@@ -36,6 +39,9 @@ struct SearchResult {
     int score = 0;
     int depth = 0;
     std::uint64_t nodes = 0;
+#ifndef NDEBUG
+    std::uint64_t probcut_legal_checks = 0;
+#endif
     std::vector<Move> pv;
     bool stopped = false;
 };
@@ -63,6 +69,9 @@ private:
         const std::atomic<bool>* external_stop = nullptr;
         std::chrono::steady_clock::time_point start;
         std::uint64_t nodes = 0;
+#ifndef NDEBUG
+        std::uint64_t probcut_legal_checks = 0;
+#endif
         bool stopped = false;
         std::vector<std::uint64_t> keys;
         std::vector<Move> root_moves;

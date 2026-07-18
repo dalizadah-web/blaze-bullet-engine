@@ -211,6 +211,9 @@ SearchResult Searcher::search(
     }
 
     result.nodes = context.nodes;
+#ifndef NDEBUG
+    result.probcut_legal_checks = context.probcut_legal_checks;
+#endif
     result.stopped = context.stopped;
     return result;
 }
@@ -523,7 +526,11 @@ int Searcher::negamax(
         }
     }
 
-    if (depth >= 5 && !checked && beta < search_mate_threshold - 180) {
+    bool probcut_enabled = true;
+#ifndef NDEBUG
+    probcut_enabled = context.limits.enable_probcut;
+#endif
+    if (probcut_enabled && depth >= 5 && !checked && beta < search_mate_threshold - 180) {
         constexpr int probcut_margin = 180;
         MoveList tactical_moves;
         generate_pseudo_legal(position, tactical_moves);
@@ -536,12 +543,17 @@ int Searcher::negamax(
             }
             if (static_exchange_evaluation(position, move) < 0) continue;
             StateInfo state;
-            if (!position.make_move(move, state)) continue;
             const Color moving_side = position.side_to_move();
+            if (!position.make_move(move, state)) continue;
             if (!king_is_safe_after_move(position, moving_side)) {
                 position.unmake_move(move, state);
                 continue;
             }
+#ifndef NDEBUG
+            if (in_check(position)) {
+                ++context.probcut_legal_checks;
+            }
+#endif
             context.keys.push_back(position.key());
             context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
             PvLine probe_pv;

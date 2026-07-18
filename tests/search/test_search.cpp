@@ -3,6 +3,7 @@
 #include "blaze/core/movegen.h"
 #include "test_support.h"
 
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cstdint>
@@ -204,6 +205,38 @@ TEST_CASE(selective_search_keeps_depth_six_under_node_regression_budget) {
     const SearchResult result = searcher.search(root, SearchLimits{.depth = 6});
     CHECK_EQ(result.depth, 6);
     CHECK(result.nodes < 30000);
+}
+
+TEST_CASE(probcut_preserves_scores_on_tactical_legality_corpus) {
+    constexpr std::array<std::string_view, 3> fens = {
+        "4k3/4q3/8/8/8/8/4R3/4K3 w - - 0 1",
+        "4r1k1/8/8/8/8/8/3qR3/4K3 w - - 0 1",
+        "r3k2r/ppp2ppp/2n5/3qp3/3P4/2P2N2/PP3PPP/R2Q1RK1 w kq - 0 12",
+    };
+
+    for (const std::string_view fen : fens) {
+        Position enabled_root = position(fen);
+        TranspositionTable enabled_table(4);
+        Searcher enabled_searcher(enabled_table);
+        SearchLimits enabled_limits{.depth = 5};
+        enabled_limits.enable_probcut = true;
+        const SearchResult enabled = enabled_searcher.search(enabled_root, enabled_limits);
+
+        Position disabled_root = position(fen);
+        TranspositionTable disabled_table(4);
+        Searcher disabled_searcher(disabled_table);
+        SearchLimits disabled_limits{.depth = 5};
+        disabled_limits.enable_probcut = false;
+        const SearchResult disabled = disabled_searcher.search(disabled_root, disabled_limits);
+
+        CHECK_EQ(enabled.score, disabled.score);
+        if (fen == fens.front()) {
+            CHECK(enabled.probcut_legal_checks > 0);
+            CHECK_EQ(disabled.probcut_legal_checks, 0U);
+        }
+        CHECK(enabled_root.is_legal(enabled.best_move));
+        CHECK(disabled_root.is_legal(disabled.best_move));
+    }
 }
 
 }  // namespace
