@@ -86,13 +86,16 @@ def main() -> int:
         for cycle in range(args.cycles):
             board = random_position(rng)
             send(f"position fen {board.fen(en_passant='fen')}")
+            prompt_deadline: float | None = None
             if cycle % 20 == 0:
                 send("go ponder")
                 send("ponderhit")
             elif cycle % 20 == 1:
                 # Tournament GUIs can report a small negative remaining clock
                 # when an expiry margin is enabled. The engine must still move.
-                send("go wtime -22 btime -7 winc 10 binc 10")
+                send("setoption name Move Overhead value 0")
+                prompt_deadline = time.monotonic() + 0.25
+                send("go wtime -22 btime -7 winc 1000 binc 1000")
             elif cycle % 4 == 0:
                 send("go infinite")
                 send("stop")
@@ -100,6 +103,12 @@ def main() -> int:
                 send("go nodes 64")
 
             best_line, _ = wait_for("bestmove ")
+            if prompt_deadline is not None:
+                if time.monotonic() > prompt_deadline:
+                    raise RuntimeError(
+                        f"cycle {cycle}: expired-clock bestmove missed 250 ms deadline"
+                    )
+                send("setoption name Move Overhead value 30")
             move_text = best_line.split(maxsplit=1)[1]
             try:
                 move = chess.Move.from_uci(move_text)

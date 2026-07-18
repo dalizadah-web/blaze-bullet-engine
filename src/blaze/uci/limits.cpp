@@ -18,13 +18,17 @@ bool parse_positive_or_zero(const std::string& text, Integer& value) {
     return parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size();
 }
 
-bool parse_clock(const std::string& text, std::chrono::milliseconds& value) {
+bool parse_clock(
+    const std::string& text,
+    std::chrono::milliseconds& value,
+    bool& expired) {
     std::int64_t parsed_value = 0;
     const auto parsed = std::from_chars(
         text.data(), text.data() + text.size(), parsed_value);
     if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size()) {
         return false;
     }
+    expired = parsed_value < 0;
     value = std::chrono::milliseconds(std::max<std::int64_t>(parsed_value, 0));
     return true;
 }
@@ -79,16 +83,19 @@ std::optional<GoParameters> parse_go(std::string_view arguments, std::string& er
 
         if (name == "wtime" || name == "btime") {
             std::chrono::milliseconds clock;
-            if (!parse_clock(value, clock)) {
+            bool expired = false;
+            if (!parse_clock(value, clock, expired)) {
                 error = "invalid value for go " + name;
                 return std::nullopt;
             }
             if (name == "wtime") {
                 result.white_time = clock;
                 result.white_time_supplied = true;
+                result.white_time_expired = expired;
             } else {
                 result.black_time = clock;
                 result.black_time_supplied = true;
+                result.black_time_expired = expired;
             }
             continue;
         }
@@ -144,7 +151,10 @@ SearchLimits to_search_limits(
     const bool clock_supplied = side_to_move == Color::White
         ? go.white_time_supplied
         : go.black_time_supplied;
-    if (remaining.count() <= 0 && increment.count() <= 0) {
+    const bool clock_expired = side_to_move == Color::White
+        ? go.white_time_expired
+        : go.black_time_expired;
+    if (clock_expired || (remaining.count() <= 0 && increment.count() <= 0)) {
         if (clock_supplied) {
             limits.target_time = std::chrono::milliseconds(1);
             limits.move_time = std::chrono::milliseconds(1);

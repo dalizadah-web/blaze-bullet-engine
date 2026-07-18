@@ -50,6 +50,21 @@ TEST_CASE(supplied_expired_clock_receives_a_finite_emergency_deadline) {
     CHECK_EQ(limits.regime, SearchRegime::Emergency);
 }
 
+TEST_CASE(negative_expired_clock_ignores_increment_and_uses_emergency_deadline) {
+    std::string error;
+    const auto go = parse_go("wtime -1 btime 0 winc 1000 binc 1000", error);
+    CHECK(go.has_value());
+    if (!go) return;
+
+    const SearchLimits limits = to_search_limits(
+        *go,
+        Color::White,
+        LatencyBudget{std::chrono::milliseconds(0), std::chrono::milliseconds(0)});
+    CHECK_EQ(limits.target_time.count(), 1);
+    CHECK_EQ(limits.move_time.count(), 1);
+    CHECK_EQ(limits.regime, SearchRegime::Emergency);
+}
+
 TEST_CASE(movetime_is_an_explicit_search_budget) {
     std::string error;
     const auto go = parse_go("movetime 250 depth 30", error);
