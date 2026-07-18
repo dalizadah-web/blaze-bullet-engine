@@ -337,7 +337,10 @@ bool UciSession::start_search(std::string_view arguments) {
         } else {
             info << "cp " << result.score;
         }
-        info << " nodes " << result.nodes << " time " << elapsed.count();
+        info << " nodes " << result.nodes << " nps ";
+        const auto elapsed_ms = std::max<std::int64_t>(elapsed.count(), 1);
+        info << (result.nodes * 1000U) / static_cast<std::uint64_t>(elapsed_ms);
+        info << " hashfull " << table_.hashfull() << " time " << elapsed.count();
         if (!result.pv.empty()) {
             info << " pv";
             for (const Move move : result.pv) info << ' ' << move_to_uci(move);

@@ -105,6 +105,16 @@ TEST_CASE(threads_option_is_accepted_and_starts_parallel_search) {
     CHECK_EQ(occurrences(output.str(), "bestmove "), 1U);
 }
 
+TEST_CASE(uci_search_info_reports_hashfull_and_nps) {
+    std::istringstream input("position startpos\ngo depth 2\nquit\n");
+    std::ostringstream output;
+    UciSession session(output);
+    session.run(input);
+    const std::string transcript = output.str();
+    CHECK(transcript.find(" hashfull ") != std::string::npos);
+    CHECK(transcript.find(" nps ") != std::string::npos);
+}
+
 TEST_CASE(uci_handshake_accepts_an_initial_utf8_bom) {
     std::istringstream input("\xEF\xBB\xBF" "uci\nquit\n");
     std::ostringstream output;

@@ -301,6 +301,7 @@ SearchResult Searcher::search_parallel(
         ? std::make_shared<std::atomic<std::uint64_t>>(limits.nodes)
         : std::shared_ptr<std::atomic<std::uint64_t>>{};
     std::atomic<bool> parallel_stop = false;
+    table_.new_search();
     for (int depth = 1; depth <= maximum_depth; ++depth) {
         if (external_stop != nullptr && external_stop->load(std::memory_order_relaxed)) {
             result.stopped = true;
@@ -325,7 +326,6 @@ SearchResult Searcher::search_parallel(
         }
         std::atomic<std::size_t> next_task = 0;
         std::atomic<int> shared_alpha{-infinity};
-        table_.new_search();
         const unsigned worker_count = std::min<unsigned>(
             static_cast<unsigned>(limits.threads),
             static_cast<unsigned>(legal_moves.size()));
@@ -596,9 +596,14 @@ int Searcher::negamax(
     }
 
     Move tt_move;
-    const auto tt_hit = table_.probe(position.key(), ply);
+    int static_eval = tt_no_static_evaluation;
+    const auto tt_hit = table_.probe(position.key(), ply, position.rule50());
     if (tt_hit) {
         tt_move = tt_hit->move;
+        static_eval = tt_hit->static_evaluation;
+        if (static_eval != tt_no_static_evaluation) {
+            context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_eval;
+        }
         const bool rule50_safe = tt_hit->rule50 == std::min(position.rule50(), 100);
         if (rule50_safe && tt_hit->depth >= depth) {
             if (tt_hit->bound == Bound::Exact ||
@@ -610,7 +615,13 @@ int Searcher::negamax(
     }
 
     if constexpr (node_type == NodeType::NonPV) {
-        const int static_eval = evaluate_position(position);
+        // Keep deep verification nodes tied to a fresh leaf estimate. This
+        // avoids reusing a stale bound's optional metadata while preserving
+        // the hot-path benefit at shallow/selective nodes.
+        if (static_eval == tt_no_static_evaluation || depth >= 10) {
+            static_eval = evaluate_position(position);
+        }
+        context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_eval;
         const bool null_enabled =
 #ifndef NDEBUG
             context.limits.enable_null_move;
@@ -634,6 +645,7 @@ int Searcher::negamax(
             const int reduction = std::min(depth - 1, 3 + depth / 4 + eval_term);
             StateInfo null_state;
             position.make_null(null_state);
+            table_.prefetch(position.key());
             PvLine null_pv;
             context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
             context.stack[static_cast<std::size_t>(ply + 1)].extension_count =
@@ -707,6 +719,7 @@ int Searcher::negamax(
             }
 #endif
             context.keys.push_back(position.key());
+            table_.prefetch(position.key());
             context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
             context.stack[static_cast<std::size_t>(ply + 1)].extension_count =
                 context.stack[static_cast<std::size_t>(ply)].extension_count;
@@ -766,6 +779,7 @@ int Searcher::negamax(
         }
         ++legal_count;
         context.keys.push_back(position.key());
+        table_.prefetch(position.key());
         PvLine child_pv;
         const bool gives_check = in_check(position);
         const int used = context.stack[static_cast<std::size_t>(ply)].extension_count;
@@ -878,7 +892,15 @@ int Searcher::negamax(
         bound = Bound::Lower;
     }
     table_.store(
-        position.key(), best_move, best_score, depth, bound, ply, position.rule50());
+        position.key(),
+        best_move,
+        best_score,
+        depth,
+        bound,
+        ply,
+        position.rule50(),
+        static_eval,
+        pv_node);
     return best_score;
 }
 
@@ -950,6 +972,7 @@ int Searcher::quiescence(
         }
         ++legal_count;
         context.keys.push_back(position.key());
+        table_.prefetch(position.key());
         PvLine child_pv;
         const int score = -quiescence(position, -beta, -alpha, ply + 1, context, child_pv);
         context.keys.pop_back();
