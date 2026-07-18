@@ -24,6 +24,8 @@ struct GoParameters {
     std::uint64_t nodes = 0;
     int mate = 0;
     std::vector<std::string> search_moves;
+    bool white_time_set = false;
+    bool black_time_set = false;
     bool infinite = false;
     bool ponder = false;
 };
