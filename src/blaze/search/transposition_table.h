@@ -63,7 +63,6 @@ private:
     mutable std::shared_mutex table_mutex_;
     std::unique_ptr<Cluster[]> clusters_;
     std::size_t cluster_count_ = 0;
-    std::size_t cluster_mask_ = 0;
     std::uint8_t generation_ = 0;
 
     [[nodiscard]] static int score_to_table(int score, int ply);

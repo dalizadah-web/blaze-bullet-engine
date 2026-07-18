@@ -18,15 +18,12 @@ TranspositionTable::TranspositionTable(std::size_t megabytes) {
 
 void TranspositionTable::resize(std::size_t megabytes) {
     const std::size_t bytes = std::max<std::size_t>(megabytes, 1) * bytes_per_megabyte;
-    const std::size_t available = std::max<std::size_t>(bytes / sizeof(Cluster), 1);
-    std::size_t count = 1;
-    while (count <= available / 2) count <<= 1;
+    const std::size_t count = std::max<std::size_t>(bytes / sizeof(Cluster), 1);
     auto replacement = std::make_unique<Cluster[]>(count);
 
     std::unique_lock lock(table_mutex_);
     clusters_ = std::move(replacement);
     cluster_count_ = count;
-    cluster_mask_ = count - 1;
     generation_ = 0;
 }
 
@@ -52,7 +49,7 @@ void TranspositionTable::store(
     Bound bound,
     int ply) {
     std::shared_lock table_lock(table_mutex_);
-    Cluster& cluster = clusters_[static_cast<std::size_t>(key) & cluster_mask_];
+    Cluster& cluster = clusters_[key % cluster_count_];
     std::lock_guard cluster_lock(cluster.mutex);
 
     Entry* replacement = nullptr;
@@ -90,7 +87,7 @@ void TranspositionTable::store(
 
 std::optional<TTData> TranspositionTable::probe(std::uint64_t key, int ply) const {
     std::shared_lock table_lock(table_mutex_);
-    const Cluster& cluster = clusters_[static_cast<std::size_t>(key) & cluster_mask_];
+    const Cluster& cluster = clusters_[key % cluster_count_];
     std::lock_guard cluster_lock(cluster.mutex);
     for (const Entry& entry : cluster.entries) {
         if (entry.occupied && entry.key == key) {
