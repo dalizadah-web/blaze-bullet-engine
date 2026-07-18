@@ -71,8 +71,14 @@ std::optional<GoParameters> parse_go(std::string_view arguments, std::string& er
             error = "invalid value for go " + name;
             return std::nullopt;
         }
-        if (name == "wtime") result.white_time = std::chrono::milliseconds(parsed);
-        else if (name == "btime") result.black_time = std::chrono::milliseconds(parsed);
+        if (name == "wtime") {
+            result.white_time = std::chrono::milliseconds(parsed);
+            result.white_time_set = true;
+        }
+        else if (name == "btime") {
+            result.black_time = std::chrono::milliseconds(parsed);
+            result.black_time_set = true;
+        }
         else if (name == "winc") result.white_increment = std::chrono::milliseconds(parsed);
         else if (name == "binc") result.black_increment = std::chrono::milliseconds(parsed);
         else if (name == "movetime") result.move_time = std::chrono::milliseconds(parsed);
@@ -111,7 +117,9 @@ SearchLimits to_search_limits(const GoParameters& go, Color side_to_move) {
 
     const auto remaining = side_to_move == Color::White ? go.white_time : go.black_time;
     const auto increment = side_to_move == Color::White ? go.white_increment : go.black_increment;
+    const bool clock_time_set = side_to_move == Color::White ? go.white_time_set : go.black_time_set;
     if (remaining.count() <= 0) {
+        if (clock_time_set) limits.move_time = std::chrono::milliseconds(1);
         return limits;
     }
 

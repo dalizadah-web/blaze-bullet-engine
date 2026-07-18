@@ -46,6 +46,24 @@ TEST_CASE(clock_budget_uses_side_to_move_and_never_consumes_entire_clock) {
     CHECK(black.move_time.count() < 2000);
 }
 
+TEST_CASE(exhausted_clock_keeps_a_finite_emergency_deadline) {
+    std::string error;
+    const auto go = parse_go("wtime 0 btime 0 winc 0 binc 0", error);
+    CHECK(go.has_value());
+
+    const SearchLimits white = to_search_limits(*go, Color::White);
+    const SearchLimits black = to_search_limits(*go, Color::Black);
+    CHECK_EQ(white.move_time.count(), 1);
+    CHECK_EQ(black.move_time.count(), 1);
+}
+
+TEST_CASE(depth_only_search_does_not_invent_a_clock_deadline) {
+    std::string error;
+    const auto go = parse_go("depth 6", error);
+    CHECK(go.has_value());
+    CHECK_EQ(to_search_limits(*go, Color::White).move_time.count(), 0);
+}
+
 TEST_CASE(infinite_and_ponder_searches_have_no_clock_deadline) {
     std::string error;
     const auto infinite = parse_go("infinite", error);
