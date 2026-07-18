@@ -184,11 +184,9 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "quarantined_pairs": quarantined_pairs,
         "raw_wdl": raw_wdl,
         "clean_wdl": clean_wdl,
-        "counts": (
-            dict(zip(_COUNT_KEYS, combined.as_tuple(), strict=True))
-            if pooled
-            else None
-        ),
+        # Counts remain descriptive, schema-valid evidence even when platform
+        # disagreement forbids pooled statistical inference.
+        "counts": dict(zip(_COUNT_KEYS, combined.as_tuple(), strict=True)),
         "termination_counts": termination_counts,
         "abnormal_games": abnormal_games,
         "llr": llr,

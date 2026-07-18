@@ -82,7 +82,7 @@ class CloudMatchSpec:
             openings=str(raw.get("openings", "")).strip(),
             opening_sha256=str(raw.get("opening_sha256", "")).lower(),
             opening_start=raw.get("opening_start"),
-            opening_suite_positions=raw.get("opening_suite_positions", 500),
+            opening_suite_positions=raw.get("opening_suite_positions"),
             sprt=CloudSprtSpec(
                 elo0=float(sprt_raw["elo0"]),
                 elo1=float(sprt_raw["elo1"]),

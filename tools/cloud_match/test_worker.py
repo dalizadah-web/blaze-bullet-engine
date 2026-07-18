@@ -147,6 +147,7 @@ class WorkerOpeningTests(unittest.TestCase):
   \"openings\": \"openings.epd\",
   \"opening_sha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",
   \"opening_start\": 1,
+  \"opening_suite_positions\": 1,
   \"sprt\": {\"elo0\": 0, \"elo1\": 5, \"alpha\": 0.05, \"beta\": 0.05}
 }""",
                 encoding="utf-8",

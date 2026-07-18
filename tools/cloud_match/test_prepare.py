@@ -32,6 +32,7 @@ class PrepareSpecTests(unittest.TestCase):
                     "openings": "book.epd",
                     "opening_sha256": "a" * 64,
                     "opening_start": 251,
+                    "opening_suite_positions": 500,
                     "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
                     }
                 ),

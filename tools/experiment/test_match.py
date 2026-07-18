@@ -19,6 +19,31 @@ from tools.experiment.manifest import sha256_file
 
 
 class MatchSpecTests(unittest.TestCase):
+    def test_schema_two_requires_frozen_full_suite_size(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "match.json"
+            path.write_text(
+                json.dumps({
+                    "schema_version": 2,
+                    "name": "test",
+                    "games": 2,
+                    "concurrency": 1,
+                    "time_control": "1+0",
+                    "threads": 1,
+                    "hash_mb": 16,
+                    "repeat": True,
+                    "opening_format": "epd",
+                    "openings": "openings.epd",
+                    "opening_sha256": "0" * 64,
+                    "opening_start": 1,
+                    "opponent_sha256": None,
+                    "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
+                }),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "opening_suite_positions"):
+                MatchSpec.from_json(path)
+
     def test_rejects_legacy_match_schema_without_opening_range(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / "match.json"

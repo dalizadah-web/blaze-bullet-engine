@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from tools.cloud_match.combine import combine_lanes
+from tools.experiment.match import validate_evidence_payload
 
 
 def lane(
@@ -199,10 +200,11 @@ class CombineLanesTests(unittest.TestCase):
 
         self.assertEqual(result["decision"], "stratified_inconclusive")
         self.assertIsNone(result["llr"])
-        self.assertIsNone(result["counts"])
         self.assertFalse(result["platform_gate"]["pooled"])
         self.assertEqual(result["lanes"][0]["environment"]["os"], "local-windows")
         self.assertEqual(result["lanes"][1]["environment"]["os"], "cloud-linux")
+        validated = validate_evidence_payload(result, context="stratified hybrid result")
+        self.assertEqual(validated.counts.as_tuple(), (2, 0, 0, 0, 2))
 
 
 if __name__ == "__main__":

@@ -25,11 +25,21 @@ def valid_payload() -> dict[str, object]:
         "openings": "testdata/openings/smoke-v1.epd",
         "opening_sha256": "a" * 64,
         "opening_start": 251,
+        "opening_suite_positions": 500,
         "sprt": {"elo0": 0.0, "elo1": 5.0, "alpha": 0.05, "beta": 0.05},
     }
 
 
 class CloudMatchSpecTests(unittest.TestCase):
+    def test_requires_frozen_full_suite_size(self) -> None:
+        payload = valid_payload()
+        payload.pop("opening_suite_positions", None)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "spec.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "opening_suite_positions"):
+                CloudMatchSpec.from_json(path)
+
     def parse(self, payload: dict[str, object]) -> CloudMatchSpec:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "match.json"

@@ -40,6 +40,7 @@ def _base_payload() -> dict[str, object]:
         "openings": "openings.epd",
         "opening_sha256": "c" * 64,
         "opening_start": 1,
+        "opening_suite_positions": 4,
         "sprt": {"elo0": 0.0, "elo1": 5.0, "alpha": 0.05, "beta": 0.05},
     }
 

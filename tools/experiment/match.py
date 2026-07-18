@@ -52,6 +52,7 @@ class MatchSpec:
     opening_order: str = "sequential"
     opening_plies: int = 0
     opening_start: int = 1
+    opening_suite_positions: int = 0
 
     @classmethod
     def from_json(cls, path: Path | str) -> "MatchSpec":
@@ -113,6 +114,15 @@ class MatchSpec:
             or opening_start <= 0
         ):
             raise ValueError("opening_start must be a positive one-based index")
+        opening_suite_positions = raw.get("opening_suite_positions")
+        if (
+            not isinstance(opening_suite_positions, int)
+            or isinstance(opening_suite_positions, bool)
+            or opening_suite_positions <= 0
+        ):
+            raise ValueError("opening_suite_positions must be a positive integer")
+        if opening_start + games // 2 - 1 > opening_suite_positions:
+            raise ValueError("opening range exceeds opening_suite_positions")
         return cls(
             schema_version=2,
             name=name,
@@ -132,6 +142,7 @@ class MatchSpec:
             opening_order=str(raw.get("opening_order", "sequential")),
             opening_plies=int(raw.get("opening_plies", 0)),
             opening_start=opening_start,
+            opening_suite_positions=opening_suite_positions,
         )
 
 
