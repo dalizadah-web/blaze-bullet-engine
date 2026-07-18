@@ -58,6 +58,8 @@ public:
         const std::vector<std::uint64_t>& prior_keys = {});
 
 private:
+    enum class NodeType : std::uint8_t { Root, PV, NonPV };
+
     struct EvalCacheEntry {
         std::uint64_t key = 0;
         int score = 0;
@@ -100,6 +102,7 @@ private:
         const std::vector<std::uint64_t>& prior_keys,
         std::chrono::steady_clock::time_point start);
 
+    template<NodeType node_type>
     [[nodiscard]] int negamax(
         Position& position,
         int depth,

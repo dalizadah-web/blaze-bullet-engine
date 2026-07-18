@@ -239,5 +239,23 @@ TEST_CASE(probcut_preserves_scores_on_tactical_legality_corpus) {
     }
 }
 
+TEST_CASE(search_prefers_the_shortest_forced_mate) {
+    Position root = position("6k1/8/5K2/8/8/8/8/3Q4 w - - 0 1");
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 6});
+    CHECK(result.score >= search_mate_threshold);
+    CHECK_EQ(result.score, search_mate_score - 3);
+    CHECK_EQ(move_to_uci(result.best_move), "d1g4");
+}
+
+TEST_CASE(mate_distance_bounds_reduce_forced_mate_tree) {
+    Position root = position("6k1/8/5K2/8/8/8/8/3Q4 w - - 0 1");
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 6});
+    CHECK(result.nodes < 390);
+}
+
 }  // namespace
 }  // namespace blaze

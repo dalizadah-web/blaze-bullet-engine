@@ -187,10 +187,11 @@ SearchResult Searcher::search(
             alpha = std::max(-infinity, result.score - 50);
             beta = std::min(infinity, result.score + 50);
         }
-        int score = negamax(position, depth, alpha, beta, 0, context, pv);
+        int score = negamax<NodeType::Root>(position, depth, alpha, beta, 0, context, pv);
         if (!context.stopped && (score <= alpha || score >= beta)) {
             pv.clear();
-            score = negamax(position, depth, -infinity, infinity, 0, context, pv);
+            score = negamax<NodeType::Root>(
+                position, depth, -infinity, infinity, 0, context, pv);
         }
         if (context.stopped) {
             break;
@@ -426,7 +427,7 @@ SearchResult Searcher::search_window(
 
     SearchResult result;
     PvLine pv;
-    const int score = negamax(position, depth, alpha, beta, 0, context, pv);
+    const int score = negamax<NodeType::Root>(position, depth, alpha, beta, 0, context, pv);
     if (!context.stopped) {
         result.score = score;
         result.depth = depth;
@@ -438,6 +439,7 @@ SearchResult Searcher::search_window(
     return result;
 }
 
+template<Searcher::NodeType node_type>
 int Searcher::negamax(
     Position& position,
     int depth,
@@ -447,6 +449,7 @@ int Searcher::negamax(
     Context& context,
     PvLine& pv,
     bool allow_null) {
+    constexpr bool pv_node = node_type != NodeType::NonPV;
     pv.clear();
     if (depth <= 0) {
         return quiescence(position, alpha, beta, ply, context, pv);
@@ -460,19 +463,21 @@ int Searcher::negamax(
 
     MoveList legal_moves;
     generate_pseudo_legal(position, legal_moves);
-    if (ply == 0 && !context.root_moves.empty()) {
-        MoveList restricted;
-        for (const Move candidate : legal_moves) {
-            for (const Move requested : context.root_moves) {
-                if (candidate.from() == requested.from() &&
-                    candidate.to() == requested.to() &&
-                    candidate.promotion() == requested.promotion()) {
-                    restricted.push(candidate);
-                    break;
+    if constexpr (node_type == NodeType::Root) {
+        if (ply == 0 && !context.root_moves.empty()) {
+            MoveList restricted;
+            for (const Move candidate : legal_moves) {
+                for (const Move requested : context.root_moves) {
+                    if (candidate.from() == requested.from() &&
+                        candidate.to() == requested.to() &&
+                        candidate.promotion() == requested.promotion()) {
+                        restricted.push(candidate);
+                        break;
+                    }
                 }
             }
+            legal_moves = restricted;
         }
-        legal_moves = restricted;
     }
     if (ply >= maximum_ply) {
         return evaluate_position(position);
@@ -485,6 +490,12 @@ int Searcher::negamax(
         MoveList evasions;
         generate_legal(position, evasions);
         return evasions.empty() ? -search_mate_score + ply : 0;
+    }
+
+    alpha = std::max(alpha, -search_mate_score + ply);
+    beta = std::min(beta, search_mate_score - ply - 1);
+    if (alpha >= beta) {
+        return alpha;
     }
 
     Move tt_move;
@@ -508,7 +519,7 @@ int Searcher::negamax(
         PvLine null_pv;
         const int reduction = depth >= 6 ? 3 : 2;
         context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
-        const int null_score = -negamax(
+        const int null_score = -negamax<NodeType::NonPV>(
             position,
             depth - 1 - reduction,
             -beta,
@@ -557,7 +568,7 @@ int Searcher::negamax(
             context.keys.push_back(position.key());
             context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
             PvLine probe_pv;
-            const int probe_score = -negamax(
+            const int probe_score = -negamax<NodeType::NonPV>(
                 position,
                 depth - 4,
                 -beta - probcut_margin,
@@ -615,7 +626,13 @@ int Searcher::negamax(
         int score = 0;
         context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
         if (move_count == 0) {
-            score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+            if constexpr (pv_node) {
+                score = -negamax<NodeType::PV>(
+                    position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+            } else {
+                score = -negamax<NodeType::NonPV>(
+                    position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+            }
         } else {
             const bool quiet = !move.has_flag(MoveFlag::Capture) &&
                 !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
@@ -627,7 +644,7 @@ int Searcher::negamax(
                 }
                 if (depth >= 8 && move_count >= 12) ++reduction;
             }
-            score = -negamax(
+            score = -negamax<NodeType::NonPV>(
                 position,
                 full_depth - reduction,
                 -alpha - 1,
@@ -636,7 +653,7 @@ int Searcher::negamax(
                 context,
                 child_pv);
             if (!context.stopped && reduction > 0 && score > alpha) {
-                score = -negamax(
+                score = -negamax<NodeType::NonPV>(
                     position,
                     full_depth,
                     -alpha - 1,
@@ -645,8 +662,11 @@ int Searcher::negamax(
                     context,
                     child_pv);
             }
-            if (!context.stopped && score > alpha && score < beta) {
-                score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+            if constexpr (pv_node) {
+                if (!context.stopped && score > alpha && score < beta) {
+                    score = -negamax<NodeType::PV>(
+                        position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+                }
             }
         }
         ++move_count;
