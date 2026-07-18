@@ -20,7 +20,7 @@ TEST_CASE(adaptive_lmr_rewards_good_moves_and_penalizes_late_bad_moves) {
 
 TEST_CASE(adaptive_lmr_reduces_pv_moves_less_and_keeps_checks_at_full_depth) {
     const SelectivityFeatures non_pv{
-        .depth = 10, .move_count = 12, .pv_node = false,
+        .depth = 8, .move_count = 8, .pv_node = false,
         .improving = false, .history = -10'000,
         .gives_check = false, .expected_cutoff = true};
     SelectivityFeatures pv = non_pv;
