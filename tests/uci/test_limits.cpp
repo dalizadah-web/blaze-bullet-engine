@@ -57,6 +57,16 @@ TEST_CASE(exhausted_clock_keeps_a_finite_emergency_deadline) {
     CHECK_EQ(black.move_time.count(), 1);
 }
 
+TEST_CASE(negative_gui_clocks_are_clamped_to_an_emergency_deadline) {
+    std::string error;
+    const auto go = parse_go("wtime -12 btime -1 winc 0 binc 0", error);
+    CHECK(go.has_value());
+    CHECK_EQ(go->white_time.count(), 0);
+    CHECK_EQ(go->black_time.count(), 0);
+    CHECK_EQ(to_search_limits(*go, Color::White).move_time.count(), 1);
+    CHECK_EQ(to_search_limits(*go, Color::Black).move_time.count(), 1);
+}
+
 TEST_CASE(depth_only_search_does_not_invent_a_clock_deadline) {
     std::string error;
     const auto go = parse_go("depth 6", error);

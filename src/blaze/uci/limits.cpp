@@ -18,6 +18,17 @@ bool parse_positive_or_zero(const std::string& text, Integer& value) {
     return parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size();
 }
 
+bool parse_clock(const std::string& text, std::chrono::milliseconds& value) {
+    std::int64_t parsed_value = 0;
+    const auto parsed = std::from_chars(
+        text.data(), text.data() + text.size(), parsed_value);
+    if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size()) {
+        return false;
+    }
+    value = std::chrono::milliseconds(std::max<std::int64_t>(parsed_value, 0));
+    return true;
+}
+
 bool is_go_keyword(const std::string& token) {
     return token == "wtime" || token == "btime" || token == "winc" ||
         token == "binc" || token == "movetime" || token == "movestogo" ||
@@ -66,22 +77,32 @@ std::optional<GoParameters> parse_go(std::string_view arguments, std::string& er
         }
         const std::string& value = tokens[++index];
 
+        if (name == "wtime" || name == "btime" || name == "winc" || name == "binc") {
+            std::chrono::milliseconds clock_value{0};
+            if (!parse_clock(value, clock_value)) {
+                error = "invalid value for go " + name;
+                return std::nullopt;
+            }
+            if (name == "wtime") {
+                result.white_time = clock_value;
+                result.white_time_set = true;
+            } else if (name == "btime") {
+                result.black_time = clock_value;
+                result.black_time_set = true;
+            } else if (name == "winc") {
+                result.white_increment = clock_value;
+            } else {
+                result.black_increment = clock_value;
+            }
+            continue;
+        }
+
         std::uint64_t parsed = 0;
         if (!parse_positive_or_zero(value, parsed)) {
             error = "invalid value for go " + name;
             return std::nullopt;
         }
-        if (name == "wtime") {
-            result.white_time = std::chrono::milliseconds(parsed);
-            result.white_time_set = true;
-        }
-        else if (name == "btime") {
-            result.black_time = std::chrono::milliseconds(parsed);
-            result.black_time_set = true;
-        }
-        else if (name == "winc") result.white_increment = std::chrono::milliseconds(parsed);
-        else if (name == "binc") result.black_increment = std::chrono::milliseconds(parsed);
-        else if (name == "movetime") result.move_time = std::chrono::milliseconds(parsed);
+        if (name == "movetime") result.move_time = std::chrono::milliseconds(parsed);
         else if (name == "movestogo" && parsed > 0 && parsed <= 1000) result.moves_to_go = static_cast<int>(parsed);
         else if (name == "depth" && parsed > 0 && parsed <= 128) result.depth = static_cast<int>(parsed);
         else if (name == "nodes" && parsed > 0) result.nodes = parsed;
