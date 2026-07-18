@@ -284,5 +284,40 @@ TEST_CASE(verified_null_move_preserves_zugzwang_score) {
     CHECK_EQ(with_null.best_move, without_null.best_move);
 }
 
+TEST_CASE(high_depth_null_move_verification_matches_disabled_search) {
+    constexpr std::string_view fen = "4k3/8/8/8/8/8/R6r/4K3 w - - 0 1";
+    Position enabled_root = position(fen);
+    Position disabled_root = position(fen);
+    TranspositionTable enabled_table(4);
+    TranspositionTable disabled_table(4);
+    Searcher enabled_searcher(enabled_table);
+    Searcher disabled_searcher(disabled_table);
+    SearchLimits enabled{.depth = 11};
+    SearchLimits disabled{.depth = 11};
+    disabled.enable_null_move = false;
+
+    const SearchResult with_null = enabled_searcher.search(enabled_root, enabled);
+    const SearchResult without_null = disabled_searcher.search(disabled_root, disabled);
+
+    CHECK(with_null.null_move_verifications > 0);
+    CHECK_EQ(with_null.score, without_null.score);
+    CHECK_EQ(with_null.best_move, without_null.best_move);
+    CHECK(enabled_root.is_legal(with_null.best_move));
+}
+
+TEST_CASE(high_depth_null_move_verification_restores_position_when_stopped) {
+    Position root = position("4k3/8/8/8/8/8/R6r/4K3 w - - 0 1");
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 11, .nodes = 120'380};
+
+    const SearchResult result = searcher.search(root, limits);
+
+    CHECK(result.stopped);
+    CHECK_EQ(result.nodes, limits.nodes);
+    CHECK_EQ(result.null_move_verifications, 1U);
+    CHECK(root.is_legal(result.best_move));
+}
+
 }  // namespace
 }  // namespace blaze

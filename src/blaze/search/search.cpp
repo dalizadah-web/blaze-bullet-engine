@@ -346,6 +346,12 @@ SearchResult Searcher::search_parallel(
                         external_stop,
                         child_history,
                         search_start);
+#ifndef NDEBUG
+                    std::uint64_t null_move_searches = child_result.null_move_searches;
+                    std::uint64_t null_move_pv_searches = child_result.null_move_pv_searches;
+                    std::uint64_t null_move_verifications =
+                        child_result.null_move_verifications;
+#endif
                     int score = -child_result.score;
                     if (!child_result.stopped && score > observed_alpha &&
                         observed_alpha != -infinity) {
@@ -358,15 +364,20 @@ SearchResult Searcher::search_parallel(
                             external_stop,
                             child_history,
                             search_start);
+#ifndef NDEBUG
+                        null_move_searches += child_result.null_move_searches;
+                        null_move_pv_searches += child_result.null_move_pv_searches;
+                        null_move_verifications += child_result.null_move_verifications;
+#endif
                         score = -child_result.score;
                     }
                     TaskResult& task = tasks[index];
                     task.score = -child_result.score;
                     task.nodes = child_result.nodes;
 #ifndef NDEBUG
-                    task.null_move_searches = child_result.null_move_searches;
-                    task.null_move_pv_searches = child_result.null_move_pv_searches;
-                    task.null_move_verifications = child_result.null_move_verifications;
+                    task.null_move_searches = null_move_searches;
+                    task.null_move_pv_searches = null_move_pv_searches;
+                    task.null_move_verifications = null_move_verifications;
 #endif
                     task.pv.push_back(root_move);
                     task.pv.insert(task.pv.end(), child_result.pv.begin(), child_result.pv.end());
