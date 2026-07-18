@@ -47,7 +47,8 @@ void TranspositionTable::store(
     int score,
     int depth,
     Bound bound,
-    int ply) {
+    int ply,
+    int rule50) {
     std::shared_lock table_lock(table_mutex_);
     Cluster& cluster = clusters_[key % cluster_count_];
     std::lock_guard cluster_lock(cluster.mutex);
@@ -75,12 +76,14 @@ void TranspositionTable::store(
         }
     }
 
+    const auto stored_rule50 = static_cast<std::uint8_t>(std::clamp(rule50, 0, 100));
     *replacement = Entry{
         key,
         move,
         static_cast<std::int16_t>(score_to_table(score, ply)),
         static_cast<std::int16_t>(std::clamp(depth, -32768, 32767)),
         bound,
+        stored_rule50,
         generation_,
         true};
 }
@@ -95,7 +98,8 @@ std::optional<TTData> TranspositionTable::probe(std::uint64_t key, int ply) cons
                 entry.move,
                 score_from_table(entry.score, ply),
                 entry.depth,
-                entry.bound};
+                entry.bound,
+                entry.rule50};
         }
     }
     return std::nullopt;

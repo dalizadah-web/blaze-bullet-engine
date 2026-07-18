@@ -25,6 +25,7 @@ struct TTData {
     int score = 0;
     int depth = 0;
     Bound bound = Bound::None;
+    std::uint8_t rule50 = 0;
 };
 
 class TranspositionTable {
@@ -40,7 +41,8 @@ public:
         int score,
         int depth,
         Bound bound,
-        int ply);
+        int ply,
+        int rule50);
     [[nodiscard]] std::optional<TTData> probe(std::uint64_t key, int ply) const;
     [[nodiscard]] std::size_t capacity() const;
 
@@ -51,6 +53,7 @@ private:
         std::int16_t score = 0;
         std::int16_t depth = 0;
         Bound bound = Bound::None;
+        std::uint8_t rule50 = 0;
         std::uint8_t generation = 0;
         bool occupied = false;
     };

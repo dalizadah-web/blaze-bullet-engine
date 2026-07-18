@@ -256,6 +256,17 @@ TEST_CASE(search_treats_rule50_position_as_draw) {
     CHECK_EQ(result.score, 0);
 }
 
+TEST_CASE(search_does_not_reuse_unsafe_rule50_cutoff) {
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    Position low = position("4k3/8/8/8/8/8/3Q4/4K3 b - - 0 1");
+    Position near_draw = position("4k3/8/8/8/8/8/3Q4/4K3 b - - 99 1");
+    const SearchResult first = searcher.search(low, SearchLimits{.depth = 4});
+    const SearchResult second = searcher.search(near_draw, SearchLimits{.depth = 4});
+    CHECK(first.score != 0);
+    CHECK_EQ(second.score, 0);
+}
+
 TEST_CASE(search_honors_root_searchmoves_restriction) {
     Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     TranspositionTable table(2);
@@ -473,7 +484,7 @@ TEST_CASE(high_depth_null_move_verification_restores_position_when_stopped) {
     Position root = position("4k3/8/8/8/8/8/R6r/4K3 w - - 0 1");
     TranspositionTable table(4);
     Searcher searcher(table);
-    SearchLimits limits{.depth = 11, .nodes = 64'500};
+    SearchLimits limits{.depth = 11, .nodes = 78'000};
 
     const SearchResult result = searcher.search(root, limits);
 

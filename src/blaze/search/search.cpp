@@ -577,7 +577,8 @@ int Searcher::negamax(
     const auto tt_hit = table_.probe(position.key(), ply);
     if (tt_hit) {
         tt_move = tt_hit->move;
-        if (tt_hit->depth >= depth) {
+        const bool rule50_safe = tt_hit->rule50 == std::min(position.rule50(), 100);
+        if (rule50_safe && tt_hit->depth >= depth) {
             if (tt_hit->bound == Bound::Exact ||
                 (tt_hit->bound == Bound::Lower && tt_hit->score >= beta) ||
                 (tt_hit->bound == Bound::Upper && tt_hit->score <= alpha)) {
@@ -854,7 +855,8 @@ int Searcher::negamax(
     } else if (best_score >= beta) {
         bound = Bound::Lower;
     }
-    table_.store(position.key(), best_move, best_score, depth, bound, ply);
+    table_.store(
+        position.key(), best_move, best_score, depth, bound, ply, position.rule50());
     return best_score;
 }
 
