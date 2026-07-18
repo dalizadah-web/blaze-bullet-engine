@@ -52,6 +52,33 @@ int exchange(Position& position, Square target, Color side) {
         while (candidates != 0) {
             const Square from = static_cast<Square>(std::countr_zero(candidates));
             candidates &= candidates - 1;
+            if (type == PieceType::Pawn && (rank_of(target) == 0 || rank_of(target) == 7)) {
+                int best = 0;
+                bool found_legal = false;
+                for (const PieceType promotion : {PieceType::Queen, PieceType::Rook,
+                                                  PieceType::Bishop, PieceType::Knight}) {
+                    StateInfo state;
+                    const Move move{
+                        from,
+                        target,
+                        MoveFlag::Capture | MoveFlag::Promotion,
+                        promotion};
+                    if (!position.make_move(move, state)) continue;
+                    const bool legal = king_safe_after(position, side);
+                    if (!legal) {
+                        position.unmake_move(move, state);
+                        continue;
+                    }
+                    found_legal = true;
+                    const int promotion_gain = value(make_piece(side, promotion)) -
+                        value(make_piece(side, PieceType::Pawn));
+                    const int reply = exchange(position, target, opposite(side));
+                    position.unmake_move(move, state);
+                    best = std::max(best, value(victim) + promotion_gain - reply);
+                }
+                if (found_legal) return best;
+                continue;
+            }
             StateInfo state;
             const Move move{from, target, MoveFlag::Capture};
             if (!position.make_move(move, state)) continue;
