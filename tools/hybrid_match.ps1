@@ -43,7 +43,13 @@ if ($runner) {
     } else {
         $commonDir = [System.IO.Path]::GetFullPath((Join-Path $ProjectRoot $commonDir))
     }
-    $runnerPath = Join-Path (Split-Path -Parent $commonDir) "cutechess-cli.exe"
+    $repositoryRoot = Split-Path -Parent $commonDir
+    $bundledRunner = Join-Path $repositoryRoot "tools-bin/cutechess-1.5.1/cutechess-1.5.1-win64/cutechess-cli.exe"
+    $runnerPath = if (Test-Path -LiteralPath $bundledRunner -PathType Leaf) {
+        $bundledRunner
+    } else {
+        Join-Path $repositoryRoot "cutechess-cli.exe"
+    }
 }
 if (-not (Test-Path -LiteralPath $runnerPath -PathType Leaf)) {
     throw "cutechess-cli was not found. Put cutechess-cli.exe in the main repository root or on PATH."

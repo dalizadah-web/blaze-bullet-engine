@@ -23,6 +23,7 @@ class CloudWorkflowWiringTests(unittest.TestCase):
     def test_local_freeze_copies_windows_runner_dependencies(self) -> None:
         script = HYBRID_RUNNER.read_text(encoding="utf-8")
 
+        self.assertIn("tools-bin/cutechess-1.5.1/cutechess-1.5.1-win64/cutechess-cli.exe", script)
         self.assertIn('-Filter "*.dll"', script)
         self.assertIn("Copy-Item -LiteralPath $dependency.FullName -Destination $frozen", script)
 
