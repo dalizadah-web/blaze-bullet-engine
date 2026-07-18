@@ -63,6 +63,13 @@ public:
         const SearchLimits& limits,
         const std::atomic<bool>* external_stop = nullptr,
         const std::vector<std::uint64_t>& prior_keys = {});
+#ifndef NDEBUG
+    [[nodiscard]] SearchResult debug_search_window(
+        Position position,
+        int depth,
+        int alpha,
+        int beta);
+#endif
 
 private:
     enum class NodeType : std::uint8_t { Root, PV, NonPV };

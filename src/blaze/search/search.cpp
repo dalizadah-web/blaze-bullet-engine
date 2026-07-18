@@ -233,6 +233,28 @@ SearchResult Searcher::search(
     return result;
 }
 
+#ifndef NDEBUG
+SearchResult Searcher::debug_search_window(
+    Position position,
+    int depth,
+    int alpha,
+    int beta) {
+    SearchLimits limits{.depth = depth};
+    return search_window(
+        std::move(position),
+        limits,
+        depth,
+        0,
+        Move{},
+        0,
+        alpha,
+        beta,
+        nullptr,
+        {},
+        std::chrono::steady_clock::now());
+}
+#endif
+
 SearchResult Searcher::search_parallel(
     Position position,
     const SearchLimits& limits,

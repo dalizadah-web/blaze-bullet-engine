@@ -31,6 +31,22 @@ TEST_CASE(transposition_table_preserves_rule50_identity) {
     CHECK_EQ(hit->rule50, 7);
 }
 
+TEST_CASE(transposition_table_clamps_negative_rule50_to_zero) {
+    TranspositionTable table(1);
+    table.store(100, Move(Square::A2, Square::A3), 10, 2, Bound::Exact, 0, -1);
+    const auto hit = table.probe(100, 0);
+    CHECK(hit.has_value());
+    CHECK_EQ(hit->rule50, 0);
+}
+
+TEST_CASE(transposition_table_clamps_rule50_above_one_hundred) {
+    TranspositionTable table(1);
+    table.store(101, Move(Square::B2, Square::B3), 10, 2, Bound::Exact, 0, 101);
+    const auto hit = table.probe(101, 0);
+    CHECK(hit.has_value());
+    CHECK_EQ(hit->rule50, 100);
+}
+
 TEST_CASE(transposition_table_distinguishes_bounds_and_misses) {
     TranspositionTable table(1);
     table.store(1, Move(Square::A2, Square::A3), -12, 4, Bound::Upper, 0, 0);
@@ -84,13 +100,23 @@ TEST_CASE(transposition_table_survives_concurrent_probe_store_stress) {
             for (std::uint64_t iteration = 0; iteration < 20000; ++iteration) {
                 const std::uint64_t key = (iteration * 17 + worker * 131) % 4096 + 1;
                 const int expected = static_cast<int>(key % 2001) - 1000;
+                const int expected_depth = static_cast<int>(key % 32);
+                const int expected_rule50 = static_cast<int>(key % 101);
                 const Move move(
                     static_cast<Square>(key % 8),
                     static_cast<Square>(8 + key % 8));
                 table.store(
-                    key, move, expected, static_cast<int>(key % 32), Bound::Exact, 0, 0);
+                    key,
+                    move,
+                    expected,
+                    expected_depth,
+                    Bound::Exact,
+                    0,
+                    expected_rule50);
                 const auto hit = table.probe(key, 0);
-                if (hit && (hit->score != expected || hit->move != move || hit->bound != Bound::Exact)) {
+                if (hit && (hit->score != expected || hit->move != move ||
+                            hit->depth != expected_depth || hit->bound != Bound::Exact ||
+                            hit->rule50 != expected_rule50)) {
                     coherent = false;
                 }
             }

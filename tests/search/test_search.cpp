@@ -267,6 +267,30 @@ TEST_CASE(search_does_not_reuse_unsafe_rule50_cutoff) {
     CHECK_EQ(second.score, 0);
 }
 
+TEST_CASE(search_does_not_reuse_mismatched_rule50_lower_bound) {
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    Position near_draw = position("4k3/8/8/8/8/8/3Q4/4K3 b - - 99 1");
+    table.store(near_draw.key(), Move{}, 120, 8, Bound::Lower, 0, 0);
+
+    const SearchResult result = searcher.debug_search_window(near_draw, 4, -50, 50);
+
+    CHECK_EQ(result.score, 0);
+    CHECK(result.nodes > 1);
+}
+
+TEST_CASE(search_does_not_reuse_mismatched_rule50_upper_bound) {
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    Position near_draw = position("4k3/8/8/8/8/8/3Q4/4K3 b - - 99 1");
+    table.store(near_draw.key(), Move{}, -120, 8, Bound::Upper, 0, 0);
+
+    const SearchResult result = searcher.debug_search_window(near_draw, 4, -50, 50);
+
+    CHECK_EQ(result.score, 0);
+    CHECK(result.nodes > 1);
+}
+
 TEST_CASE(search_honors_root_searchmoves_restriction) {
     Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     TranspositionTable table(2);
