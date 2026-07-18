@@ -15,7 +15,7 @@ class PrepareSpecTests(unittest.TestCase):
             base.write_text(
                 json.dumps(
                     {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "name": "base",
                     "candidate_ref": "old",
                     "baseline_ref": "old-base",
@@ -31,6 +31,7 @@ class PrepareSpecTests(unittest.TestCase):
                     "hash_mb": 16,
                     "openings": "book.epd",
                     "opening_sha256": "a" * 64,
+                    "opening_start": 251,
                     "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
                     }
                 ),
@@ -47,6 +48,7 @@ class PrepareSpecTests(unittest.TestCase):
                 time_control="0.5+0.01",
                 threads=1,
                 hash_mb=32,
+                opening_start=101,
             )
 
             payload = json.loads(output.read_text(encoding="utf-8"))
@@ -54,6 +56,7 @@ class PrepareSpecTests(unittest.TestCase):
             self.assertEqual(payload["candidate_ref"], "feature")
             self.assertEqual(payload["games"], 12)
             self.assertEqual(payload["time_control"], "0.5+0.01")
+            self.assertEqual(payload["opening_start"], 101)
 
 
 if __name__ == "__main__":

@@ -22,6 +22,7 @@ def main() -> int:
     parser.add_argument("--runner", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--games", type=int, required=True)
+    parser.add_argument("--opening-start", type=int, default=1)
     parser.add_argument("--concurrency", type=int, default=8)
     parser.add_argument("--time-control", required=True)
     parser.add_argument("--threads", type=int, default=1)
@@ -43,7 +44,7 @@ def main() -> int:
             raise ValueError("opening SHA-256 mismatch after newline normalization")
     baseline_identity = ArtifactIdentity.from_path(args.baseline)
     spec = MatchSpec(
-        schema_version=1,
+        schema_version=2,
         name=f"{base.name}-local",
         games=args.games,
         concurrency=args.concurrency,
@@ -61,6 +62,7 @@ def main() -> int:
             alpha=base.sprt.alpha,
             beta=base.sprt.beta,
         ),
+        opening_start=args.opening_start,
     )
     result = run_match(
         spec,
@@ -82,9 +84,11 @@ def main() -> int:
             time_control=args.time_control,
             threads=args.threads,
             hash_mb=args.hash_mb,
+            opening_start=args.opening_start,
             sprt=replace(base.sprt, elo0=args.elo0, elo1=args.elo1),
         )
     )
+    configuration["opening_count"] = args.games // 2
     summary = {
         "schema_version": 3,
         "lane": "local-windows-16-thread-cpu",

@@ -82,6 +82,7 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                     "raw_wdl": {"wins": 8, "draws": 7, "losses": 5},
                     "clean_wdl": {"wins": 8, "draws": 7, "losses": 5},
                     "pair_indexes": pair_indexes,
+                    "source_opening_indexes": [frozen.opening_start + pair for pair in pair_indexes],
                     "game_ids": [
                         game_id
                         for pair in pair_indexes

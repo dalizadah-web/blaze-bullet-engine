@@ -52,18 +52,19 @@ class CloudMatchSpec:
     hash_mb: int
     openings: str
     opening_sha256: str
+    opening_start: int
     sprt: CloudSprtSpec
 
     @classmethod
     def from_json(cls, path: Path | str) -> "CloudMatchSpec":
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
-        if raw.get("schema_version") != 1:
-            raise ValueError("schema_version must be 1")
+        if raw.get("schema_version") != 2:
+            raise ValueError("schema_version must be 2")
         sprt_raw = raw.get("sprt")
         if not isinstance(sprt_raw, dict):
             raise ValueError("sprt is required")
         spec = cls(
-            schema_version=1,
+            schema_version=2,
             name=str(raw.get("name", "")).strip(),
             candidate_ref=str(raw.get("candidate_ref", "")).strip(),
             baseline_ref=str(raw.get("baseline_ref", "")).strip(),
@@ -79,6 +80,7 @@ class CloudMatchSpec:
             hash_mb=raw.get("hash_mb"),
             openings=str(raw.get("openings", "")).strip(),
             opening_sha256=str(raw.get("opening_sha256", "")).lower(),
+            opening_start=raw.get("opening_start"),
             sprt=CloudSprtSpec(
                 elo0=float(sprt_raw["elo0"]),
                 elo1=float(sprt_raw["elo1"]),
@@ -128,6 +130,12 @@ class CloudMatchSpec:
             raise ValueError("time_control must use base+increment seconds")
         if not self.openings or not _SHA256.fullmatch(self.opening_sha256):
             raise ValueError("openings and a valid opening_sha256 are required")
+        if (
+            not isinstance(self.opening_start, int)
+            or isinstance(self.opening_start, bool)
+            or self.opening_start <= 0
+        ):
+            raise ValueError("opening_start must be a positive one-based index")
         if self.sprt.elo1 <= self.sprt.elo0:
             raise ValueError("sprt elo1 must exceed elo0")
         if not 0 < self.sprt.alpha < 1 or not 0 < self.sprt.beta < 1:

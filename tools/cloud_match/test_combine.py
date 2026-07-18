@@ -4,7 +4,14 @@ from unittest.mock import patch
 from tools.cloud_match.combine import combine_lanes
 
 
-def lane(name: str, wins: int, losses: int, *, quarantined_pairs: int = 0) -> dict:
+def lane(
+    name: str,
+    wins: int,
+    losses: int,
+    *,
+    quarantined_pairs: int = 0,
+    opening_start: int = 1,
+) -> dict:
     clean_pairs = wins + losses
     clean_games = clean_pairs * 2
     quarantined_games = quarantined_pairs * 2
@@ -62,6 +69,8 @@ def lane(name: str, wins: int, losses: int, *, quarantined_pairs: int = 0) -> di
             "threads": 1,
             "hash_mb": 16,
             "opening_sha256": "a" * 64,
+            "opening_start": opening_start,
+            "opening_count": clean_pairs + quarantined_pairs,
             "sprt": {"elo0": 0.0, "elo1": 5.0, "alpha": 0.05, "beta": 0.05},
         },
         "artifacts": {"candidate_sha256": name * 64},
@@ -70,7 +79,7 @@ def lane(name: str, wins: int, losses: int, *, quarantined_pairs: int = 0) -> di
 
 class CombineLanesTests(unittest.TestCase):
     def test_combines_cross_platform_lane_evidence(self) -> None:
-        result = combine_lanes([lane("c", 2, 0), lane("l", 1, 1)])
+        result = combine_lanes([lane("c", 2, 0), lane("l", 1, 1, opening_start=3)])
         self.assertEqual(result["expected_games"], 8)
         self.assertEqual(result["counts"]["wins2"], 3)
         self.assertEqual(result["counts"]["losses2"], 1)
@@ -78,7 +87,7 @@ class CombineLanesTests(unittest.TestCase):
 
     def test_preserves_quarantined_pairs_and_lane_strata(self) -> None:
         cloud = lane("c", 1, 0, quarantined_pairs=1)
-        local = lane("l", 0, 1, quarantined_pairs=2)
+        local = lane("l", 0, 1, quarantined_pairs=2, opening_start=3)
 
         result = combine_lanes([cloud, local])
 
@@ -112,7 +121,7 @@ class CombineLanesTests(unittest.TestCase):
 
     def test_zero_clean_lanes_never_call_sprt(self) -> None:
         cloud = lane("c", 0, 0, quarantined_pairs=1)
-        local = lane("l", 0, 0, quarantined_pairs=1)
+        local = lane("l", 0, 0, quarantined_pairs=1, opening_start=2)
 
         with patch("tools.cloud_match.combine.sprt_llr", side_effect=AssertionError("SPRT called")), patch(
             "tools.cloud_match.combine.sprt_decision", side_effect=AssertionError("SPRT called")
@@ -135,6 +144,39 @@ class CombineLanesTests(unittest.TestCase):
         local["configuration"]["sprt"] = {"elo0": 0.0, "elo1": 10.0, "alpha": 0.05, "beta": 0.05}
         with self.assertRaisesRegex(ValueError, "incompatible lane configuration"):
             combine_lanes([cloud, local])
+
+    def test_rejects_lanes_without_a_frozen_full_suite_hash(self) -> None:
+        local = lane("local", 1, 0, opening_start=1)
+        cloud = lane("cloud", 1, 0, opening_start=2)
+        local["configuration"].pop("opening_sha256")
+        cloud["configuration"].pop("opening_sha256")
+
+        with self.assertRaisesRegex(ValueError, "full-suite opening SHA-256"):
+            combine_lanes([local, cloud])
+
+    def test_accepts_exact_disjoint_coverage_and_preserves_platform_strata(self) -> None:
+        local = lane("local-windows", 1, 0, opening_start=1)
+        cloud = lane("cloud-linux", 1, 0, opening_start=2)
+
+        result = combine_lanes([local, cloud])
+
+        self.assertEqual(result["opening_ranges"], [
+            {"lane": "local-windows", "opening_start": 1, "opening_count": 1},
+            {"lane": "cloud-linux", "opening_start": 2, "opening_count": 1},
+        ])
+        self.assertEqual([item["lane"] for item in result["lanes"]], ["local-windows", "cloud-linux"])
+
+    def test_rejects_overlapping_or_uncovered_opening_ranges(self) -> None:
+        with self.assertRaisesRegex(ValueError, "overlap"):
+            combine_lanes([
+                lane("local", 1, 0, opening_start=1),
+                lane("cloud", 1, 0, opening_start=1),
+            ])
+        with self.assertRaisesRegex(ValueError, "uncovered"):
+            combine_lanes([
+                lane("local", 1, 0, opening_start=1),
+                lane("cloud", 1, 0, opening_start=3),
+            ])
 
 
 if __name__ == "__main__":

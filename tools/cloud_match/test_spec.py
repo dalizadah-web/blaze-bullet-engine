@@ -8,7 +8,7 @@ from tools.cloud_match.spec import CloudMatchSpec
 
 def valid_payload() -> dict[str, object]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "name": "bullet-regression",
         "candidate_ref": "codex/bullet-beast",
         "baseline_ref": "4d25363fef79ff2025670e248ed07b3d81747d3a",
@@ -24,6 +24,7 @@ def valid_payload() -> dict[str, object]:
         "hash_mb": 16,
         "openings": "testdata/openings/smoke-v1.epd",
         "opening_sha256": "a" * 64,
+        "opening_start": 251,
         "sprt": {"elo0": 0.0, "elo1": 5.0, "alpha": 0.05, "beta": 0.05},
     }
 
@@ -39,7 +40,14 @@ class CloudMatchSpecTests(unittest.TestCase):
         spec = self.parse(valid_payload())
         self.assertEqual(spec.games, 400)
         self.assertEqual(spec.shards, 20)
+        self.assertEqual(spec.opening_start, 251)
         self.assertEqual(len(spec.experiment_id()), 24)
+
+    def test_rejects_legacy_spec_without_range_identity(self) -> None:
+        payload = valid_payload()
+        payload["schema_version"] = 1
+        with self.assertRaisesRegex(ValueError, "schema_version must be 2"):
+            self.parse(payload)
 
     def test_rejects_unsafe_or_unpairable_inputs(self) -> None:
         cases = (
@@ -49,6 +57,7 @@ class CloudMatchSpecTests(unittest.TestCase):
             ("concurrency", 3),
             ("threads", 3),
             ("opening_sha256", "bad"),
+            ("opening_start", 0),
         )
         for field, value in cases:
             with self.subTest(field=field, value=value):

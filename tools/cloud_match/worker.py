@@ -37,7 +37,11 @@ def _globalize_evidence(
 
 
 def write_shard_openings(
-    source: Path | str, indexes: list[int], destination: Path | str
+    source: Path | str,
+    indexes: list[int],
+    destination: Path | str,
+    *,
+    opening_start: int = 1,
 ) -> list[str]:
     lines = [
         line.strip()
@@ -46,7 +50,14 @@ def write_shard_openings(
     ]
     if not lines:
         raise ValueError(f"opening source contains no opening positions: {source}")
-    selected = [lines[index % len(lines)] for index in indexes]
+    if opening_start <= 0:
+        raise ValueError("opening_start must be a positive one-based index")
+    source_indexes = [opening_start - 1 + index for index in indexes]
+    if len(set(source_indexes)) != len(source_indexes):
+        raise ValueError("duplicate opening source index")
+    if any(index < 0 or index >= len(lines) for index in source_indexes):
+        raise ValueError("opening source index is outside opening source; wraparound is forbidden")
+    selected = [lines[index] for index in source_indexes]
     target = Path(destination)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("".join(line + "\n" for line in selected), encoding="utf-8")
@@ -88,7 +99,12 @@ def run_worker(
     if sha256_file(source_openings) != spec.opening_sha256:
         raise ValueError("source opening SHA-256 mismatch")
     shard_openings = output_path / "shard-openings.epd"
-    write_shard_openings(source_openings, assigned_pairs, shard_openings)
+    write_shard_openings(
+        source_openings,
+        assigned_pairs,
+        shard_openings,
+        opening_start=spec.opening_start,
+    )
 
     candidate_identity = ArtifactIdentity.from_path(candidate)
     baseline_identity = ArtifactIdentity.from_path(baseline)
@@ -98,7 +114,7 @@ def run_worker(
     if baseline_identity.sha256 != spec.baseline_sha256:
         raise ValueError("baseline binary SHA-256 does not match frozen spec")
     match_spec = MatchSpec(
-        schema_version=1,
+        schema_version=2,
         name=f"{spec.name}-shard-{shard_index:02d}",
         games=len(assigned_pairs) * 2,
         concurrency=spec.concurrency,
@@ -116,6 +132,7 @@ def run_worker(
             alpha=spec.sprt.alpha,
             beta=spec.sprt.beta,
         ),
+        opening_start=1,
     )
     match_output = output_path / "match"
     result = run_match(
@@ -150,6 +167,7 @@ def run_worker(
         "openings_sha256": spec.opening_sha256,
         "runner_sha256": runner_identity.sha256,
         "pair_indexes": assigned_pairs,
+        "source_opening_indexes": [spec.opening_start + pair for pair in assigned_pairs],
         "game_ids": game_ids,
         "pgn": "match/games.pgn",
         "environment": {

@@ -6,8 +6,9 @@ param(
     [string]$WorkflowRef = "codex/bullet-beast",
     [string]$CandidateRef = "codex/bullet-beast",
     [string]$BaselineRef = "4d25363fef79ff2025670e248ed07b3d81747d3a",
-    [ValidateRange(2, 1000000)][int]$Games = 400,
-    [ValidateRange(1, 20)][int]$Shards = 20,
+    [ValidateRange(2, 1000000)][int]$Games = 500,
+    [ValidateRange(1, 20)][int]$Shards = 10,
+    [ValidateRange(1, 1000000)][int]$OpeningStart = 251,
     [string]$TimeControl = "0.5+0",
     [ValidateRange(1, 2)][int]$Threads = 1,
     [ValidateRange(1, 65536)][int]$HashMb = 16,
@@ -25,6 +26,7 @@ if ($Action -eq "Run" -and -not $CloudOnly) {
     & (Join-Path $PSScriptRoot "hybrid_match.ps1") -Repo $Repo `
         -WorkflowRef $WorkflowRef -CandidateRef $CandidateRef -BaselineRef $BaselineRef `
         -CloudGames $Games -LocalGames $Games -CloudShards $Shards `
+        -CloudOpeningStart $OpeningStart -LocalOpeningStart 1 `
         -LocalConcurrency 8 -TimeControl $TimeControl -Threads $Threads `
         -HashMb $HashMb -Elo0 $Elo0 -Elo1 $Elo1
     exit $LASTEXITCODE
@@ -85,6 +87,7 @@ switch ($Action) {
             -f "baseline_ref=$BaselineRef" `
             -f "games=$Games" `
             -f "shards=$Shards" `
+            -f "opening_start=$OpeningStart" `
             -f "time_control=$TimeControl" `
             -f "threads=$Threads" `
             -f "hash_mb=$HashMb" `

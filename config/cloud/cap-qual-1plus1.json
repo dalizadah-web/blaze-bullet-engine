@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "aa50f42-vs-e5d7f7b",
   "candidate_ref": "aa50f42331323ec06c05b4f5aa4d04437e3d57b9",
   "baseline_ref": "e5d7f7b",
@@ -13,8 +13,9 @@
   "time_control": "1+1",
   "threads": 1,
   "hash_mb": 16,
-  "openings": "testdata/openings/smoke-v1.epd",
-  "opening_sha256": "2c3ba57f3306350614f12c07ed55de3a8c4598ff56d16a2a6213acc04eff06f0",
+  "openings": "testdata/openings/uho-lichess-500-v1.epd",
+  "opening_sha256": "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc",
+  "opening_start": 1,
   "sprt": {
     "elo0": 0.0,
     "elo1": 5.0,

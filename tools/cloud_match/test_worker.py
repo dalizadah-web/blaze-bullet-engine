@@ -60,10 +60,10 @@ class WorkerOpeningTests(unittest.TestCase):
             source.write_text("fen-0\n\nfen-1\nfen-2\n", encoding="utf-8")
             destination = root / "shard.epd"
 
-            selected = write_shard_openings(source, [1, 3, 5], destination)
+            selected = write_shard_openings(source, [0, 1, 2], destination)
 
-            self.assertEqual(selected, ["fen-1", "fen-0", "fen-2"])
-            self.assertEqual(destination.read_text(encoding="utf-8"), "fen-1\nfen-0\nfen-2\n")
+            self.assertEqual(selected, ["fen-0", "fen-1", "fen-2"])
+            self.assertEqual(destination.read_text(encoding="utf-8"), "fen-0\nfen-1\nfen-2\n")
 
     def test_rejects_empty_opening_source(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -74,13 +74,33 @@ class WorkerOpeningTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "no opening positions"):
                 write_shard_openings(source, [0], root / "shard.epd")
 
+    def test_applies_one_based_lane_offset_without_wraparound(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "openings.epd"
+            source.write_text("a\nb\nc\nd\ne\n", encoding="utf-8")
+
+            selected = write_shard_openings(
+                source, [0, 2], root / "shard.epd", opening_start=2
+            )
+            self.assertEqual(selected, ["b", "d"])
+
+            with self.assertRaisesRegex(ValueError, "outside opening source"):
+                write_shard_openings(
+                    source, [0, 4], root / "bad.epd", opening_start=2
+                )
+            with self.assertRaisesRegex(ValueError, "duplicate opening source index"):
+                write_shard_openings(
+                    source, [1, 1], root / "duplicate.epd", opening_start=2
+                )
+
     def test_rejects_a_spec_without_frozen_binary_hashes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             spec = root / "spec.json"
             spec.write_text(
                 """{
-  \"schema_version\": 1,
+  \"schema_version\": 2,
   \"name\": \"test\",
   \"candidate_ref\": \"candidate\",
   \"baseline_ref\": \"baseline\",
@@ -96,6 +116,7 @@ class WorkerOpeningTests(unittest.TestCase):
   \"hash_mb\": 16,
   \"openings\": \"openings.epd\",
   \"opening_sha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",
+  \"opening_start\": 1,
   \"sprt\": {\"elo0\": 0, \"elo1\": 5, \"alpha\": 0.05, \"beta\": 0.05}
 }""",
                 encoding="utf-8",

@@ -23,7 +23,7 @@ _COMMIT_D = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 
 def _base_payload() -> dict[str, object]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "name": "id-test",
         "candidate_ref": "aa50f42331323ec06c05b4f5aa4d04437e3d57b9",
         "baseline_ref": "e5d7f7b",
@@ -39,6 +39,7 @@ def _base_payload() -> dict[str, object]:
         "hash_mb": 16,
         "openings": "openings.epd",
         "opening_sha256": "c" * 64,
+        "opening_start": 1,
         "sprt": {"elo0": 0.0, "elo1": 5.0, "alpha": 0.05, "beta": 0.05},
     }
 
@@ -77,6 +78,7 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
         "raw_wdl": {"wins": 2, "draws": 2, "losses": 0},
         "clean_wdl": {"wins": 2, "draws": 2, "losses": 0},
         "pair_indexes": pair_indexes,
+        "source_opening_indexes": [spec.opening_start + pair for pair in pair_indexes],
         "game_ids": [
             game_id
             for pair in pair_indexes

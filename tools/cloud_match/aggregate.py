@@ -49,6 +49,7 @@ def aggregate_shards(
     expected_indexes = set(range(spec.shards))
     seen_indexes: set[int] = set()
     seen_game_ids: set[str] = set()
+    seen_source_opening_indexes: set[int] = set()
     common_hashes: dict[str, str] = {}
     totals = [0, 0, 0, 0, 0]
     completed_games = clean_games = clean_pairs = 0
@@ -76,6 +77,13 @@ def aggregate_shards(
         assigned_pairs = pair_indexes(spec.games, index, spec.shards)
         if raw.get("pair_indexes") != assigned_pairs:
             raise ValueError(f"pair assignment mismatch in {path}")
+        expected_source_indexes = [spec.opening_start + pair for pair in assigned_pairs]
+        source_indexes = raw.get("source_opening_indexes")
+        if source_indexes != expected_source_indexes:
+            raise ValueError(f"source opening assignment mismatch in {path}")
+        if seen_source_opening_indexes.intersection(source_indexes):
+            raise ValueError(f"duplicate source opening index in {path}")
+        seen_source_opening_indexes.update(source_indexes)
         expected_games = len(assigned_pairs) * 2
         if raw.get("expected_games") != expected_games:
             raise ValueError(f"game count mismatch in {path}")
@@ -157,6 +165,11 @@ def aggregate_shards(
         raise ValueError("missing shard indexes")
     if len(seen_game_ids) != spec.games:
         raise ValueError("incomplete or duplicate game ID coverage")
+    expected_source_coverage = set(
+        range(spec.opening_start, spec.opening_start + spec.games // 2)
+    )
+    if seen_source_opening_indexes != expected_source_coverage:
+        raise ValueError("incomplete source opening coverage")
 
     counts = Pentanomial(*totals)
     if clean_pairs == 0:
@@ -172,8 +185,11 @@ def aggregate_shards(
             spec.sprt.beta,
         )
     assert termination_counts is not None
+    frozen_spec = asdict(spec)
+    frozen_spec["opening_count"] = spec.games // 2
     return {
         "schema_version": 3,
+        "lane": "cloud-linux-github-hosted",
         "experiment_id": experiment_id,
         "expected_games": spec.games,
         "completed_games": completed_games,
@@ -190,7 +206,7 @@ def aggregate_shards(
         "llr": llr,
         "decision": decision,
         "artifacts": common_hashes,
-        "spec": asdict(spec),
+        "spec": frozen_spec,
     }
 
 

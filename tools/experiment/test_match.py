@@ -19,13 +19,46 @@ from tools.experiment.manifest import sha256_file
 
 
 class MatchSpecTests(unittest.TestCase):
+    def test_rejects_legacy_match_schema_without_opening_range(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "match.json"
+            config.write_text(json.dumps({"schema_version": 1}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "match schema_version must be 2"):
+                MatchSpec.from_json(config)
+
+    def test_schema_two_requires_explicit_opening_start(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "match.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "name": "missing-range",
+                        "games": 2,
+                        "concurrency": 1,
+                        "time_control": "1+0",
+                        "threads": 1,
+                        "hash_mb": 16,
+                        "repeat": True,
+                        "opening_format": "epd",
+                        "openings": "openings.epd",
+                        "opening_sha256": "0" * 64,
+                        "opponent_sha256": None,
+                        "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "opening_start must be a positive"):
+                MatchSpec.from_json(config)
+
     def test_rejects_an_odd_game_count(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / "match.json"
             config.write_text(
                 json.dumps(
                     {
-                        "schema_version": 1,
+                        "schema_version": 2,
                         "name": "invalid",
                         "games": 3,
                         "concurrency": 1,
@@ -36,6 +69,7 @@ class MatchSpecTests(unittest.TestCase):
                         "opening_format": "epd",
                         "openings": "openings.epd",
                         "opening_sha256": "0" * 64,
+                        "opening_start": 1,
                         "opponent_sha256": None,
                         "sprt": {
                             "elo0": 0.0,
@@ -85,6 +119,39 @@ class MatchSpecTests(unittest.TestCase):
         self.assertIn("tc=10+0.1", command)
         self.assertIn("-repeat", command)
         self.assertEqual(command[command.index("-games") + 1], "2")
+
+    def test_runner_command_freezes_one_based_opening_start(self) -> None:
+        spec = MatchSpec(
+            schema_version=2,
+            name="opening-range",
+            games=4,
+            concurrency=1,
+            time_control="1+0",
+            threads=1,
+            hash_mb=16,
+            repeat=True,
+            opening_format="epd",
+            openings="openings.epd",
+            opening_sha256="0" * 64,
+            opponent_sha256=None,
+            sprt=SprtSpec(0.0, 5.0, 0.05, 0.05),
+            opening_start=3,
+        )
+
+        command = build_runner_command(
+            spec,
+            runner=Path("cutechess-cli"),
+            candidate=Path("candidate"),
+            opponent=Path("baseline"),
+            openings=Path("openings.epd"),
+            pgn=Path("games.pgn"),
+            games=4,
+            candidate_name="Candidate",
+            opponent_name="Baseline",
+        )
+
+        opening_options = command[command.index("-openings") + 1 : command.index("-games")]
+        self.assertIn("start=3", opening_options)
 
 
 class PgnPairTests(unittest.TestCase):
@@ -443,7 +510,8 @@ class MatchExecutionTests(unittest.TestCase):
             for path in (candidate, opponent, runner):
                 path.write_bytes(path.name.encode("ascii"))
             openings.write_text(
-                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - id "start";\n',
+                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - id "start";\n'
+                * 5,
                 encoding="utf-8",
             )
             spec = MatchSpec(

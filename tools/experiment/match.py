@@ -51,13 +51,14 @@ class MatchSpec:
     max_moves: int = 200
     opening_order: str = "sequential"
     opening_plies: int = 0
+    opening_start: int = 1
 
     @classmethod
     def from_json(cls, path: Path | str) -> "MatchSpec":
         config_path = Path(path)
         raw = json.loads(config_path.read_text(encoding="utf-8"))
-        if raw.get("schema_version") != 1:
-            raise ValueError("match schema_version must be 1")
+        if raw.get("schema_version") != 2:
+            raise ValueError("match schema_version must be 2")
         games = raw.get("games")
         if not isinstance(games, int) or games <= 0 or games % 2 != 0:
             raise ValueError("games must be a positive even number")
@@ -105,8 +106,15 @@ class MatchSpec:
             raise ValueError("match name is required")
         if not isinstance(openings, str) or not openings.strip():
             raise ValueError("openings path is required")
+        opening_start = raw.get("opening_start")
+        if (
+            not isinstance(opening_start, int)
+            or isinstance(opening_start, bool)
+            or opening_start <= 0
+        ):
+            raise ValueError("opening_start must be a positive one-based index")
         return cls(
-            schema_version=1,
+            schema_version=2,
             name=name,
             games=games,
             concurrency=concurrency,
@@ -123,6 +131,7 @@ class MatchSpec:
             max_moves=int(raw.get("max_moves", 200)),
             opening_order=str(raw.get("opening_order", "sequential")),
             opening_plies=int(raw.get("opening_plies", 0)),
+            opening_start=opening_start,
         )
 
 
@@ -849,6 +858,7 @@ def build_runner_command(
         f"file={openings}",
         f"format={spec.opening_format}",
         f"order={spec.opening_order}",
+        f"start={spec.opening_start}",
         "-games",
         str(games),
         "-repeat",
@@ -895,6 +905,17 @@ def run_match(
             "opening SHA-256 mismatch: "
             f"expected {spec.opening_sha256}, got {openings_identity.sha256}"
         )
+    if spec.opening_format == "epd":
+        opening_count = sum(
+            bool(line.strip())
+            for line in openings_path.read_text(encoding="utf-8-sig").splitlines()
+        )
+        last_opening = spec.opening_start + game_count // 2 - 1
+        if last_opening > opening_count:
+            raise ValueError(
+                "opening range exceeds source without wraparound: "
+                f"requested {spec.opening_start}..{last_opening}, source has {opening_count}"
+            )
     if spec.opponent_sha256 and opponent_identity.sha256 != spec.opponent_sha256:
         raise ValueError(
             "opponent SHA-256 mismatch: "
@@ -911,6 +932,7 @@ def run_match(
 
     configuration = asdict(spec)
     configuration["games"] = game_count
+    configuration["opening_count"] = game_count // 2
     manifest = ExperimentManifest.create(
         experiment_id=f"{spec.name}-{source_commit[:12]}",
         source_commit=source_commit,

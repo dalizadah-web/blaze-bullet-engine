@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
 from typing import Any, Iterable
 
 from tools.experiment.match import validate_evidence_payload
@@ -12,6 +13,7 @@ from tools.experiment.pentanomial import Pentanomial, sprt_decision, sprt_llr
 
 
 _COUNT_KEYS = ("wins2", "wins1_draw1", "draws2", "losses1_draw1", "losses2")
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _COMPATIBILITY_KEYS = (
     "candidate_ref",
     "baseline_ref",
@@ -35,6 +37,10 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
     if len(items) < 2:
         raise ValueError("at least two lanes are required")
     common = _configuration(items[0])
+    if not isinstance(common["opening_sha256"], str) or not _SHA256.fullmatch(
+        common["opening_sha256"]
+    ):
+        raise ValueError("lanes require a frozen full-suite opening SHA-256")
     totals = [0, 0, 0, 0, 0]
     expected_games = completed_games = clean_games = clean_pairs = 0
     quarantined_games = quarantined_pairs = 0
@@ -43,6 +49,7 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
     termination_counts: dict[str, dict[str, int]] | None = None
     abnormal_games: list[dict[str, Any]] = []
     lane_records: list[dict[str, Any]] = []
+    opening_ranges: list[dict[str, Any]] = []
     for index, lane in enumerate(items):
         if lane.get("schema_version") != 3:
             raise ValueError(f"unsupported lane schema at index {index}")
@@ -69,6 +76,27 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
             for key, value in entries.items():
                 termination_counts[group][key] += value
         lane_name = lane.get("lane", f"lane-{index}")
+        lane_configuration = lane.get("configuration", lane.get("spec"))
+        assert isinstance(lane_configuration, dict)
+        opening_start = lane_configuration.get("opening_start")
+        opening_count = lane_configuration.get("opening_count")
+        if (
+            not isinstance(opening_start, int)
+            or isinstance(opening_start, bool)
+            or opening_start <= 0
+            or not isinstance(opening_count, int)
+            or isinstance(opening_count, bool)
+            or opening_count <= 0
+            or opening_count != evidence.expected_games // 2
+        ):
+            raise ValueError(f"invalid opening range at lane {index}")
+        opening_ranges.append(
+            {
+                "lane": lane_name,
+                "opening_start": opening_start,
+                "opening_count": opening_count,
+            }
+        )
         abnormal_games.extend(
             {**dict(record), "lane": lane_name}
             for record in evidence.abnormal_games
@@ -82,6 +110,14 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
             }
         )
     combined = Pentanomial(*totals)
+    expected_start = 1
+    for opening_range in sorted(opening_ranges, key=lambda item: item["opening_start"]):
+        start = opening_range["opening_start"]
+        if start < expected_start:
+            raise ValueError("opening lane ranges overlap")
+        if start > expected_start:
+            raise ValueError("opening lane ranges leave uncovered positions")
+        expected_start = start + opening_range["opening_count"]
     sprt = common["sprt"]
     if clean_pairs == 0:
         llr = 0.0
@@ -113,6 +149,7 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "llr": llr,
         "decision": decision,
         "configuration": common,
+        "opening_ranges": opening_ranges,
         "lanes": lane_records,
     }
 

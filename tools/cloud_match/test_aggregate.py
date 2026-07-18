@@ -20,7 +20,7 @@ class AggregateShardsTests(unittest.TestCase):
         self.spec_path.write_text(
             json.dumps(
                 {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "name": "test",
                     "candidate_ref": "candidate",
                     "baseline_ref": "baseline",
@@ -36,6 +36,7 @@ class AggregateShardsTests(unittest.TestCase):
                     "hash_mb": 16,
                     "openings": "openings.epd",
                     "opening_sha256": "c" * 64,
+                    "opening_start": 1,
                     "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
                 }
             ),
@@ -74,6 +75,7 @@ class AggregateShardsTests(unittest.TestCase):
             "raw_wdl": {"wins": wins, "draws": draws, "losses": losses},
             "clean_wdl": {"wins": wins, "draws": draws, "losses": losses},
             "pair_indexes": pair_indexes,
+            "source_opening_indexes": [self.spec.opening_start + pair for pair in pair_indexes],
             "game_ids": [
                 game_id
                 for pair in pair_indexes
@@ -108,6 +110,7 @@ class AggregateShardsTests(unittest.TestCase):
 
         result = aggregate_shards([first, second], self.spec)
 
+        self.assertEqual(result["lane"], "cloud-linux-github-hosted")
         self.assertEqual(result["expected_games"], 8)
         self.assertEqual(result["clean_pairs"], 4)
         self.assertEqual(result["counts"], {
@@ -264,6 +267,16 @@ class AggregateShardsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate game ID"):
             aggregate_shards([first, second], self.spec)
 
+    def test_rejects_forged_or_duplicate_source_opening_indexes(self) -> None:
+        first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        second = self._write_shard(1, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        payload = json.loads(second.read_text(encoding="utf-8"))
+        payload["source_opening_indexes"] = json.loads(first.read_text(encoding="utf-8"))["source_opening_indexes"]
+        second.write_text(json.dumps(payload), encoding="utf-8")
+
+        with self.assertRaisesRegex(ValueError, "source opening assignment mismatch"):
+            aggregate_shards([first, second], self.spec)
+
     def test_rejects_missing_shard(self) -> None:
         first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
 
@@ -331,6 +344,7 @@ class AggregateShardsTests(unittest.TestCase):
             "runner_sha256": "d" * 64,
             "expected_games": 4,
             "pair_indexes": pair_indexes,
+            "source_opening_indexes": [self.spec.opening_start + pair for pair in pair_indexes],
             "game_ids": [
                 f"{self.spec.experiment_id()}-p{pair:06d}-w" for pair in pair_indexes
             ] + [
