@@ -31,6 +31,7 @@ struct SearchLimits {
     std::shared_ptr<std::atomic<std::uint64_t>> shared_node_budget{};
 #ifndef NDEBUG
     bool enable_probcut = true;
+    bool enable_null_move = true;
 #endif
 };
 
@@ -41,6 +42,9 @@ struct SearchResult {
     std::uint64_t nodes = 0;
 #ifndef NDEBUG
     std::uint64_t probcut_legal_checks = 0;
+    std::uint64_t null_move_searches = 0;
+    std::uint64_t null_move_pv_searches = 0;
+    std::uint64_t null_move_verifications = 0;
 #endif
     std::vector<Move> pv;
     bool stopped = false;
@@ -73,6 +77,9 @@ private:
         std::uint64_t nodes = 0;
 #ifndef NDEBUG
         std::uint64_t probcut_legal_checks = 0;
+        std::uint64_t null_move_searches = 0;
+        std::uint64_t null_move_pv_searches = 0;
+        std::uint64_t null_move_verifications = 0;
 #endif
         bool stopped = false;
         std::vector<std::uint64_t> keys;

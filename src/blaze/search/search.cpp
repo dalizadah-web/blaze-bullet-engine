@@ -214,6 +214,9 @@ SearchResult Searcher::search(
     result.nodes = context.nodes;
 #ifndef NDEBUG
     result.probcut_legal_checks = context.probcut_legal_checks;
+    result.null_move_searches = context.null_move_searches;
+    result.null_move_pv_searches = context.null_move_pv_searches;
+    result.null_move_verifications = context.null_move_verifications;
 #endif
     result.stopped = context.stopped;
     return result;
@@ -281,6 +284,11 @@ SearchResult Searcher::search_parallel(
             Move move;
             int score = -infinity;
             std::uint64_t nodes = 0;
+#ifndef NDEBUG
+            std::uint64_t null_move_searches = 0;
+            std::uint64_t null_move_pv_searches = 0;
+            std::uint64_t null_move_verifications = 0;
+#endif
             std::vector<Move> pv;
             bool complete = false;
         };
@@ -355,6 +363,11 @@ SearchResult Searcher::search_parallel(
                     TaskResult& task = tasks[index];
                     task.score = -child_result.score;
                     task.nodes = child_result.nodes;
+#ifndef NDEBUG
+                    task.null_move_searches = child_result.null_move_searches;
+                    task.null_move_pv_searches = child_result.null_move_pv_searches;
+                    task.null_move_verifications = child_result.null_move_verifications;
+#endif
                     task.pv.push_back(root_move);
                     task.pv.insert(task.pv.end(), child_result.pv.begin(), child_result.pv.end());
                     task.complete = !child_result.stopped;
@@ -382,6 +395,11 @@ SearchResult Searcher::search_parallel(
         std::uint64_t searched_nodes = 0;
         for (const TaskResult& task : tasks) {
             searched_nodes += task.nodes;
+#ifndef NDEBUG
+            result.null_move_searches += task.null_move_searches;
+            result.null_move_pv_searches += task.null_move_pv_searches;
+            result.null_move_verifications += task.null_move_verifications;
+#endif
             if (task.complete && (best == nullptr || task.score > best->score)) {
                 best = &task;
             }
@@ -435,6 +453,11 @@ SearchResult Searcher::search_window(
         if (!result.pv.empty()) result.best_move = result.pv.front();
     }
     result.nodes = context.nodes;
+#ifndef NDEBUG
+    result.null_move_searches = context.null_move_searches;
+    result.null_move_pv_searches = context.null_move_pv_searches;
+    result.null_move_verifications = context.null_move_verifications;
+#endif
     result.stopped = context.stopped;
     return result;
 }
@@ -511,29 +534,70 @@ int Searcher::negamax(
         }
     }
 
-    if (allow_null && depth >= 3 && !checked && position.rule50() < 99 &&
-        beta < search_mate_threshold &&
-        has_non_pawn_material(position, position.side_to_move())) {
-        StateInfo null_state;
-        position.make_null(null_state);
-        PvLine null_pv;
-        const int reduction = depth >= 6 ? 3 : 2;
-        context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
-        const int null_score = -negamax<NodeType::NonPV>(
-            position,
-            depth - 1 - reduction,
-            -beta,
-            -beta + 1,
-            ply + 1,
-            context,
-            null_pv,
-            false);
-        position.unmake_null(null_state);
-        if (context.stopped) {
-            return 0;
-        }
-        if (null_score >= beta) {
-            return null_score;
+    if constexpr (node_type == NodeType::NonPV) {
+        const int static_eval = evaluate_position(position);
+        const bool null_enabled =
+#ifndef NDEBUG
+            context.limits.enable_null_move;
+#else
+            true;
+#endif
+        if (null_enabled && allow_null && depth >= 3 && !checked &&
+            position.rule50() < 90 && beta < search_mate_threshold &&
+            static_eval >= beta &&
+            has_non_pawn_material(position, position.side_to_move())) {
+#ifndef NDEBUG
+            const auto record_null_move_attempt = [&context] {
+                ++context.null_move_searches;
+                if constexpr (node_type != NodeType::NonPV) {
+                    ++context.null_move_pv_searches;
+                }
+            };
+            record_null_move_attempt();
+#endif
+            const int eval_term = std::clamp((static_eval - beta) / 180, 0, 3);
+            const int reduction = std::min(depth - 1, 3 + depth / 4 + eval_term);
+            StateInfo null_state;
+            position.make_null(null_state);
+            PvLine null_pv;
+            context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
+            const int null_score = -negamax<NodeType::NonPV>(
+                position,
+                depth - 1 - reduction,
+                -beta,
+                -beta + 1,
+                ply + 1,
+                context,
+                null_pv,
+                false);
+            position.unmake_null(null_state);
+            if (context.stopped) {
+                return 0;
+            }
+            if (null_score >= beta) {
+                if (depth < 10) {
+                    return std::min(null_score, search_mate_threshold - 1);
+                }
+#ifndef NDEBUG
+                ++context.null_move_verifications;
+#endif
+                PvLine verification_pv;
+                const int verification = negamax<NodeType::NonPV>(
+                    position,
+                    depth - reduction,
+                    beta - 1,
+                    beta,
+                    ply,
+                    context,
+                    verification_pv,
+                    false);
+                if (context.stopped) {
+                    return 0;
+                }
+                if (verification >= beta) {
+                    return verification;
+                }
+            }
         }
     }
 

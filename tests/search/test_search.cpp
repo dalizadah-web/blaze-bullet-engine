@@ -257,5 +257,32 @@ TEST_CASE(mate_distance_bounds_reduce_forced_mate_tree) {
     CHECK(result.nodes < 390);
 }
 
+TEST_CASE(null_move_is_used_only_at_non_pv_nodes) {
+    Position root = position("r1bqk2r/pppp1ppp/2n2n2/4p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 4 5");
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 8});
+    CHECK(result.null_move_searches > 0);
+    CHECK_EQ(result.null_move_pv_searches, 0U);
+    CHECK(root.is_legal(result.best_move));
+}
+
+TEST_CASE(verified_null_move_preserves_zugzwang_score) {
+    constexpr std::string_view fen = "8/8/8/2k5/8/2P5/2K5/8 w - - 0 1";
+    Position enabled_root = position(fen);
+    Position disabled_root = position(fen);
+    TranspositionTable enabled_table(4);
+    TranspositionTable disabled_table(4);
+    Searcher enabled_searcher(enabled_table);
+    Searcher disabled_searcher(disabled_table);
+    SearchLimits enabled{.depth = 8};
+    SearchLimits disabled{.depth = 8};
+    disabled.enable_null_move = false;
+    const SearchResult with_null = enabled_searcher.search(enabled_root, enabled);
+    const SearchResult without_null = disabled_searcher.search(disabled_root, disabled);
+    CHECK_EQ(with_null.score, without_null.score);
+    CHECK_EQ(with_null.best_move, without_null.best_move);
+}
+
 }  // namespace
 }  // namespace blaze
