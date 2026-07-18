@@ -134,6 +134,23 @@ TEST_CASE(search_parallel_root_split_returns_a_legal_result) {
     CHECK(!result.stopped);
 }
 
+TEST_CASE(parallel_depth_one_searches_moves_instead_of_returning_generation_order) {
+    Position root = position("4k3/8/8/8/8/8/q7/R3K3 w - - 0 1");
+    TranspositionTable one_table(2);
+    TranspositionTable four_table(2);
+    Searcher one_searcher(one_table);
+    Searcher four_searcher(four_table);
+    SearchLimits one{.depth = 1};
+    SearchLimits four{.depth = 1};
+    four.threads = 4;
+    const SearchResult single = one_searcher.search(root, one);
+    const SearchResult parallel = four_searcher.search(root, four);
+    CHECK_EQ(parallel.best_move, single.best_move);
+    CHECK_EQ(parallel.score, single.score);
+    CHECK(parallel.nodes > 0);
+    CHECK_EQ(move_to_uci(parallel.best_move), "a1a2");
+}
+
 TEST_CASE(search_parallel_root_split_preserves_single_thread_score) {
     Position root = position("r1bqk2r/pppp1ppp/2n2n2/4p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 4 5");
     TranspositionTable single_table(8);

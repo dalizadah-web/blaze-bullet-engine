@@ -270,16 +270,6 @@ SearchResult Searcher::search_parallel(
             result.stopped = true;
             break;
         }
-        if (depth == 1) {
-            result.depth = 1;
-            result.score = evaluate_position(position);
-            if (limits.target_time.count() > 0 &&
-                std::chrono::steady_clock::now() - search_start >= limits.target_time) {
-                break;
-            }
-            continue;
-        }
-
         struct TaskResult {
             Move move;
             int score = -infinity;
