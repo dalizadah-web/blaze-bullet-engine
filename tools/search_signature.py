@@ -49,10 +49,17 @@ def parse_info(line: str) -> dict[str, object]:
                 raise ValueError("score must specify cp or mate")
             kind = tokens[index]
             value, index = _parse_integer(tokens, index + 1, "score")
-            parsed["score"] = {"kind": kind, "value": value}
+            score: dict[str, object] = {"kind": kind, "value": value}
+            bound: str | None = None
             while index < len(tokens) and tokens[index] in {"lowerbound", "upperbound"}:
-                parsed[tokens[index]] = True
+                next_bound = "lower" if tokens[index] == "lowerbound" else "upper"
+                if bound is not None:
+                    raise ValueError("score must not specify more than one bound")
+                bound = next_bound
                 index += 1
+            if bound is not None:
+                score["bound"] = bound
+            parsed["score"] = score
         elif field == "pv":
             parsed["pv"] = tokens[index:]
             break
@@ -149,7 +156,13 @@ def signature_payload(report: dict[str, object]) -> dict[str, object]:
     )
     return {
         key: report[key]
-        for key in ("engine_sha256", "corpus_sha256", "uci", "settings")
+        for key in (
+            "schema_version",
+            "engine_sha256",
+            "corpus_sha256",
+            "uci",
+            "settings",
+        )
         if key in report
     } | {
         "positions": deterministic_positions,
@@ -213,10 +226,17 @@ class UciEngine:
     def returncode(self) -> int | None:
         return self._process.poll()
 
+    @property
+    def reader_alive(self) -> bool:
+        return self._reader.is_alive()
+
     def _read_stdout(self, stdout: TextIO) -> None:
         try:
             for line in stdout:
                 self._lines.put(line.rstrip("\r\n"))
+        except (OSError, ValueError):
+            # close() may close the pipe while the daemon reader is unwinding.
+            pass
         finally:
             self._lines.put(None)
 
@@ -259,6 +279,22 @@ class UciEngine:
                 self.options.append(line)
         if "name" not in self.identity:
             raise ValueError("UCI engine did not advertise an id name")
+        advertised_names: set[str] = set()
+        for option in self.options:
+            tokens = option.split()
+            try:
+                name_start = tokens.index("name") + 1
+                type_start = tokens.index("type", name_start)
+            except ValueError:
+                continue
+            advertised_names.add(" ".join(tokens[name_start:type_start]).casefold())
+        missing = [
+            name for name in ("Hash", "Threads") if name.casefold() not in advertised_names
+        ]
+        if missing:
+            raise ValueError(
+                "UCI engine did not advertise required options: " + ", ".join(missing)
+            )
         self._send(f"setoption name Threads value {threads}")
         self._send(f"setoption name Hash value {hash_mb}")
         self._send("isready")
@@ -309,14 +345,49 @@ class UciEngine:
                     raise ValueError(f"invalid bestmove: {bestmove!r}") from exc
                 if move not in board.legal_moves:
                     raise ValueError(f"illegal bestmove {bestmove!r} for {fen!r}")
+                pv = final_info["pv"]
+                if not isinstance(pv, list) or not pv:
+                    raise ValueError("complete info must contain a non-empty PV")
+                pv_board = board.copy(stack=False)
+                for ply, token in enumerate(pv, start=1):
+                    if not isinstance(token, str):
+                        raise ValueError(f"invalid PV move at ply {ply}: {token!r}")
+                    try:
+                        pv_move = chess.Move.from_uci(token)
+                    except ValueError as exc:
+                        raise ValueError(
+                            f"invalid PV move at ply {ply}: {token!r}"
+                        ) from exc
+                    if pv_move not in pv_board.legal_moves:
+                        raise ValueError(
+                            f"illegal PV move at ply {ply}: {token!r}"
+                        )
+                    pv_board.push(pv_move)
+                if pv[0] != bestmove:
+                    raise ValueError(
+                        f"PV first move {pv[0]!r} does not match bestmove {bestmove!r}"
+                    )
                 result: dict[str, object] = {
                     "bestmove": bestmove,
                     "info": final_info,
                 }
                 if len(fields) == 4:
-                    result["ponder"] = fields[3]
+                    ponder = fields[3]
+                    child = board.copy(stack=False)
+                    child.push(move)
+                    try:
+                        ponder_move = chess.Move.from_uci(ponder)
+                    except ValueError as exc:
+                        raise ValueError(f"invalid ponder move: {ponder!r}") from exc
+                    if ponder_move not in child.legal_moves:
+                        raise ValueError(
+                            f"illegal ponder {ponder!r} after {bestmove!r}"
+                        )
+                    result["ponder"] = ponder
                 return result
-        except (TimeoutError, RuntimeError):
+        except (TimeoutError, RuntimeError, ValueError):
+            # Any malformed result leaves unread protocol output in the pipe. The
+            # process is poisoned and cannot safely be reused for another search.
             self.close()
             raise
 
@@ -342,6 +413,9 @@ class UciEngine:
             self._process.stdin.close()
         if self._process.stdout is not None:
             self._process.stdout.close()
+        self._reader.join(timeout=self.shutdown_timeout)
+        if self._reader.is_alive():
+            raise RuntimeError("UCI reader thread did not terminate during close")
 
     def __enter__(self) -> "UciEngine":
         return self

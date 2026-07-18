@@ -37,8 +37,9 @@ for raw in sys.stdin:
     if command == "uci":
         emit("id name Deterministic Fake")
         emit("id author Blaze Tests")
-        emit("option name Hash type spin default 16 min 1 max 4096")
-        emit("option name Threads type spin default 1 min 1 max 128")
+        if mode != "no-options":
+            emit("option name Hash type spin default 16 min 1 max 4096")
+            emit("option name Threads type spin default 1 min 1 max 128")
         emit("uciok")
     elif command == "isready":
         emit("readyok")
@@ -54,6 +55,21 @@ for raw in sys.stdin:
         elif mode == "illegal":
             emit("info depth 4 seldepth 6 score cp 12 nodes 100 time 3 pv e2e4")
             emit("bestmove a1a8")
+        elif mode == "empty-pv":
+            emit("info depth 4 seldepth 6 score cp 12 nodes 100 time 3 pv")
+            emit("bestmove e2e4")
+        elif mode == "invalid-pv":
+            emit("info depth 4 seldepth 6 score cp 12 nodes 100 time 3 pv h9h8")
+            emit("bestmove e2e4")
+        elif mode == "mismatched-pv":
+            emit("info depth 4 seldepth 6 score cp 12 nodes 100 time 3 pv d2d4")
+            emit("bestmove e2e4")
+        elif mode == "truncated-pv":
+            emit("info depth 4 seldepth 6 score cp 12 nodes 100 time 3 pv e2e4 e7e5 e2e3")
+            emit("bestmove e2e4")
+        elif mode == "illegal-ponder":
+            emit("info depth 4 seldepth 6 score cp 12 nodes 100 time 3 pv e2e4 e7e5")
+            emit("bestmove e2e4 ponder e2e5")
         else:
             emit("info depth 1 seldepth 1 score cp 2 nodes 10 time 1 pv d2d4")
             emit("info depth 4 seldepth 6 score cp 12 nodes 100 time 3 nps 33333 pv e2e4 e7e5")
@@ -82,6 +98,29 @@ class SearchSignatureTests(unittest.TestCase):
         parsed = parse_info("info depth 8 score mate -3 nodes 200 pv e1e2")
 
         self.assertEqual(parsed["score"], {"kind": "mate", "value": -3})
+
+    def test_parse_info_preserves_score_bound_semantics(self) -> None:
+        exact = parse_info("info depth 4 score cp 12 nodes 100")
+        lower = parse_info("info depth 4 score cp 12 lowerbound nodes 100")
+        upper = parse_info("info depth 4 score cp 12 upperbound nodes 100")
+
+        self.assertEqual(exact["score"], {"kind": "cp", "value": 12})
+        self.assertEqual(
+            lower["score"], {"kind": "cp", "value": 12, "bound": "lower"}
+        )
+        self.assertEqual(
+            upper["score"], {"kind": "cp", "value": 12, "bound": "upper"}
+        )
+        self.assertNotEqual(
+            canonical_signature({"score": exact["score"]}),
+            canonical_signature({"score": lower["score"]}),
+        )
+
+    def test_parse_info_rejects_conflicting_score_bounds(self) -> None:
+        with self.assertRaisesRegex(ValueError, "bound"):
+            parse_info(
+                "info depth 4 score cp 12 lowerbound upperbound nodes 100"
+            )
 
     def test_parse_info_rejects_incomplete_score(self) -> None:
         with self.assertRaisesRegex(ValueError, "score"):
@@ -139,6 +178,19 @@ class SearchSignatureTests(unittest.TestCase):
             canonical_signature(signature_payload(changed)),
         )
 
+    def test_signature_payload_includes_schema_identity(self) -> None:
+        first = {
+            "schema_version": 1,
+            "engine_sha256": "a" * 64,
+            "positions": [],
+        }
+        second = dict(first, schema_version=2)
+
+        self.assertNotEqual(
+            canonical_signature(signature_payload(first)),
+            canonical_signature(signature_payload(second)),
+        )
+
 
 class UciEngineTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -183,6 +235,31 @@ class UciEngineTests(unittest.TestCase):
         self.assertIn("go nodes 100", commands)
         self.assertEqual(commands[-1], "quit")
 
+    def test_two_searches_each_reset_and_synchronize_the_engine(self) -> None:
+        engine = UciEngine(self.command(), timeout=1.0)
+        try:
+            for _ in range(2):
+                engine.search(
+                    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    100,
+                )
+        finally:
+            engine.close()
+
+        commands = self.commands()
+        self.assertEqual(commands.count("ucinewgame"), 2)
+        self.assertEqual(commands.count("isready"), 3)
+        first_reset = commands.index("ucinewgame")
+        second_reset = commands.index("ucinewgame", first_reset + 1)
+        for reset in (first_reset, second_reset):
+            self.assertEqual(commands[reset + 1], "isready")
+            self.assertTrue(commands[reset + 2].startswith("position fen "))
+            self.assertEqual(commands[reset + 3], "go nodes 100")
+
+    def test_handshake_rejects_unadvertised_deterministic_options(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Hash.*Threads|Threads.*Hash"):
+            UciEngine(self.command("no-options"), timeout=1.0)
+
     def test_search_rejects_malformed_info(self) -> None:
         engine = UciEngine(self.command("malformed"), timeout=1.0)
         try:
@@ -193,6 +270,9 @@ class UciEngineTests(unittest.TestCase):
                 )
         finally:
             engine.close()
+
+        self.assertIsNotNone(engine.returncode)
+        self.assertFalse(engine.reader_alive)
 
     def test_search_rejects_incomplete_final_info(self) -> None:
         engine = UciEngine(self.command("incomplete"), timeout=1.0)
@@ -216,6 +296,51 @@ class UciEngineTests(unittest.TestCase):
         finally:
             engine.close()
 
+    def test_search_rejects_empty_pv(self) -> None:
+        engine = UciEngine(self.command("empty-pv"), timeout=1.0)
+        with self.assertRaisesRegex(ValueError, "non-empty PV"):
+            engine.search(
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                100,
+            )
+        self.assertIsNotNone(engine.returncode)
+
+    def test_search_rejects_invalid_pv_token(self) -> None:
+        engine = UciEngine(self.command("invalid-pv"), timeout=1.0)
+        with self.assertRaisesRegex(ValueError, "invalid PV move"):
+            engine.search(
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                100,
+            )
+        self.assertIsNotNone(engine.returncode)
+
+    def test_search_rejects_pv_that_does_not_start_with_bestmove(self) -> None:
+        engine = UciEngine(self.command("mismatched-pv"), timeout=1.0)
+        with self.assertRaisesRegex(ValueError, "PV.*bestmove"):
+            engine.search(
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                100,
+            )
+        self.assertIsNotNone(engine.returncode)
+
+    def test_search_rejects_sequentially_illegal_pv(self) -> None:
+        engine = UciEngine(self.command("truncated-pv"), timeout=1.0)
+        with self.assertRaisesRegex(ValueError, "illegal PV move"):
+            engine.search(
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                100,
+            )
+        self.assertIsNotNone(engine.returncode)
+
+    def test_search_rejects_illegal_ponder_on_child_board(self) -> None:
+        engine = UciEngine(self.command("illegal-ponder"), timeout=1.0)
+        with self.assertRaisesRegex(ValueError, "illegal ponder"):
+            engine.search(
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                100,
+            )
+        self.assertIsNotNone(engine.returncode)
+
     def test_search_timeout_closes_process(self) -> None:
         engine = UciEngine(self.command("timeout"), timeout=0.5)
         with self.assertRaisesRegex(TimeoutError, "bestmove"):
@@ -235,6 +360,7 @@ class UciEngineTests(unittest.TestCase):
         engine.close()
 
         self.assertIsNotNone(engine.returncode)
+        self.assertFalse(engine.reader_alive)
 
     def test_search_accepts_complete_info_without_seldepth(self) -> None:
         script = self.fake_engine.read_text(encoding="utf-8").replace(
