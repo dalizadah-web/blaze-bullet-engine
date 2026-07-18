@@ -7,15 +7,17 @@
 #include <algorithm>
 #include <array>
 #include <bit>
+#include <limits>
+#include <thread>
 #include <utility>
 #include <vector>
-#include <thread>
 
 namespace blaze {
 namespace {
 
 constexpr int infinity = search_mate_score + 1;
 constexpr int maximum_ply = 128;
+constexpr int maximum_extensions = 2;
 const std::array<std::array<int, 64>, 64> empty_history{};
 
 bool has_non_pawn_material(const Position& position, Color color) {
@@ -166,6 +168,13 @@ SearchResult Searcher::search(
 
     Context context;
     context.limits = limits;
+    context.stack[0].extension_count = 0;
+#ifndef NDEBUG
+    context.limits.maximum_ply = std::clamp(
+        context.limits.maximum_ply,
+        1,
+        maximum_ply);
+#endif
     context.external_stop = external_stop;
     context.start = std::chrono::steady_clock::now();
     context.keys = prior_keys;
@@ -213,6 +222,7 @@ SearchResult Searcher::search(
 
     result.nodes = context.nodes;
 #ifndef NDEBUG
+    result.maximum_extension_count = context.maximum_extension_count;
     result.probcut_legal_checks = context.probcut_legal_checks;
     result.null_move_searches = context.null_move_searches;
     result.null_move_pv_searches = context.null_move_pv_searches;
@@ -275,6 +285,7 @@ SearchResult Searcher::search_parallel(
             int score = -infinity;
             std::uint64_t nodes = 0;
 #ifndef NDEBUG
+            int maximum_extension_count = 0;
             std::uint64_t null_move_searches = 0;
             std::uint64_t null_move_pv_searches = 0;
             std::uint64_t null_move_verifications = 0;
@@ -311,9 +322,12 @@ SearchResult Searcher::search_parallel(
                     if (!child.make_move(root_move, state)) {
                         continue;
                     }
+                    const int root_extension =
+                        in_check(child) && depth >= 3 && index < 4 ? 1 : 0;
+                    const int child_depth = depth - 1 + root_extension;
                     SearchLimits child_limits = limits;
                     child_limits.threads = 1;
-                    child_limits.depth = depth - 1;
+                    child_limits.depth = child_depth;
                     child_limits.search_moves.clear();
                     child_limits.nodes = 0;
                     child_limits.shared_node_budget = shared_node_budget;
@@ -330,13 +344,17 @@ SearchResult Searcher::search_parallel(
                     SearchResult child_result = child_searcher.search_window(
                         child,
                         child_limits,
-                        depth - 1,
+                        child_depth,
+                        1,
+                        root_move,
+                        root_extension,
                         child_alpha,
                         child_beta,
                         external_stop,
                         child_history,
                         search_start);
 #ifndef NDEBUG
+                    int maximum_extension_count = child_result.maximum_extension_count;
                     std::uint64_t null_move_searches = child_result.null_move_searches;
                     std::uint64_t null_move_pv_searches = child_result.null_move_pv_searches;
                     std::uint64_t null_move_verifications =
@@ -348,13 +366,19 @@ SearchResult Searcher::search_parallel(
                         child_result = child_searcher.search_window(
                             child,
                             child_limits,
-                            depth - 1,
+                            child_depth,
+                            1,
+                            root_move,
+                            root_extension,
                             -infinity,
                             infinity,
                             external_stop,
                             child_history,
                             search_start);
 #ifndef NDEBUG
+                        maximum_extension_count = std::max(
+                            maximum_extension_count,
+                            child_result.maximum_extension_count);
                         null_move_searches += child_result.null_move_searches;
                         null_move_pv_searches += child_result.null_move_pv_searches;
                         null_move_verifications += child_result.null_move_verifications;
@@ -365,6 +389,7 @@ SearchResult Searcher::search_parallel(
                     task.score = -child_result.score;
                     task.nodes = child_result.nodes;
 #ifndef NDEBUG
+                    task.maximum_extension_count = maximum_extension_count;
                     task.null_move_searches = null_move_searches;
                     task.null_move_pv_searches = null_move_pv_searches;
                     task.null_move_verifications = null_move_verifications;
@@ -397,6 +422,9 @@ SearchResult Searcher::search_parallel(
         for (const TaskResult& task : tasks) {
             searched_nodes += task.nodes;
 #ifndef NDEBUG
+            result.maximum_extension_count = std::max(
+                result.maximum_extension_count,
+                task.maximum_extension_count);
             result.null_move_searches += task.null_move_searches;
             result.null_move_pv_searches += task.null_move_pv_searches;
             result.null_move_verifications += task.null_move_verifications;
@@ -429,6 +457,9 @@ SearchResult Searcher::search_window(
     Position position,
     const SearchLimits& limits,
     int depth,
+    int ply,
+    Move previous_move,
+    int extension_count,
     int alpha,
     int beta,
     const std::atomic<bool>* external_stop,
@@ -439,6 +470,16 @@ SearchResult Searcher::search_window(
 
     Context context;
     context.limits = limits;
+    context.stack[0].extension_count = 0;
+#ifndef NDEBUG
+    context.limits.maximum_ply = std::clamp(
+        context.limits.maximum_ply,
+        1,
+        maximum_ply);
+    context.maximum_extension_count = extension_count;
+#endif
+    context.stack[static_cast<std::size_t>(ply)].current_move = previous_move;
+    context.stack[static_cast<std::size_t>(ply)].extension_count = extension_count;
     context.external_stop = external_stop;
     context.start = start;
     context.keys = prior_keys;
@@ -446,7 +487,7 @@ SearchResult Searcher::search_window(
 
     SearchResult result;
     PvLine pv;
-    const int score = negamax<NodeType::Root>(position, depth, alpha, beta, 0, context, pv);
+    const int score = negamax<NodeType::Root>(position, depth, alpha, beta, ply, context, pv);
     if (!context.stopped) {
         result.score = score;
         result.depth = depth;
@@ -455,6 +496,7 @@ SearchResult Searcher::search_window(
     }
     result.nodes = context.nodes;
 #ifndef NDEBUG
+    result.maximum_extension_count = context.maximum_extension_count;
     result.null_move_searches = context.null_move_searches;
     result.null_move_pv_searches = context.null_move_pv_searches;
     result.null_move_verifications = context.null_move_verifications;
@@ -503,8 +545,12 @@ int Searcher::negamax(
             legal_moves = restricted;
         }
     }
+#ifndef NDEBUG
+    if (ply >= context.limits.maximum_ply) {
+#else
     if (ply >= maximum_ply) {
-        return evaluate_position(position);
+#endif
+        return maximum_ply_score(position, ply);
     }
     const bool checked = in_check(position);
     if (position.rule50() >= 100 || is_repetition(context, position.key())) {
@@ -562,6 +608,8 @@ int Searcher::negamax(
             position.make_null(null_state);
             PvLine null_pv;
             context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
+            context.stack[static_cast<std::size_t>(ply + 1)].extension_count =
+                context.stack[static_cast<std::size_t>(ply)].extension_count;
             const int null_score = -negamax<NodeType::NonPV>(
                 position,
                 depth - 1 - reduction,
@@ -632,6 +680,8 @@ int Searcher::negamax(
 #endif
             context.keys.push_back(position.key());
             context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
+            context.stack[static_cast<std::size_t>(ply + 1)].extension_count =
+                context.stack[static_cast<std::size_t>(ply)].extension_count;
             PvLine probe_pv;
             const int probe_score = -negamax<NodeType::NonPV>(
                 position,
@@ -670,6 +720,14 @@ int Searcher::negamax(
                  ? countermoves_[square_index(previous_move.from())]
                      [square_index(previous_move.to())]
                  : Move{})) {
+        const bool recaptures = previous_move.is_valid() &&
+            previous_move.to() == move.to() &&
+            (previous_move.has_flag(MoveFlag::Capture) ||
+             previous_move.has_flag(MoveFlag::EnPassant)) &&
+            (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant));
+        const int see_score = recaptures
+            ? static_exchange_evaluation(position, move)
+            : std::numeric_limits<int>::min();
         StateInfo state;
         if (!position.make_move(move, state)) {
             continue;
@@ -682,12 +740,22 @@ int Searcher::negamax(
         context.keys.push_back(position.key());
         PvLine child_pv;
         const bool gives_check = in_check(position);
-        const bool recaptures = previous_move.is_valid() &&
-            previous_move.to() == move.to() &&
-            (previous_move.has_flag(MoveFlag::Capture) ||
-             previous_move.has_flag(MoveFlag::EnPassant)) &&
-            (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant));
-        const int full_depth = depth - 1 + (gives_check ? 1 : 0) + (recaptures ? 1 : 0);
+        const int used = context.stack[static_cast<std::size_t>(ply)].extension_count;
+        int extension = 0;
+        if (used < maximum_extensions) {
+            const bool selective_check = gives_check && depth >= 3 && move_count < 4;
+            const bool sound_recapture = recaptures && depth <= 8 && see_score >= 0;
+            extension = selective_check || sound_recapture ? 1 : 0;
+        }
+        const int child_extension_count = used + extension;
+        context.stack[static_cast<std::size_t>(ply + 1)].extension_count =
+            child_extension_count;
+#ifndef NDEBUG
+        context.maximum_extension_count = std::max(
+            context.maximum_extension_count,
+            child_extension_count);
+#endif
+        const int full_depth = depth - 1 + extension;
         int score = 0;
         context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
         if (move_count == 0) {
@@ -800,8 +868,12 @@ int Searcher::quiescence(
         return 0;
     }
 
+#ifndef NDEBUG
+    if (ply >= context.limits.maximum_ply) {
+#else
     if (ply >= maximum_ply) {
-        return evaluate_position(position);
+#endif
+        return maximum_ply_score(position, ply);
     }
 
     const bool checked = in_check(position);
@@ -915,6 +987,15 @@ int Searcher::evaluate_position(const Position& position) const {
     const int score = network_ != nullptr ? network_->evaluate(position) : evaluate(position);
     entry = EvalCacheEntry{key, score, true};
     return score;
+}
+
+int Searcher::maximum_ply_score(Position& position, int ply) const {
+    if (!in_check(position)) {
+        return evaluate_position(position);
+    }
+    MoveList evasions;
+    generate_legal(position, evasions);
+    return evasions.empty() ? -search_mate_score + ply : 0;
 }
 
 bool Searcher::is_repetition(const Context& context, std::uint64_t key) {

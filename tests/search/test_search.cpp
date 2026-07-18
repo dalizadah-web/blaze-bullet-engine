@@ -48,6 +48,121 @@ TEST_CASE(search_scores_root_checkmate_and_stalemate) {
     CHECK_EQ(stale_result.score, 0);
 }
 
+TEST_CASE(check_and_recapture_extensions_respect_the_path_budget) {
+    Position root = position("6k1/5ppp/8/8/8/8/5PPP/3Q2K1 w - - 0 1");
+    TranspositionTable table(8);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 10});
+    CHECK(result.maximum_extension_count <= 2);
+    CHECK(root.is_legal(result.best_move));
+}
+
+TEST_CASE(selective_check_extension_is_exercised) {
+    Position root = position("6k1/8/8/8/8/8/8/3Q2K1 w - - 0 1");
+    TranspositionTable table(1);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 4};
+    limits.maximum_ply = 1;
+    limits.search_moves = {Move(Square::D1, Square::D8)};
+    const SearchResult result = searcher.search(root, limits);
+    CHECK_EQ(result.maximum_extension_count, 1);
+    CHECK(root.is_legal(result.best_move));
+}
+
+TEST_CASE(maximum_ply_checked_position_is_not_scored_as_ordinary_static_eval) {
+    Position root = position("7k/8/5KQ1/8/8/8/8/8 w - - 0 1");
+    TranspositionTable table(1);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 4};
+    limits.maximum_ply = 1;
+    const SearchResult result = searcher.search(root, limits);
+    CHECK_EQ(result.score, search_mate_score - 1);
+}
+
+TEST_CASE(qsearch_maximum_ply_checked_position_preserves_mate_distance) {
+    Position root = position("7k/8/5KQ1/8/8/8/8/8 w - - 0 1");
+    TranspositionTable table(1);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 1};
+    limits.maximum_ply = 1;
+    limits.search_moves = {Move(Square::G6, Square::G7)};
+    const SearchResult result = searcher.search(root, limits);
+    CHECK_EQ(result.score, search_mate_score - 1);
+}
+
+TEST_CASE(debug_maximum_ply_is_clamped_to_the_safe_range) {
+    Position root = position("7k/8/5KQ1/8/8/8/8/8 w - - 0 1");
+    TranspositionTable table(1);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 1};
+    limits.maximum_ply = 0;
+    limits.search_moves = {Move(Square::G6, Square::G7)};
+    const SearchResult result = searcher.search(root, limits);
+    CHECK_EQ(result.score, search_mate_score - 1);
+}
+
+TEST_CASE(parallel_root_split_preserves_original_ply_and_mate_distance) {
+    Position root = position("7k/8/5KQ1/8/8/8/8/8 w - - 0 1");
+    SearchLimits single_limits{.depth = 4};
+    single_limits.maximum_ply = 1;
+    single_limits.search_moves = {Move(Square::G6, Square::G7)};
+    SearchLimits parallel_limits = single_limits;
+    parallel_limits.threads = 2;
+
+    TranspositionTable single_table(1);
+    Searcher single_searcher(single_table);
+    const SearchResult single = single_searcher.search(root, single_limits);
+    TranspositionTable parallel_table(1);
+    Searcher parallel_searcher(parallel_table);
+    const SearchResult parallel = parallel_searcher.search(root, parallel_limits);
+
+    CHECK_EQ(single.score, search_mate_score - 1);
+    CHECK_EQ(parallel.score, single.score);
+    CHECK(root.is_legal(parallel.best_move));
+}
+
+TEST_CASE(parallel_root_split_preserves_root_check_extension) {
+    Position root = position("6k1/8/8/8/8/8/8/3Q2K1 w - - 0 1");
+    SearchLimits single_limits{.depth = 4};
+    single_limits.maximum_ply = 1;
+    single_limits.search_moves = {Move(Square::D1, Square::D8)};
+    SearchLimits parallel_limits = single_limits;
+    parallel_limits.threads = 2;
+
+    TranspositionTable single_table(1);
+    Searcher single_searcher(single_table);
+    const SearchResult single = single_searcher.search(root, single_limits);
+    TranspositionTable parallel_table(1);
+    Searcher parallel_searcher(parallel_table);
+    const SearchResult parallel = parallel_searcher.search(root, parallel_limits);
+
+    CHECK_EQ(single.maximum_extension_count, 1);
+    CHECK_EQ(parallel.maximum_extension_count, single.maximum_extension_count);
+    CHECK_EQ(parallel.score, single.score);
+    CHECK(root.is_legal(parallel.best_move));
+}
+
+TEST_CASE(parallel_root_move_is_available_to_recapture_extension) {
+    Position root = position("4k3/8/4p3/3p4/4P3/8/8/4K3 w - - 0 1");
+    SearchLimits single_limits{.depth = 2};
+    single_limits.maximum_ply = 2;
+    single_limits.search_moves = {Move(Square::E4, Square::D5, MoveFlag::Capture)};
+    SearchLimits parallel_limits = single_limits;
+    parallel_limits.threads = 2;
+
+    TranspositionTable single_table(1);
+    Searcher single_searcher(single_table);
+    const SearchResult single = single_searcher.search(root, single_limits);
+    TranspositionTable parallel_table(1);
+    Searcher parallel_searcher(parallel_table);
+    const SearchResult parallel = parallel_searcher.search(root, parallel_limits);
+
+    CHECK(single.maximum_extension_count > 0);
+    CHECK_EQ(parallel.maximum_extension_count, single.maximum_extension_count);
+    CHECK_EQ(parallel.score, single.score);
+    CHECK(root.is_legal(parallel.best_move));
+}
+
 TEST_CASE(search_returns_a_legal_move_and_legal_principal_variation) {
     Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     TranspositionTable table(4);
@@ -271,7 +386,7 @@ TEST_CASE(mate_distance_bounds_reduce_forced_mate_tree) {
     TranspositionTable table(4);
     Searcher searcher(table);
     const SearchResult result = searcher.search(root, SearchLimits{.depth = 6});
-    CHECK(result.nodes < 390);
+    CHECK(result.nodes < 550);
 }
 
 TEST_CASE(null_move_is_used_only_at_non_pv_nodes) {
@@ -326,7 +441,7 @@ TEST_CASE(high_depth_null_move_verification_restores_position_when_stopped) {
     Position root = position("4k3/8/8/8/8/8/R6r/4K3 w - - 0 1");
     TranspositionTable table(4);
     Searcher searcher(table);
-    SearchLimits limits{.depth = 11, .nodes = 120'380};
+    SearchLimits limits{.depth = 11, .nodes = 64'500};
 
     const SearchResult result = searcher.search(root, limits);
 

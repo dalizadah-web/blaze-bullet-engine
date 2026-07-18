@@ -30,6 +30,7 @@ struct SearchLimits {
     int recommended_threads = 1;
     std::shared_ptr<std::atomic<std::uint64_t>> shared_node_budget{};
 #ifndef NDEBUG
+    int maximum_ply = 128;
     bool enable_probcut = true;
     bool enable_null_move = true;
 #endif
@@ -41,6 +42,7 @@ struct SearchResult {
     int depth = 0;
     std::uint64_t nodes = 0;
 #ifndef NDEBUG
+    int maximum_extension_count = 0;
     std::uint64_t probcut_legal_checks = 0;
     std::uint64_t null_move_searches = 0;
     std::uint64_t null_move_pv_searches = 0;
@@ -76,6 +78,7 @@ private:
         std::chrono::steady_clock::time_point start;
         std::uint64_t nodes = 0;
 #ifndef NDEBUG
+        int maximum_extension_count = 0;
         std::uint64_t probcut_legal_checks = 0;
         std::uint64_t null_move_searches = 0;
         std::uint64_t null_move_pv_searches = 0;
@@ -103,6 +106,9 @@ private:
         Position position,
         const SearchLimits& limits,
         int depth,
+        int ply,
+        Move previous_move,
+        int extension_count,
         int alpha,
         int beta,
         const std::atomic<bool>* external_stop,
@@ -129,6 +135,7 @@ private:
     [[nodiscard]] bool should_stop(Context& context) const;
     [[nodiscard]] bool consume_node(Context& context) const;
     [[nodiscard]] int evaluate_position(const Position& position) const;
+    [[nodiscard]] int maximum_ply_score(Position& position, int ply) const;
     [[nodiscard]] static bool is_repetition(const Context& context, std::uint64_t key);
 };
 
