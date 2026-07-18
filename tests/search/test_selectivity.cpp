@@ -18,15 +18,12 @@ TEST_CASE(adaptive_lmr_rewards_good_moves_and_penalizes_late_bad_moves) {
     CHECK(bad <= 4);
 }
 
-TEST_CASE(adaptive_lmr_reduces_pv_moves_less_and_keeps_checks_at_full_depth) {
-    const SelectivityFeatures non_pv{
-        .depth = 10, .move_count = 12, .pv_node = false,
-        .improving = false, .history = -10'000,
-        .gives_check = false, .expected_cutoff = true};
-    SelectivityFeatures pv = non_pv;
-    pv.pv_node = true;
-    CHECK(late_move_reduction(pv) < late_move_reduction(non_pv));
-    CHECK(late_move_reduction(pv) > 0);
+TEST_CASE(adaptive_lmr_keeps_pv_checks_at_full_depth) {
+    CHECK_EQ(late_move_reduction(
+                 SelectivityFeatures{.depth = 10, .move_count = 12, .pv_node = true,
+                                     .improving = false, .history = -10'000,
+                                     .gives_check = false, .expected_cutoff = true}),
+             0);
     CHECK_EQ(late_move_reduction(
                  SelectivityFeatures{.depth = 10, .move_count = 12, .pv_node = false,
                                      .improving = false, .history = -10'000,

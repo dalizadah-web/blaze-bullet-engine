@@ -21,7 +21,7 @@ struct SelectivityFeatures {
 };
 
 [[nodiscard]] inline int late_move_reduction(const SelectivityFeatures& features) {
-    if (features.gives_check || features.depth < 3 ||
+    if (features.pv_node || features.gives_check || features.depth < 3 ||
         features.move_count < 3) {
         return 0;
     }
@@ -33,11 +33,7 @@ struct SelectivityFeatures {
     if (features.improving) --reduction;
     if (features.history >= 4'000) --reduction;
     if (features.history <= -4'000) ++reduction;
-    if (features.pv_node) --reduction;
-    const int maximum_reduction = features.pv_node
-        ? std::max(1, features.depth / 2 - 1)
-        : std::max(1, features.depth / 2);
-    return std::clamp(reduction, 0, maximum_reduction);
+    return std::clamp(reduction, 0, std::max(1, features.depth / 2));
 }
 
 [[nodiscard]] inline int null_move_reduction(int depth, int static_evaluation, int beta) {
