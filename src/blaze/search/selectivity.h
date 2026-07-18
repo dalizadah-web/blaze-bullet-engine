@@ -26,14 +26,14 @@ struct SelectivityFeatures {
         return 0;
     }
     int reduction = 1;
-    if (features.depth >= 6) ++reduction;
+    if (features.depth >= 6 && features.move_count >= 6) ++reduction;
     if (features.depth >= 10) ++reduction;
-    if (features.move_count >= 6) ++reduction;
     if (features.move_count >= 12) ++reduction;
-    if (features.expected_cutoff) ++reduction;
-    if (features.improving || features.history >= 4'000) --reduction;
+    if (features.expected_cutoff && features.depth >= 5) ++reduction;
+    if (features.improving) --reduction;
+    if (features.history >= 4'000) --reduction;
     if (features.history <= -4'000) ++reduction;
-    return std::clamp(reduction, 0, std::max(0, features.depth - 2));
+    return std::clamp(reduction, 0, std::max(1, features.depth / 2));
 }
 
 [[nodiscard]] inline int null_move_reduction(int depth, int static_evaluation, int beta) {
@@ -71,6 +71,18 @@ struct SelectivityFeatures {
 
 [[nodiscard]] inline int quiescence_delta_margin(int ply) {
     return 90 + std::min(ply, 8) * 16;
+}
+
+[[nodiscard]] inline int corrected_static_evaluation(int raw_evaluation, int correction) {
+    return raw_evaluation + std::clamp(correction, -4'096, 4'096) / 128;
+}
+
+[[nodiscard]] inline int update_correction_history(
+    int current, int search_error, int depth) {
+    const int weight = std::clamp(depth, 1, 16);
+    const int bounded_error = std::clamp(search_error, -512, 512);
+    const int update = bounded_error * weight / 16;
+    return std::clamp(current + update, -4'096, 4'096);
 }
 
 [[nodiscard]] inline bool should_try_singular_extension(

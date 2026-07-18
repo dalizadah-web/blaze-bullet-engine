@@ -15,7 +15,7 @@ TEST_CASE(adaptive_lmr_rewards_good_moves_and_penalizes_late_bad_moves) {
                             .gives_check = false, .expected_cutoff = true});
     CHECK(good >= 0);
     CHECK(bad > good);
-    CHECK(bad <= 6);
+    CHECK(bad <= 4);
 }
 
 TEST_CASE(adaptive_lmr_keeps_pv_checks_at_full_depth) {
@@ -54,6 +54,14 @@ TEST_CASE(futility_pruning_requires_a_weak_late_quiet_move) {
 
 TEST_CASE(quiescence_delta_margin_increases_with_tactical_depth) {
     CHECK(quiescence_delta_margin(0) < quiescence_delta_margin(4));
+}
+
+TEST_CASE(correction_history_stays_a_small_static_evaluation_adjustment) {
+    CHECK_EQ(corrected_static_evaluation(100, 4'096), 132);
+    CHECK_EQ(corrected_static_evaluation(100, -4'096), 68);
+    CHECK_EQ(corrected_static_evaluation(100, 40'000), 132);
+    CHECK_EQ(update_correction_history(4'000, 500, 16), 4'096);
+    CHECK_EQ(update_correction_history(-4'000, -500, 16), -4'096);
 }
 
 TEST_CASE(singular_extension_only_probes_a_deep_non_pv_tt_candidate) {

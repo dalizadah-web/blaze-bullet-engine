@@ -503,8 +503,8 @@ int Searcher::negamax(
     const std::size_t color_index = static_cast<std::size_t>(position.side_to_move());
     const std::size_t correction_index = static_cast<std::size_t>(position.key() & 16'383U);
     const int raw_static_evaluation = evaluate_position(position);
-    const int static_evaluation = raw_static_evaluation +
-        correction_history_[color_index][correction_index] / 32;
+    const int static_evaluation = corrected_static_evaluation(
+        raw_static_evaluation, correction_history_[color_index][correction_index]);
     context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_evaluation;
     const bool improving = ply >= 2 &&
         static_evaluation > context.stack[static_cast<std::size_t>(ply - 2)].static_evaluation;
@@ -772,9 +772,9 @@ int Searcher::negamax(
         bound = Bound::Lower;
     }
     if (best_score > -search_mate_threshold && best_score < search_mate_threshold) {
-        const int error = std::clamp(best_score - raw_static_evaluation, -1'024, 1'024);
+        const int error = best_score - raw_static_evaluation;
         int& correction = correction_history_[color_index][correction_index];
-        correction = std::clamp(correction + error * 4, -32'000, 32'000);
+        correction = update_correction_history(correction, error, depth);
     }
     table_.store(position.key(), best_move, best_score, depth, bound, ply);
     return best_score;
