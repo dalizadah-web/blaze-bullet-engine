@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Any, Iterable
 
+from tools.experiment.match import validate_evidence_payload
 from tools.experiment.pentanomial import Pentanomial, sprt_decision, sprt_llr
 
 
@@ -35,44 +36,77 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         raise ValueError("at least two lanes are required")
     common = _configuration(items[0])
     totals = [0, 0, 0, 0, 0]
-    lane_records = []
+    expected_games = completed_games = clean_games = clean_pairs = 0
+    quarantined_games = quarantined_pairs = 0
+    raw_wdl = {"wins": 0, "draws": 0, "losses": 0}
+    termination_counts: dict[str, dict[str, int]] | None = None
+    abnormal_games: list[dict[str, Any]] = []
+    lane_records: list[dict[str, Any]] = []
     for index, lane in enumerate(items):
+        if lane.get("schema_version") != 2:
+            raise ValueError(f"unsupported lane schema at index {index}")
         if _configuration(lane) != common:
             raise ValueError(f"incompatible lane configuration at index {index}")
-        raw_counts = lane.get("counts")
-        if not isinstance(raw_counts, dict) or set(raw_counts) != set(_COUNT_KEYS):
-            raise ValueError(f"invalid lane counts at index {index}")
-        values = [raw_counts[key] for key in _COUNT_KEYS]
-        if any(not isinstance(value, int) or isinstance(value, bool) or value < 0 for value in values):
-            raise ValueError(f"invalid lane count value at index {index}")
-        counts = Pentanomial(*values)
-        if lane.get("games") != counts.pairs * 2:
-            raise ValueError(f"lane game count mismatch at index {index}")
+        evidence = validate_evidence_payload(lane, context=f"lane {index}")
+        values = list(evidence.counts.as_tuple())
         totals = [left + right for left, right in zip(totals, values, strict=True)]
+        expected_games += evidence.expected_games
+        completed_games += evidence.completed_games
+        clean_games += evidence.clean_games
+        clean_pairs += evidence.clean_pairs
+        quarantined_games += evidence.quarantined_games
+        quarantined_pairs += evidence.quarantined_pairs
+        for key in raw_wdl:
+            raw_wdl[key] += evidence.raw_wdl[key]
+        if termination_counts is None:
+            termination_counts = {
+                group: {key: 0 for key in entries}
+                for group, entries in evidence.termination_counts.items()
+            }
+        for group, entries in evidence.termination_counts.items():
+            for key, value in entries.items():
+                termination_counts[group][key] += value
+        lane_name = lane.get("lane", f"lane-{index}")
+        abnormal_games.extend(
+            {**dict(record), "lane": lane_name}
+            for record in evidence.abnormal_games
+        )
         lane_records.append(
             {
-                "lane": lane.get("lane", f"lane-{index}"),
-                "games": lane["games"],
-                "counts": raw_counts,
+                "schema_version": 2,
+                "lane": lane_name,
+                **evidence.to_dict(),
                 "artifacts": lane.get("artifacts", {}),
             }
         )
     combined = Pentanomial(*totals)
     sprt = common["sprt"]
-    llr = sprt_llr(combined, float(sprt["elo0"]), float(sprt["elo1"]))
-    decision = sprt_decision(
-        combined,
-        float(sprt["elo0"]),
-        float(sprt["elo1"]),
-        float(sprt["alpha"]),
-        float(sprt["beta"]),
-    )
+    if clean_pairs == 0:
+        llr = 0.0
+        decision = "no_clean_pairs"
+    else:
+        llr = sprt_llr(combined, float(sprt["elo0"]), float(sprt["elo1"]))
+        decision = sprt_decision(
+            combined,
+            float(sprt["elo0"]),
+            float(sprt["elo1"]),
+            float(sprt["alpha"]),
+            float(sprt["beta"]),
+        )
+    assert termination_counts is not None
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "hybrid-meta-analysis",
-        "games": combined.pairs * 2,
-        "pairs": combined.pairs,
+        "expected_games": expected_games,
+        "completed_games": completed_games,
+        "clean_games": clean_games,
+        "clean_pairs": clean_pairs,
+        "quarantined_games": quarantined_games,
+        "quarantined_pairs": quarantined_pairs,
+        "raw_wdl": raw_wdl,
         "counts": dict(zip(_COUNT_KEYS, combined.as_tuple(), strict=True)),
+        "termination_counts": termination_counts,
+        "abnormal_games": abnormal_games,
         "llr": llr,
         "decision": decision,
         "configuration": common,

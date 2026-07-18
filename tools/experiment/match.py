@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
-from typing import Callable
+from typing import Any, Callable
 
 import chess.pgn
 
@@ -127,22 +127,233 @@ class MatchSpec:
 
 
 @dataclass(frozen=True)
-class MatchResult:
+class MatchEvidence:
+    expected_games: int
+    completed_games: int
+    clean_games: int
+    clean_pairs: int
+    quarantined_games: int
+    quarantined_pairs: int
+    raw_wdl: dict[str, int]
     counts: Pentanomial
+    termination_counts: dict[str, dict[str, int]]
+    abnormal_games: tuple[dict[str, object], ...]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "expected_games": self.expected_games,
+            "completed_games": self.completed_games,
+            "clean_games": self.clean_games,
+            "clean_pairs": self.clean_pairs,
+            "quarantined_games": self.quarantined_games,
+            "quarantined_pairs": self.quarantined_pairs,
+            "raw_wdl": dict(self.raw_wdl),
+            "counts": dict(zip(
+                ("wins2", "wins1_draw1", "draws2", "losses1_draw1", "losses2"),
+                self.counts.as_tuple(),
+                strict=True,
+            )),
+            "termination_counts": {
+                group: dict(values) for group, values in self.termination_counts.items()
+            },
+            "abnormal_games": [dict(record) for record in self.abnormal_games],
+        }
+
+
+_COUNT_KEYS = ("wins2", "wins1_draw1", "draws2", "losses1_draw1", "losses2")
+_TERMINATION_SHAPE = {
+    "clean": ("ordinary", "adjudication"),
+    "candidate": ("time_loss", "illegal_move", "disconnect", "stall"),
+    "opponent": ("time_loss", "illegal_move", "disconnect", "stall"),
+    "infrastructure_unknown": (
+        "unterminated",
+        "malformed",
+        "unknown",
+        "contradictory",
+        "runner_failure",
+    ),
+}
+
+
+def _nonnegative_int(value: Any, field: str, context: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise ValueError(f"invalid {field} in {context}")
+    return value
+
+
+def _abnormal_pair_key(record: dict[str, Any], context: str) -> str:
+    game_id = record.get("game_id")
+    if isinstance(game_id, str) and game_id.endswith(("-w", "-b")):
+        return game_id[:-2]
+    game_index = record.get("game_index")
+    if isinstance(game_index, int) and not isinstance(game_index, bool) and game_index >= 0:
+        return f"index-{game_index // 2}"
+    raise ValueError(f"abnormal game has no auditable pair identity in {context}")
+
+
+def validate_evidence_payload(
+    payload: dict[str, Any], *, context: str, expected_games: int | None = None
+) -> MatchEvidence:
+    """Validate schema-v2 evidence without trusting producer arithmetic."""
+    if payload.get("schema_version") != 2:
+        raise ValueError(f"unsupported evidence schema in {context}")
+    expected = _nonnegative_int(payload.get("expected_games"), "expected_games", context)
+    if expected == 0 or expected % 2:
+        raise ValueError(f"expected_games must be positive and even in {context}")
+    if expected_games is not None and expected != expected_games:
+        raise ValueError(f"game count mismatch in {context}")
+    completed = _nonnegative_int(payload.get("completed_games"), "completed_games", context)
+    clean_games = _nonnegative_int(payload.get("clean_games"), "clean_games", context)
+    clean_pairs = _nonnegative_int(payload.get("clean_pairs"), "clean_pairs", context)
+    quarantined_games = _nonnegative_int(
+        payload.get("quarantined_games"), "quarantined_games", context
+    )
+    quarantined_pairs = _nonnegative_int(
+        payload.get("quarantined_pairs"), "quarantined_pairs", context
+    )
+    if completed > expected:
+        raise ValueError(f"completed game count exceeds expected games in {context}")
+    if clean_games != clean_pairs * 2 or quarantined_games != quarantined_pairs * 2:
+        raise ValueError(f"pair/game arithmetic mismatch in {context}")
+    if clean_games + quarantined_games != expected:
+        raise ValueError(f"clean/quarantined coverage mismatch in {context}")
+
+    raw = payload.get("raw_wdl")
+    if not isinstance(raw, dict) or set(raw) != {"wins", "draws", "losses"}:
+        raise ValueError(f"invalid raw_wdl in {context}")
+    raw_wdl = {
+        key: _nonnegative_int(raw[key], f"raw_wdl.{key}", context)
+        for key in ("wins", "draws", "losses")
+    }
+    if sum(raw_wdl.values()) != completed:
+        raise ValueError(f"raw W/D/L does not match completed games in {context}")
+
+    raw_counts = payload.get("counts")
+    if not isinstance(raw_counts, dict) or set(raw_counts) != set(_COUNT_KEYS):
+        raise ValueError(f"invalid pentanomial counts in {context}")
+    count_values = [
+        _nonnegative_int(raw_counts[key], f"counts.{key}", context)
+        for key in _COUNT_KEYS
+    ]
+    counts = Pentanomial(*count_values)
+    if counts.pairs != clean_pairs:
+        raise ValueError(f"pentanomial pair count mismatch in {context}")
+
+    raw_terminations = payload.get("termination_counts")
+    if not isinstance(raw_terminations, dict) or set(raw_terminations) != set(_TERMINATION_SHAPE):
+        raise ValueError(f"invalid termination counts in {context}")
+    termination_counts: dict[str, dict[str, int]] = {}
+    for group, keys in _TERMINATION_SHAPE.items():
+        values = raw_terminations.get(group)
+        if not isinstance(values, dict) or set(values) != set(keys):
+            raise ValueError(f"invalid termination counts for {group} in {context}")
+        termination_counts[group] = {
+            key: _nonnegative_int(values[key], f"termination_counts.{group}.{key}", context)
+            for key in keys
+        }
+
+    records = payload.get("abnormal_games")
+    if not isinstance(records, list) or any(not isinstance(record, dict) for record in records):
+        raise ValueError(f"invalid abnormal game records in {context}")
+    abnormal_games = tuple(dict(record) for record in records)
+    abnormal_total = sum(
+        sum(values.values())
+        for group, values in termination_counts.items()
+        if group != "clean"
+    )
+    if abnormal_total != len(abnormal_games):
+        raise ValueError(f"termination count does not match abnormal records in {context}")
+    if sum(termination_counts["clean"].values()) + abnormal_total != expected:
+        raise ValueError(f"termination coverage does not match expected games in {context}")
+
+    observed_counts = {
+        group: {key: 0 for key in keys}
+        for group, keys in _TERMINATION_SHAPE.items()
+        if group != "clean"
+    }
+    pair_keys: set[str] = set()
+    seen_record_ids: set[tuple[str, str]] = set()
+    for record in abnormal_games:
+        offender = record.get("offender")
+        category = record.get("category")
+        group = offender if offender in ("candidate", "opponent") else "infrastructure_unknown"
+        if not isinstance(category, str) or category not in observed_counts[group]:
+            raise ValueError(f"invalid abnormal termination category in {context}")
+        if group in ("candidate", "opponent"):
+            candidate_color = record.get("candidate_color")
+            result = record.get("result")
+            if candidate_color not in ("white", "black") or result not in ("1-0", "0-1"):
+                raise ValueError(f"contradictory offender/result evidence in {context}")
+            candidate_lost = (candidate_color == "white" and result == "0-1") or (
+                candidate_color == "black" and result == "1-0"
+            )
+            if (group == "candidate") != candidate_lost:
+                raise ValueError(f"contradictory offender/result evidence in {context}")
+            expected_termination = {
+                "time_loss": "time forfeit",
+                "illegal_move": "illegal move",
+                "disconnect": "abandoned",
+                "stall": "stalled connection",
+            }[category]
+            termination = record.get("termination")
+            if not isinstance(termination, str) or termination.casefold().strip() != expected_termination:
+                raise ValueError(f"termination/category mismatch in {context}")
+        observed_counts[group][category] += 1
+        pair_key = _abnormal_pair_key(record, context)
+        game_identity = str(record.get("game_id", record.get("game_index")))
+        identity = (pair_key, game_identity)
+        if identity in seen_record_ids:
+            raise ValueError(f"duplicate abnormal game record in {context}")
+        seen_record_ids.add(identity)
+        pair_keys.add(pair_key)
+        for key in ("round", "result", "termination", "reason"):
+            if not isinstance(record.get(key), str):
+                raise ValueError(f"invalid abnormal game {key} in {context}")
+    if observed_counts != {
+        group: termination_counts[group] for group in observed_counts
+    }:
+        raise ValueError(f"termination count does not match abnormal categories in {context}")
+    if len(pair_keys) != quarantined_pairs:
+        raise ValueError(f"abnormal records do not cover quarantined pairs in {context}")
+
+    return MatchEvidence(
+        expected_games=expected,
+        completed_games=completed,
+        clean_games=clean_games,
+        clean_pairs=clean_pairs,
+        quarantined_games=quarantined_games,
+        quarantined_pairs=quarantined_pairs,
+        raw_wdl=raw_wdl,
+        counts=counts,
+        termination_counts=termination_counts,
+        abnormal_games=abnormal_games,
+    )
+
+
+@dataclass(frozen=True)
+class MatchResult:
+    evidence: MatchEvidence
     llr: float
     decision: str
-    games: int
     pgn: str
     manifest: str
 
+    @property
+    def counts(self) -> Pentanomial:
+        return self.evidence.counts
+
+    @property
+    def games(self) -> int:
+        return self.evidence.expected_games
+
     def to_json(self) -> str:
-        payload = asdict(self)
-        payload["counts"] = {
-            "wins2": self.counts.wins2,
-            "wins1_draw1": self.counts.wins1_draw1,
-            "draws2": self.counts.draws2,
-            "losses1_draw1": self.counts.losses1_draw1,
-            "losses2": self.counts.losses2,
+        payload = {
+            "schema_version": 2,
+            **self.evidence.to_dict(),
+            "llr": self.llr,
+            "decision": self.decision,
+            "pgn": self.pgn,
+            "manifest": self.manifest,
         }
         return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
@@ -166,38 +377,260 @@ def _candidate_score(game: chess.pgn.Game, candidate_name: str) -> float:
     return 1.0 if candidate_won else 0.0
 
 
+def _empty_termination_counts() -> dict[str, dict[str, int]]:
+    engine_categories = {
+        "time_loss": 0,
+        "illegal_move": 0,
+        "disconnect": 0,
+        "stall": 0,
+    }
+    return {
+        "clean": {"ordinary": 0, "adjudication": 0},
+        "candidate": dict(engine_categories),
+        "opponent": dict(engine_categories),
+        "infrastructure_unknown": {
+            "unterminated": 0,
+            "malformed": 0,
+            "unknown": 0,
+            "contradictory": 0,
+            "runner_failure": 0,
+        },
+    }
+
+
+def _losing_engine(
+    game: chess.pgn.Game, candidate_name: str, opponent_name: str
+) -> str | None:
+    result = game.headers.get("Result")
+    if result == "1-0":
+        loser = game.headers.get("Black")
+    elif result == "0-1":
+        loser = game.headers.get("White")
+    else:
+        return None
+    if loser == candidate_name:
+        return "candidate"
+    if loser == opponent_name:
+        return "opponent"
+    return None
+
+
+def _termination_record(
+    game: chess.pgn.Game,
+    candidate_name: str,
+    opponent_name: str,
+    game_index: int,
+) -> tuple[str | None, dict[str, object] | None]:
+    result = game.headers.get("Result", "*")
+    raw_termination = game.headers.get("Termination", "").strip()
+    termination = raw_termination.casefold()
+    base = {
+        "game_index": game_index,
+        "game_id": f"game-{game_index + 1:06d}",
+        "round": game.headers.get("Round", ""),
+        "result": result,
+        "termination": raw_termination,
+        "candidate_color": (
+            "white" if game.headers.get("White") == candidate_name else "black"
+        ),
+    }
+    if game.errors:
+        return None, {
+            **base,
+            "category": "malformed",
+            "offender": "unknown",
+            "reason": "; ".join(str(error) for error in game.errors),
+        }
+    if result not in ("1-0", "0-1", "1/2-1/2"):
+        return None, {
+            **base,
+            "category": "unterminated",
+            "offender": "unknown",
+            "reason": "game has no completed result",
+        }
+    if not termination:
+        return "ordinary", None
+    if termination == "adjudication":
+        return "adjudication", None
+    if termination == "unterminated":
+        return None, {
+            **base,
+            "category": "unterminated",
+            "offender": "unknown",
+            "reason": "runner marked the game unterminated",
+        }
+    engine_categories = {
+        "time forfeit": "time_loss",
+        "illegal move": "illegal_move",
+        "abandoned": "disconnect",
+        "stalled connection": "stall",
+    }
+    if termination in engine_categories:
+        offender = _losing_engine(game, candidate_name, opponent_name)
+        if offender is None:
+            return None, {
+                **base,
+                "category": "contradictory",
+                "offender": "unknown",
+                "reason": "engine-failure termination has no decisive loser",
+            }
+        return None, {
+            **base,
+            "category": engine_categories[termination],
+            "offender": offender,
+            "reason": "engine failure",
+        }
+    return None, {
+        **base,
+        "category": "unknown",
+        "offender": "unknown",
+        "reason": "unrecognized termination",
+    }
+
+
 def parse_paired_pgn(
     path: Path | str,
     candidate_name: str,
     opponent_name: str,
     *,
     expected_games: int,
-) -> Pentanomial:
+) -> MatchEvidence:
     games: list[chess.pgn.Game] = []
     with Path(path).open(encoding="utf-8") as stream:
         while game := chess.pgn.read_game(stream):
             games.append(game)
-    if len(games) != expected_games:
-        raise ValueError(f"expected {expected_games} completed games, found {len(games)}")
-    if len(games) % 2 != 0:
-        raise ValueError("paired PGN must contain an even number of games")
-    games.sort(key=_round_key)
+    if len(games) > expected_games:
+        raise ValueError(f"expected at most {expected_games} games, found {len(games)}")
+    slots: list[chess.pgn.Game | None]
+    if len(games) == expected_games:
+        games.sort(key=_round_key)
+        slots = list(games)
+    else:
+        slots = [None] * expected_games
+        for game in games:
+            round_key = _round_key(game)
+            if len(round_key) != 1 or not 1 <= round_key[0] <= expected_games:
+                raise ValueError("incomplete PGN requires unique numeric Round tags")
+            slot = round_key[0] - 1
+            if slots[slot] is not None:
+                raise ValueError(f"duplicate PGN Round tag: {round_key[0]}")
+            slots[slot] = game
 
     pair_scores: list[tuple[float, float]] = []
+    raw_wdl = {"wins": 0, "draws": 0, "losses": 0}
+    termination_counts = _empty_termination_counts()
+    abnormal_games: list[dict[str, object]] = []
+    completed_games = 0
+    clean_pairs = 0
     expected_players = {candidate_name, opponent_name}
-    for index in range(0, len(games), 2):
-        first, second = games[index], games[index + 1]
+    for index in range(0, expected_games, 2):
+        first, second = slots[index], slots[index + 1]
         for game in (first, second):
+            if game is None:
+                continue
             if {game.headers.get("White"), game.headers.get("Black")} != expected_players:
                 raise ValueError("PGN game contains unexpected engine names")
-        if first.headers.get("White") == second.headers.get("White"):
-            raise ValueError("paired games must swap colors")
-        if first.board().fen() != second.board().fen():
-            raise ValueError("paired games must start from the same opening position")
-        pair_scores.append(
-            (_candidate_score(first, candidate_name), _candidate_score(second, candidate_name))
-        )
-    return Pentanomial.from_pair_scores(pair_scores)
+        if first is not None and second is not None:
+            if first.headers.get("White") == second.headers.get("White"):
+                raise ValueError("paired games must swap colors")
+            if first.board().fen() != second.board().fen():
+                raise ValueError("paired games must start from the same opening position")
+        scores: list[float] = []
+        pair_is_clean = True
+        for game_index, game in ((index, first), (index + 1, second)):
+            if game is None:
+                pair_is_clean = False
+                abnormal = {
+                    "game_index": game_index,
+                    "game_id": f"game-{game_index + 1:06d}",
+                    "round": str(game_index + 1),
+                    "result": "*",
+                    "termination": "",
+                    "candidate_color": "unknown",
+                    "category": "unterminated",
+                    "offender": "unknown",
+                    "reason": "PGN game is missing",
+                }
+                abnormal_games.append(abnormal)
+                termination_counts["infrastructure_unknown"]["unterminated"] += 1
+                continue
+            result = game.headers.get("Result")
+            if result in ("1-0", "0-1", "1/2-1/2"):
+                score = _candidate_score(game, candidate_name)
+                completed_games += 1
+                scores.append(score)
+                raw_wdl[("wins" if score == 1.0 else "draws" if score == 0.5 else "losses")] += 1
+            clean_kind, abnormal = _termination_record(
+                game, candidate_name, opponent_name, game_index
+            )
+            if clean_kind is not None:
+                termination_counts["clean"][clean_kind] += 1
+            else:
+                pair_is_clean = False
+                assert abnormal is not None
+                abnormal_games.append(abnormal)
+                offender = str(abnormal["offender"])
+                category = str(abnormal["category"])
+                group = offender if offender in ("candidate", "opponent") else "infrastructure_unknown"
+                termination_counts[group][category] += 1
+        if pair_is_clean:
+            if len(scores) != 2:
+                raise AssertionError("clean pair does not have two completed results")
+            pair_scores.append((scores[0], scores[1]))
+            clean_pairs += 1
+    total_pairs = expected_games // 2
+    quarantined_pairs = total_pairs - clean_pairs
+    return MatchEvidence(
+        expected_games=expected_games,
+        completed_games=completed_games,
+        clean_games=clean_pairs * 2,
+        clean_pairs=clean_pairs,
+        quarantined_games=quarantined_pairs * 2,
+        quarantined_pairs=quarantined_pairs,
+        raw_wdl=raw_wdl,
+        counts=Pentanomial.from_pair_scores(pair_scores),
+        termination_counts=termination_counts,
+        abnormal_games=tuple(abnormal_games),
+    )
+
+
+def _runner_failure_evidence(
+    expected_games: int,
+    reason: str,
+    partial: MatchEvidence | None = None,
+) -> MatchEvidence:
+    termination_counts = _empty_termination_counts()
+    termination_counts["infrastructure_unknown"]["runner_failure"] = expected_games
+    records = tuple(
+        {
+            "game_index": index,
+            "game_id": f"game-{index + 1:06d}",
+            "round": str(index + 1),
+            "result": "*",
+            "termination": reason,
+            "candidate_color": "unknown",
+            "category": "runner_failure",
+            "offender": "unknown",
+            "reason": reason,
+        }
+        for index in range(expected_games)
+    )
+    return MatchEvidence(
+        expected_games=expected_games,
+        completed_games=partial.completed_games if partial is not None else 0,
+        clean_games=0,
+        clean_pairs=0,
+        quarantined_games=expected_games,
+        quarantined_pairs=expected_games // 2,
+        raw_wdl=(
+            dict(partial.raw_wdl)
+            if partial is not None
+            else {"wins": 0, "draws": 0, "losses": 0}
+        ),
+        counts=Pentanomial(0, 0, 0, 0, 0),
+        termination_counts=termination_counts,
+        abnormal_games=records,
+    )
 
 
 def build_runner_command(
@@ -330,31 +763,48 @@ def run_match(
     )
     log_path.write_text(completed.stdout or "", encoding="utf-8", newline="\n")
     if completed.returncode != 0:
-        raise RuntimeError(
-            f"match runner exited with {completed.returncode}; see {log_path}"
+        reason = f"match runner exited with {completed.returncode}"
+        partial = None
+        if pgn_path.is_file():
+            try:
+                partial = parse_paired_pgn(
+                    pgn_path,
+                    candidate_name,
+                    opponent_name,
+                    expected_games=game_count,
+                )
+            except (OSError, ValueError):
+                partial = None
+        evidence = _runner_failure_evidence(game_count, reason, partial)
+        pgn_path.touch(exist_ok=True)
+    elif not pgn_path.is_file():
+        evidence = _runner_failure_evidence(
+            game_count, "match runner produced no PGN"
         )
-    if not pgn_path.is_file():
-        raise RuntimeError(f"match runner produced no PGN: {pgn_path}")
-
-    counts = parse_paired_pgn(
-        pgn_path,
-        candidate_name,
-        opponent_name,
-        expected_games=game_count,
-    )
-    llr = sprt_llr(counts, spec.sprt.elo0, spec.sprt.elo1)
-    decision = sprt_decision(
-        counts,
-        spec.sprt.elo0,
-        spec.sprt.elo1,
-        spec.sprt.alpha,
-        spec.sprt.beta,
-    )
+        pgn_path.touch()
+    else:
+        evidence = parse_paired_pgn(
+            pgn_path,
+            candidate_name,
+            opponent_name,
+            expected_games=game_count,
+        )
+    if evidence.clean_pairs == 0:
+        llr = 0.0
+        decision = "no_clean_pairs"
+    else:
+        llr = sprt_llr(evidence.counts, spec.sprt.elo0, spec.sprt.elo1)
+        decision = sprt_decision(
+            evidence.counts,
+            spec.sprt.elo0,
+            spec.sprt.elo1,
+            spec.sprt.alpha,
+            spec.sprt.beta,
+        )
     result = MatchResult(
-        counts=counts,
+        evidence=evidence,
         llr=llr,
         decision=decision,
-        games=game_count,
         pgn=str(pgn_path.resolve()),
         manifest=str(manifest_path.resolve()),
     )

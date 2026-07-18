@@ -86,10 +86,9 @@ def main() -> int:
         )
     )
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "lane": "local-windows-16-thread-cpu",
-        "games": result.games,
-        "counts": asdict(result.counts),
+        **result.evidence.to_dict(),
         "llr": result.llr,
         "decision": result.decision,
         "configuration": configuration,

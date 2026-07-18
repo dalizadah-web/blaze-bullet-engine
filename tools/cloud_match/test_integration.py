@@ -63,7 +63,7 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                 (shard_dir / "games.pgn").write_text("pgn", encoding="utf-8")
                 pair_indexes = [p for p in range(200) if p % 20 == index]
                 payload = {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "experiment_id": frozen.experiment_id(),
                     "shard_index": index,
                     "shard_count": 20,
@@ -74,6 +74,12 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                     "openings_sha256": frozen.opening_sha256,
                     "runner_sha256": "e" * 64,
                     "expected_games": len(pair_indexes) * 2,
+                    "completed_games": len(pair_indexes) * 2,
+                    "clean_games": len(pair_indexes) * 2,
+                    "clean_pairs": len(pair_indexes),
+                    "quarantined_games": 0,
+                    "quarantined_pairs": 0,
+                    "raw_wdl": {"wins": 8, "draws": 7, "losses": 5},
                     "pair_indexes": pair_indexes,
                     "game_ids": [
                         game_id
@@ -87,6 +93,13 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                         "wins2": 3, "wins1_draw1": 2, "draws2": 2,
                         "losses1_draw1": 1, "losses2": 2,
                     },
+                    "termination_counts": {
+                        "clean": {"ordinary": len(pair_indexes) * 2, "adjudication": 0},
+                        "candidate": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                        "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                        "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0},
+                    },
+                    "abnormal_games": [],
                     "pgn": "games.pgn",
                 }
                 (shard_dir / "shard.json").write_text(
@@ -95,8 +108,8 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                 shards.append(shard_dir / "shard.json")
 
             result = aggregate_shards(shards, frozen)
-            self.assertEqual(result["games"], 400)
-            self.assertEqual(result["pairs"], 200)
+            self.assertEqual(result["expected_games"], 400)
+            self.assertEqual(result["clean_pairs"], 200)
 
 
 if __name__ == "__main__":

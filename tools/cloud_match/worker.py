@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 import json
 from pathlib import Path
 import platform
@@ -12,7 +11,29 @@ from typing import Any
 from tools.cloud_match.shards import pair_indexes
 from tools.cloud_match.spec import CloudMatchSpec
 from tools.experiment.manifest import ArtifactIdentity, sha256_file
-from tools.experiment.match import MatchSpec, SprtSpec, run_match
+from tools.experiment.match import MatchEvidence, MatchSpec, SprtSpec, run_match
+
+
+def _globalize_evidence(
+    evidence: MatchEvidence, game_ids: list[str]
+) -> dict[str, Any]:
+    if len(game_ids) != evidence.expected_games:
+        raise ValueError("game ID count does not match evidence")
+    payload = {"schema_version": 2, **evidence.to_dict()}
+    records: list[dict[str, object]] = []
+    for raw_record in evidence.abnormal_games:
+        record = dict(raw_record)
+        game_index = record.pop("game_index", None)
+        if (
+            not isinstance(game_index, int)
+            or isinstance(game_index, bool)
+            or not 0 <= game_index < len(game_ids)
+        ):
+            raise ValueError("abnormal game index is outside shard assignment")
+        record["game_id"] = game_ids[game_index]
+        records.append(record)
+    payload["abnormal_games"] = records
+    return payload
 
 
 def write_shard_openings(
@@ -118,7 +139,7 @@ def run_worker(
         )
     ]
     payload: dict[str, Any] = {
-        "schema_version": 1,
+        **_globalize_evidence(result.evidence, game_ids),
         "experiment_id": experiment_id,
         "shard_index": shard_index,
         "shard_count": spec.shards,
@@ -128,10 +149,8 @@ def run_worker(
         "baseline_sha256": baseline_identity.sha256,
         "openings_sha256": spec.opening_sha256,
         "runner_sha256": runner_identity.sha256,
-        "expected_games": len(assigned_pairs) * 2,
         "pair_indexes": assigned_pairs,
         "game_ids": game_ids,
-        "counts": asdict(result.counts),
         "pgn": "match/games.pgn",
         "environment": {
             "machine": platform.machine(),

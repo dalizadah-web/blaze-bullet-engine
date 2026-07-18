@@ -11,6 +11,7 @@ from typing import Any, Iterable
 
 from tools.cloud_match.shards import pair_indexes
 from tools.cloud_match.spec import CloudMatchSpec
+from tools.experiment.match import validate_evidence_payload
 from tools.experiment.pentanomial import Pentanomial, sprt_decision, sprt_llr
 
 
@@ -34,18 +35,6 @@ def _load_manifest(path: Path) -> dict[str, Any]:
     return payload
 
 
-def _validated_counts(raw: Any, path: Path) -> Pentanomial:
-    if not isinstance(raw, dict) or set(raw) != set(_COUNT_KEYS):
-        raise ValueError(f"invalid pentanomial counts in {path}")
-    values = []
-    for key in _COUNT_KEYS:
-        value = raw[key]
-        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
-            raise ValueError(f"invalid {key} count in {path}")
-        values.append(value)
-    return Pentanomial(*values)
-
-
 def aggregate_shards(
     manifest_paths: Iterable[Path | str], spec: CloudMatchSpec
 ) -> dict[str, Any]:
@@ -62,10 +51,15 @@ def aggregate_shards(
     seen_game_ids: set[str] = set()
     common_hashes: dict[str, str] = {}
     totals = [0, 0, 0, 0, 0]
+    completed_games = clean_games = clean_pairs = 0
+    quarantined_games = quarantined_pairs = 0
+    raw_wdl = {"wins": 0, "draws": 0, "losses": 0}
+    termination_counts: dict[str, dict[str, int]] | None = None
+    abnormal_games: list[dict[str, Any]] = []
 
     for path in paths:
         raw = _load_manifest(path)
-        if raw.get("schema_version") != 1:
+        if raw.get("schema_version") != 2:
             raise ValueError(f"unsupported shard schema in {path}")
         if raw.get("experiment_id") != experiment_id:
             raise ValueError(f"experiment ID mismatch in {path}")
@@ -129,10 +123,33 @@ def aggregate_shards(
         pgn = raw.get("pgn")
         if not isinstance(pgn, str) or not (path.parent / pgn).is_file():
             raise ValueError(f"missing shard PGN for {path}")
-        counts = _validated_counts(raw.get("counts"), path)
-        if counts.pairs != len(assigned_pairs):
-            raise ValueError(f"pentanomial pair count mismatch in {path}")
-        totals = [left + right for left, right in zip(totals, counts.as_tuple(), strict=True)]
+        evidence = validate_evidence_payload(
+            raw, context=str(path), expected_games=expected_games
+        )
+        expected_id_set = set(expected_ids)
+        for record in evidence.abnormal_games:
+            if record.get("game_id") not in expected_id_set:
+                raise ValueError(f"abnormal game ID assignment mismatch in {path}")
+        totals = [
+            left + right
+            for left, right in zip(totals, evidence.counts.as_tuple(), strict=True)
+        ]
+        completed_games += evidence.completed_games
+        clean_games += evidence.clean_games
+        clean_pairs += evidence.clean_pairs
+        quarantined_games += evidence.quarantined_games
+        quarantined_pairs += evidence.quarantined_pairs
+        for key in raw_wdl:
+            raw_wdl[key] += evidence.raw_wdl[key]
+        if termination_counts is None:
+            termination_counts = {
+                group: {key: 0 for key in values}
+                for group, values in evidence.termination_counts.items()
+            }
+        for group, values in evidence.termination_counts.items():
+            for key, value in values.items():
+                termination_counts[group][key] += value
+        abnormal_games.extend(dict(record) for record in evidence.abnormal_games)
 
     if seen_indexes != expected_indexes:
         raise ValueError("missing shard indexes")
@@ -140,21 +157,33 @@ def aggregate_shards(
         raise ValueError("incomplete or duplicate game ID coverage")
 
     counts = Pentanomial(*totals)
-    llr = sprt_llr(counts, spec.sprt.elo0, spec.sprt.elo1)
-    decision = sprt_decision(
-        counts,
-        spec.sprt.elo0,
-        spec.sprt.elo1,
-        spec.sprt.alpha,
-        spec.sprt.beta,
-    )
+    if clean_pairs == 0:
+        llr = 0.0
+        decision = "no_clean_pairs"
+    else:
+        llr = sprt_llr(counts, spec.sprt.elo0, spec.sprt.elo1)
+        decision = sprt_decision(
+            counts,
+            spec.sprt.elo0,
+            spec.sprt.elo1,
+            spec.sprt.alpha,
+            spec.sprt.beta,
+        )
+    assert termination_counts is not None
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "experiment_id": experiment_id,
-        "games": spec.games,
-        "pairs": counts.pairs,
+        "expected_games": spec.games,
+        "completed_games": completed_games,
+        "clean_games": clean_games,
+        "clean_pairs": clean_pairs,
+        "quarantined_games": quarantined_games,
+        "quarantined_pairs": quarantined_pairs,
+        "raw_wdl": raw_wdl,
         "shards": spec.shards,
         "counts": dict(zip(_COUNT_KEYS, counts.as_tuple(), strict=True)),
+        "termination_counts": termination_counts,
+        "abnormal_games": abnormal_games,
         "llr": llr,
         "decision": decision,
         "artifacts": common_hashes,
@@ -164,14 +193,44 @@ def aggregate_shards(
 
 def summary_markdown(result: dict[str, Any]) -> str:
     counts = result["counts"]
-    return (
+    summary = (
         f"# Cloud match {result['experiment_id']}\n\n"
-        f"- Games: {result['games']} ({result['pairs']} complete color-swapped pairs)\n"
+        f"- Expected/completed games: {result['expected_games']}/{result['completed_games']}\n"
+        f"- Clean evidence: {result['clean_games']} games ({result['clean_pairs']} color-swapped pairs)\n"
+        f"- Quarantined: {result['quarantined_games']} games ({result['quarantined_pairs']} pairs)\n"
+        f"- Raw candidate W/D/L: {result['raw_wdl']['wins']}/"
+        f"{result['raw_wdl']['draws']}/{result['raw_wdl']['losses']}\n"
         f"- Shards: {result['shards']}\n"
         f"- SPRT decision: **{result['decision']}**\n"
         f"- LLR: `{result['llr']:.6f}`\n"
         f"- Pentanomial: `{counts['wins2']} {counts['wins1_draw1']} "
         f"{counts['draws2']} {counts['losses1_draw1']} {counts['losses2']}`\n"
+    )
+    termination_lines = []
+    labels = {
+        "clean": "Clean",
+        "candidate": "Candidate",
+        "opponent": "Opponent",
+        "infrastructure_unknown": "Infrastructure/unknown",
+    }
+    for group, values in result["termination_counts"].items():
+        for category, value in values.items():
+            termination_lines.append(f"- {labels[group]} {category}: {value}\n")
+    abnormal_lines = []
+    for record in result["abnormal_games"]:
+        abnormal_lines.append(
+            f"- `{record['game_id']}` round `{record['round']}`: "
+            f"{record['category']} ({record['offender']}), result `{record['result']}`, "
+            f"termination `{record['termination']}`\n"
+        )
+    if not abnormal_lines:
+        abnormal_lines.append("- None\n")
+    return (
+        summary
+        + "\n## Termination counts\n\n"
+        + "".join(termination_lines)
+        + "\n## Abnormal games\n\n"
+        + "".join(abnormal_lines)
     )
 
 

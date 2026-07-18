@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.cloud_match.aggregate import aggregate_shards
+from tools.cloud_match.aggregate import aggregate_shards, summary_markdown
 from tools.cloud_match.spec import CloudMatchSpec
 
 
@@ -50,8 +50,11 @@ class AggregateShardsTests(unittest.TestCase):
         shard.mkdir()
         (shard / "games.pgn").write_text("pgn", encoding="utf-8")
         pair_indexes = [index, index + 2]
+        wins = counts["wins2"] * 2 + counts["wins1_draw1"]
+        draws = counts["wins1_draw1"] + counts["draws2"] * 2 + counts["losses1_draw1"]
+        losses = counts["losses1_draw1"] + counts["losses2"] * 2
         payload = {
-            "schema_version": 1,
+            "schema_version": 2,
             "experiment_id": self.spec.experiment_id(),
             "shard_index": index,
             "shard_count": 2,
@@ -62,6 +65,12 @@ class AggregateShardsTests(unittest.TestCase):
             "openings_sha256": "c" * 64,
             "runner_sha256": "d" * 64,
             "expected_games": 4,
+            "completed_games": 4,
+            "clean_games": 4,
+            "clean_pairs": 2,
+            "quarantined_games": 0,
+            "quarantined_pairs": 0,
+            "raw_wdl": {"wins": wins, "draws": draws, "losses": losses},
             "pair_indexes": pair_indexes,
             "game_ids": [
                 game_id
@@ -72,6 +81,13 @@ class AggregateShardsTests(unittest.TestCase):
                 )
             ],
             "counts": counts,
+            "termination_counts": {
+                "clean": {"ordinary": 4, "adjudication": 0},
+                "candidate": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0},
+            },
+            "abnormal_games": [],
             "pgn": "games.pgn",
         }
         manifest = shard / "shard.json"
@@ -90,8 +106,8 @@ class AggregateShardsTests(unittest.TestCase):
 
         result = aggregate_shards([first, second], self.spec)
 
-        self.assertEqual(result["games"], 8)
-        self.assertEqual(result["pairs"], 4)
+        self.assertEqual(result["expected_games"], 8)
+        self.assertEqual(result["clean_pairs"], 4)
         self.assertEqual(result["counts"], {
             "wins2": 1,
             "wins1_draw1": 1,
@@ -100,6 +116,70 @@ class AggregateShardsTests(unittest.TestCase):
             "losses2": 1,
         })
         self.assertIn(result["decision"], ("accept", "reject", "continue"))
+
+    def test_quarantines_abnormal_pair_and_rejects_forged_termination_counts(self) -> None:
+        first = self._write_shard(
+            0,
+            {"wins2": 1, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0},
+        )
+        payload = json.loads(first.read_text(encoding="utf-8"))
+        payload.update({
+            "clean_games": 2,
+            "clean_pairs": 1,
+            "quarantined_games": 2,
+            "quarantined_pairs": 1,
+            "raw_wdl": {"wins": 2, "draws": 1, "losses": 1},
+        })
+        payload["termination_counts"]["clean"]["ordinary"] = 3
+        payload["termination_counts"]["candidate"]["time_loss"] = 1
+        payload["abnormal_games"] = [{
+            "game_id": payload["game_ids"][2],
+            "round": "3",
+            "result": "0-1",
+            "candidate_color": "white",
+            "termination": "time forfeit",
+            "category": "time_loss",
+            "offender": "candidate",
+            "reason": "engine failure",
+        }]
+        first.write_text(json.dumps(payload), encoding="utf-8")
+        second = self._write_shard(
+            1,
+            {"wins2": 0, "wins1_draw1": 0, "draws2": 2, "losses1_draw1": 0, "losses2": 0},
+        )
+
+        result = aggregate_shards([first, second], self.spec)
+
+        self.assertEqual(result["expected_games"], 8)
+        self.assertEqual(result["clean_games"], 6)
+        self.assertEqual(result["quarantined_pairs"], 1)
+        self.assertEqual(result["termination_counts"]["candidate"]["time_loss"], 1)
+        self.assertEqual(result["abnormal_games"][0]["game_id"], payload["game_ids"][2])
+        markdown = summary_markdown(result)
+        self.assertIn("Candidate time_loss: 1", markdown)
+        self.assertIn(payload["game_ids"][2], markdown)
+
+        forged = json.loads(first.read_text(encoding="utf-8"))
+        forged["termination_counts"]["candidate"]["time_loss"] = 2
+        first.write_text(json.dumps(forged), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "termination count"):
+            aggregate_shards([first, second], self.spec)
+
+        contradictory = payload
+        contradictory["abnormal_games"][0]["result"] = "1-0"
+        first.write_text(json.dumps(contradictory), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "contradictory offender/result"):
+            aggregate_shards([first, second], self.spec)
+
+    def test_rejects_backward_incompatible_shard_schema(self) -> None:
+        first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        second = self._write_shard(1, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        payload = json.loads(first.read_text(encoding="utf-8"))
+        payload["schema_version"] = 1
+        first.write_text(json.dumps(payload), encoding="utf-8")
+
+        with self.assertRaisesRegex(ValueError, "unsupported shard schema"):
+            aggregate_shards([first, second], self.spec)
 
     def test_rejects_duplicate_game_ids(self) -> None:
         first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
@@ -166,7 +246,7 @@ class AggregateShardsTests(unittest.TestCase):
         (second_dir / "games.pgn").write_text("pgn", encoding="utf-8")
         pair_indexes = [0, 2]
         payload = {
-            "schema_version": 1,
+            "schema_version": 2,
             "experiment_id": self.spec.experiment_id(),
             "shard_index": 0,
             "shard_count": 2,

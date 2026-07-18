@@ -58,7 +58,7 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
     (shard / "games.pgn").write_text("pgn", encoding="utf-8")
     pair_indexes = [index, index + 2]
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "experiment_id": spec.experiment_id(),
         "shard_index": index,
         "shard_count": 2,
@@ -69,6 +69,12 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
         "openings_sha256": opening_sha,
         "runner_sha256": "d" * 64,
         "expected_games": 4,
+        "completed_games": 4,
+        "clean_games": 4,
+        "clean_pairs": 2,
+        "quarantined_games": 0,
+        "quarantined_pairs": 0,
+        "raw_wdl": {"wins": 2, "draws": 2, "losses": 0},
         "pair_indexes": pair_indexes,
         "game_ids": [
             game_id
@@ -82,6 +88,13 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
             "wins2": 1, "wins1_draw1": 0, "draws2": 1,
             "losses1_draw1": 0, "losses2": 0,
         },
+        "termination_counts": {
+            "clean": {"ordinary": 4, "adjudication": 0},
+            "candidate": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+            "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+            "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0},
+        },
+        "abnormal_games": [],
         "pgn": "games.pgn",
     }
     manifest = shard / "shard.json"
@@ -97,7 +110,7 @@ class ExperimentIdentityPoolingTests(unittest.TestCase):
         second = _shard_manifest(spec, 1, spec.candidate_commit,
                                  "a" * 64, spec.opening_sha256)
         result = aggregate_shards([first, second], spec)
-        self.assertEqual(result["pairs"], 4)
+        self.assertEqual(result["clean_pairs"], 4)
 
     def test_different_resolved_commit_cannot_pool(self) -> None:
         spec = _make_spec(_base_payload())

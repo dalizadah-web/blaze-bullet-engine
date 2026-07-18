@@ -2,10 +2,46 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.cloud_match.worker import run_worker, write_shard_openings
+from tools.cloud_match.worker import _globalize_evidence, run_worker, write_shard_openings
+from tools.experiment.match import MatchEvidence
+from tools.experiment.pentanomial import Pentanomial
 
 
 class WorkerOpeningTests(unittest.TestCase):
+    def test_globalizes_abnormal_records_without_changing_evidence_arithmetic(self) -> None:
+        evidence = MatchEvidence(
+            expected_games=2,
+            completed_games=2,
+            clean_games=0,
+            clean_pairs=0,
+            quarantined_games=2,
+            quarantined_pairs=1,
+            raw_wdl={"wins": 0, "draws": 1, "losses": 1},
+            counts=Pentanomial(0, 0, 0, 0, 0),
+            termination_counts={
+                "clean": {"ordinary": 1, "adjudication": 0},
+                "candidate": {"time_loss": 1, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0},
+            },
+            abnormal_games=({
+                "game_index": 0,
+                "round": "1",
+                "result": "0-1",
+                "termination": "time forfeit",
+                "category": "time_loss",
+                "offender": "candidate",
+                "reason": "engine failure",
+            },),
+        )
+
+        payload = _globalize_evidence(evidence, ["experiment-p000000-w", "experiment-p000000-b"])
+
+        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(payload["quarantined_pairs"], 1)
+        self.assertEqual(payload["abnormal_games"][0]["game_id"], "experiment-p000000-w")
+        self.assertNotIn("game_index", payload["abnormal_games"][0])
+
     def test_selects_deterministic_cyclic_openings_for_shard(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

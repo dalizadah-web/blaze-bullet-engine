@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import textwrap
@@ -85,6 +86,145 @@ class MatchSpecTests(unittest.TestCase):
 
 
 class PgnPairTests(unittest.TestCase):
+    def _parse(self, first_headers: str, second_headers: str):
+        first_result = re.search(r'\[Result "([^"]+)"\]', first_headers).group(1)
+        second_result = re.search(r'\[Result "([^"]+)"\]', second_headers).group(1)
+        pgn = (
+            '[Event "paired"]\n[Round "1"]\n[White "Blaze"]\n[Black "Opponent"]\n'
+            f"{first_headers}\n\n1. e4 e5 {first_result}\n\n"
+            '[Event "paired"]\n[Round "2"]\n[White "Opponent"]\n[Black "Blaze"]\n'
+            f"{second_headers}\n\n1. e4 e5 {second_result}"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "games.pgn"
+            path.write_text(pgn + "\n", encoding="utf-8")
+            return parse_paired_pgn(path, "Blaze", "Opponent", expected_games=2)
+
+    def test_ordinary_decisive_and_draw_results_remain_clean(self) -> None:
+        evidence = self._parse('[Result "1-0"]', '[Result "1/2-1/2"]')
+
+        self.assertEqual(evidence.clean_pairs, 1)
+        self.assertEqual(evidence.quarantined_pairs, 0)
+        self.assertEqual(evidence.counts.as_tuple(), (0, 1, 0, 0, 0))
+        self.assertEqual(evidence.raw_wdl, {"wins": 1, "draws": 1, "losses": 0})
+        self.assertEqual(evidence.termination_counts["clean"], {"ordinary": 2, "adjudication": 0})
+
+    def test_adjudication_is_explicitly_accepted_as_clean(self) -> None:
+        evidence = self._parse(
+            '[Result "1-0"]\n[Termination "adjudication"]',
+            '[Result "0-1"]\n[Termination "adjudication"]',
+        )
+
+        self.assertEqual(evidence.clean_pairs, 1)
+        self.assertEqual(evidence.termination_counts["clean"], {"ordinary": 0, "adjudication": 2})
+
+    def test_time_forfeits_are_attributed_to_the_losing_engine(self) -> None:
+        evidence = self._parse(
+            '[Result "0-1"]\n[Termination "time forfeit"]',
+            '[Result "0-1"]\n[Termination "time forfeit"]',
+        )
+
+        self.assertEqual(evidence.clean_pairs, 0)
+        self.assertEqual(evidence.quarantined_pairs, 1)
+        self.assertEqual(evidence.termination_counts["candidate"]["time_loss"], 1)
+        self.assertEqual(evidence.termination_counts["opponent"]["time_loss"], 1)
+        self.assertEqual(evidence.raw_wdl, {"wins": 1, "draws": 0, "losses": 1})
+        self.assertEqual(evidence.counts.pairs, 0)
+
+    def test_abnormal_termination_categories_are_auditable(self) -> None:
+        cases = (
+            ("illegal move", "illegal_move", "candidate"),
+            ("abandoned", "disconnect", "candidate"),
+            ("stalled connection", "stall", "candidate"),
+            ("unterminated", "unterminated", "infrastructure_unknown"),
+            ("future runner reason", "unknown", "infrastructure_unknown"),
+        )
+        for termination, category, side in cases:
+            with self.subTest(termination=termination):
+                evidence = self._parse(
+                    f'[Result "0-1"]\n[Termination "{termination}"]',
+                    '[Result "0-1"]',
+                )
+                self.assertEqual(evidence.clean_pairs, 0)
+                self.assertEqual(evidence.quarantined_pairs, 1)
+                self.assertEqual(evidence.termination_counts[side][category], 1)
+                self.assertEqual(evidence.abnormal_games[0]["game_id"], "game-000001")
+                self.assertEqual(evidence.abnormal_games[0]["termination"], termination)
+                self.assertEqual(evidence.abnormal_games[0]["round"], "1")
+
+    def test_contradictory_draw_and_engine_failure_fails_closed(self) -> None:
+        evidence = self._parse(
+            '[Result "1/2-1/2"]\n[Termination "illegal move"]',
+            '[Result "1/2-1/2"]',
+        )
+
+        self.assertEqual(evidence.clean_pairs, 0)
+        self.assertEqual(evidence.termination_counts["infrastructure_unknown"]["contradictory"], 1)
+        self.assertEqual(evidence.abnormal_games[0]["offender"], "unknown")
+
+    def test_uncompleted_result_quarantines_the_whole_pair(self) -> None:
+        evidence = self._parse('[Result "*"]', '[Result "1-0"]')
+
+        self.assertEqual(evidence.completed_games, 1)
+        self.assertEqual(evidence.quarantined_games, 2)
+        self.assertEqual(evidence.clean_games, 0)
+        self.assertEqual(evidence.raw_wdl, {"wins": 0, "draws": 0, "losses": 1})
+        self.assertEqual(evidence.termination_counts["infrastructure_unknown"]["unterminated"], 1)
+
+    def test_missing_pgn_game_is_audited_and_quarantined(self) -> None:
+        pgn = textwrap.dedent(
+            """
+            [Event "paired"]
+            [Round "2"]
+            [White "Opponent"]
+            [Black "Blaze"]
+            [Result "0-1"]
+
+            1. e4 e5 0-1
+            """
+        ).strip()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "games.pgn"
+            path.write_text(pgn + "\n", encoding="utf-8")
+
+            evidence = parse_paired_pgn(path, "Blaze", "Opponent", expected_games=2)
+
+        self.assertEqual(evidence.completed_games, 1)
+        self.assertEqual(evidence.quarantined_pairs, 1)
+        self.assertEqual(evidence.raw_wdl, {"wins": 1, "draws": 0, "losses": 0})
+        self.assertEqual(evidence.abnormal_games[0]["game_index"], 0)
+        self.assertEqual(evidence.abnormal_games[0]["reason"], "PGN game is missing")
+
+    def test_malformed_movetext_is_infrastructure_unknown(self) -> None:
+        pgn = textwrap.dedent(
+            """
+            [Event "paired"]
+            [Round "1"]
+            [White "Blaze"]
+            [Black "Opponent"]
+            [Result "1-0"]
+
+            1. e5 1-0
+
+            [Event "paired"]
+            [Round "2"]
+            [White "Opponent"]
+            [Black "Blaze"]
+            [Result "0-1"]
+
+            1. e4 e5 0-1
+            """
+        ).strip()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "games.pgn"
+            path.write_text(pgn + "\n", encoding="utf-8")
+
+            with self.assertLogs("chess.pgn", level="ERROR"):
+                evidence = parse_paired_pgn(path, "Blaze", "Opponent", expected_games=2)
+
+        self.assertEqual(evidence.clean_pairs, 0)
+        self.assertEqual(evidence.termination_counts["infrastructure_unknown"]["malformed"], 1)
+
     def test_maps_color_swapped_wins_to_two_win_category(self) -> None:
         pgn = textwrap.dedent(
             """
@@ -111,7 +251,7 @@ class PgnPairTests(unittest.TestCase):
 
             result = parse_paired_pgn(path, "Blaze", "Opponent", expected_games=2)
 
-        self.assertEqual(result.as_tuple(), (1, 0, 0, 0, 0))
+        self.assertEqual(result.counts.as_tuple(), (1, 0, 0, 0, 0))
 
     def test_rejects_pair_without_color_reversal(self) -> None:
         pgn = textwrap.dedent(
@@ -142,6 +282,64 @@ class PgnPairTests(unittest.TestCase):
 
 
 class MatchExecutionTests(unittest.TestCase):
+    def test_runner_failure_returns_zero_evidence_without_calling_sprt(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            candidate = root / "candidate.exe"
+            opponent = root / "opponent.exe"
+            runner = root / "runner.exe"
+            openings = root / "openings.epd"
+            for path in (candidate, opponent, runner):
+                path.write_bytes(path.name.encode("ascii"))
+            openings.write_text(
+                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - id "start";\n',
+                encoding="utf-8",
+            )
+            spec = MatchSpec(
+                schema_version=1,
+                name="failed-runner",
+                games=2,
+                concurrency=1,
+                time_control="1+0.01",
+                threads=1,
+                hash_mb=16,
+                repeat=True,
+                opening_format="epd",
+                openings=str(openings),
+                opening_sha256=sha256_file(openings),
+                opponent_sha256=None,
+                sprt=SprtSpec(0.0, 5.0, 0.05, 0.05),
+            )
+
+            def failed_executor(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+                pgn_path = Path(command[command.index("-pgnout") + 1])
+                pgn_path.write_text(
+                    '[Event "partial"]\n[Round "1"]\n[White "Blaze"]\n'
+                    '[Black "Opponent"]\n[Result "1-0"]\n\n1. e4 e5 1-0\n',
+                    encoding="utf-8",
+                )
+                return subprocess.CompletedProcess(command, 17, stdout="runner crashed\n")
+
+            result = run_match(
+                spec,
+                candidate=candidate,
+                opponent=opponent,
+                runner=runner,
+                output=root / "result",
+                source_commit="0" * 40,
+                executor=failed_executor,
+            )
+
+        self.assertEqual(result.decision, "no_clean_pairs")
+        self.assertEqual(result.llr, 0.0)
+        self.assertEqual(result.evidence.completed_games, 1)
+        self.assertEqual(result.evidence.raw_wdl, {"wins": 1, "draws": 0, "losses": 0})
+        self.assertEqual(result.evidence.quarantined_pairs, 1)
+        self.assertEqual(
+            result.evidence.termination_counts["infrastructure_unknown"]["runner_failure"],
+            2,
+        )
+
     def test_run_match_writes_hashed_manifest_and_paired_result(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
