@@ -7,7 +7,7 @@
   "baseline_commit": "e5d7f7b43b2629492e20439734f6bf446d19d807",
   "candidate_sha256": "",
   "baseline_sha256": "",
-  "games": 400,
+  "games": 1000,
   "shards": 20,
   "concurrency": 2,
   "time_control": "2+1",
@@ -17,6 +17,7 @@
   "opening_sha256": "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc",
   "opening_start": 1,
   "opening_suite_positions": 500,
+  "opening_repeats": 1,
   "sprt": {
     "elo0": 0.0,
     "elo1": 5.0,

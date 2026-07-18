@@ -23,7 +23,7 @@ class PrepareSpecTests(unittest.TestCase):
                     "baseline_commit": "b" * 40,
                     "candidate_sha256": "",
                     "baseline_sha256": "",
-                    "games": 8,
+                    "games": 12,
                     "shards": 2,
                     "concurrency": 2,
                     "time_control": "1+0",
@@ -32,7 +32,8 @@ class PrepareSpecTests(unittest.TestCase):
                     "openings": "book.epd",
                     "opening_sha256": "a" * 64,
                     "opening_start": 251,
-                    "opening_suite_positions": 500,
+                    "opening_suite_positions": 6,
+                    "opening_repeats": 1,
                     "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
                     }
                 ),

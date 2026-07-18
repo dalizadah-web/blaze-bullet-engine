@@ -25,21 +25,29 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         workflow = WORKFLOW.read_text(encoding="utf-8")
 
         self.assertIn("opening_start:", workflow)
-        self.assertIn("default: 251", workflow)
+        self.assertIn("default: 1", workflow)
+        self.assertIn("opening_repeats:", workflow)
+        self.assertIn("default: 10", workflow)
         self.assertIn("--opening-start '${{ inputs.opening_start }}'", workflow)
 
-    def test_local_and_cloud_launchers_freeze_disjoint_250_pair_lanes(self) -> None:
+    def test_cloud_launcher_defaults_to_10k_full_suite_cycles(self) -> None:
         hybrid = HYBRID.read_text(encoding="utf-8")
         cloud = CLOUD.read_text(encoding="utf-8")
 
-        self.assertIn("[int]$CloudGames = 500", hybrid)
-        self.assertIn("[int]$LocalGames = 500", hybrid)
-        self.assertIn("[int]$CloudOpeningStart = 251", hybrid)
-        self.assertIn("[int]$LocalOpeningStart = 1", hybrid)
-        self.assertIn("-OpeningStart $CloudOpeningStart", hybrid)
-        self.assertIn("--opening-start $LocalOpeningStart", hybrid)
-        self.assertIn("[int]$OpeningStart = 251", cloud)
+        self.assertIn("[int]$Games = 10000", cloud)
+        self.assertIn("[int]$Shards = 20", cloud)
+        self.assertIn("[int]$OpeningStart = 1", cloud)
+        self.assertIn("[int]$OpeningRepeats = 10", cloud)
         self.assertIn('"opening_start=$OpeningStart"', cloud)
+        self.assertIn('"opening_repeats=$OpeningRepeats"', cloud)
+        self.assertIn("default-match.json", cloud)
+        self.assertIn("OpeningSuitePositions", cloud)
+        self.assertNotIn("500 * $OpeningRepeats", cloud)
+
+    def test_hybrid_launcher_is_quarantined_until_disjoint_lane_support_exists(self) -> None:
+        hybrid = HYBRID.read_text(encoding="utf-8")
+        self.assertIn("Hybrid local+cloud lanes are quarantined", hybrid)
+        self.assertIn("-CloudOnly", hybrid)
 
 
 if __name__ == "__main__":

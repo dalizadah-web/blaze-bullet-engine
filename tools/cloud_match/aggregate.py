@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 from typing import Any, Iterable
 
-from tools.cloud_match.shards import pair_indexes
+from tools.cloud_match.shards import game_ids_for_slots, pair_slots
 from tools.cloud_match.spec import CloudMatchSpec
 from tools.experiment.match import validate_evidence_payload
 from tools.experiment.pentanomial import Pentanomial, sprt_decision, sprt_llr
@@ -49,7 +49,7 @@ def aggregate_shards(
     expected_indexes = set(range(spec.shards))
     seen_indexes: set[int] = set()
     seen_game_ids: set[str] = set()
-    seen_source_opening_indexes: set[int] = set()
+    seen_pair_slots: set[tuple[int, int]] = set()
     common_hashes: dict[str, str] = {}
     totals = [0, 0, 0, 0, 0]
     completed_games = clean_games = clean_pairs = 0
@@ -75,28 +75,43 @@ def aggregate_shards(
             raise ValueError(f"duplicate shard index {index}")
         seen_indexes.add(index)
 
-        assigned_pairs = pair_indexes(spec.games, index, spec.shards)
+        assigned_slots = pair_slots(
+            spec.opening_suite_positions,
+            spec.opening_repeats,
+            index,
+            spec.shards,
+        )
+        assigned_pairs = [
+            cycle * spec.opening_suite_positions + slot
+            for cycle, slot in assigned_slots
+        ]
         if raw.get("pair_indexes") != assigned_pairs:
             raise ValueError(f"pair assignment mismatch in {path}")
-        expected_source_indexes = [spec.opening_start + pair for pair in assigned_pairs]
         source_indexes = raw.get("source_opening_indexes")
+        expected_source_indexes = [
+            spec.opening_start + slot for _, slot in assigned_slots
+        ]
         if source_indexes != expected_source_indexes:
             raise ValueError(f"source opening assignment mismatch in {path}")
-        if seen_source_opening_indexes.intersection(source_indexes):
-            raise ValueError(f"duplicate source opening index in {path}")
-        seen_source_opening_indexes.update(source_indexes)
+        raw_slots = raw.get("pair_slots")
+        expected_slots = [{"cycle": cycle, "slot": slot} for cycle, slot in assigned_slots]
+        if raw_slots != expected_slots:
+            raise ValueError(f"pair slot assignment mismatch in {path}")
+        slot_keys = set(assigned_slots)
+        if len(slot_keys) != len(assigned_slots) or seen_pair_slots.intersection(slot_keys):
+            raise ValueError(f"duplicate pair slot in {path}")
+        seen_pair_slots.update(slot_keys)
+        if raw.get("opening_repeats") != spec.opening_repeats:
+            raise ValueError(f"opening repeat mismatch in {path}")
         expected_games = len(assigned_pairs) * 2
         if raw.get("expected_games") != expected_games:
             raise ValueError(f"game count mismatch in {path}")
 
-        expected_ids = [
-            game_id
-            for pair in assigned_pairs
-            for game_id in (
-                f"{experiment_id}-p{pair:06d}-w",
-                f"{experiment_id}-p{pair:06d}-b",
-            )
-        ]
+        expected_ids = game_ids_for_slots(
+            experiment_id,
+            assigned_slots,
+            include_cycle=spec.opening_repeats > 1,
+        )
         game_ids = raw.get("game_ids")
         if game_ids != expected_ids:
             if isinstance(game_ids, list) and seen_game_ids.intersection(game_ids):
@@ -169,11 +184,13 @@ def aggregate_shards(
         raise ValueError("missing shard indexes")
     if len(seen_game_ids) != spec.games:
         raise ValueError("incomplete or duplicate game ID coverage")
-    expected_source_coverage = set(
-        range(spec.opening_start, spec.opening_start + spec.games // 2)
-    )
-    if seen_source_opening_indexes != expected_source_coverage:
-        raise ValueError("incomplete source opening coverage")
+    expected_slot_coverage = {
+        (cycle, slot)
+        for cycle in range(spec.opening_repeats)
+        for slot in range(spec.opening_suite_positions)
+    }
+    if seen_pair_slots != expected_slot_coverage:
+        raise ValueError("incomplete pair slot coverage")
 
     counts = Pentanomial(*totals)
     if clean_pairs == 0:
@@ -190,7 +207,8 @@ def aggregate_shards(
         )
     assert termination_counts is not None
     frozen_spec = asdict(spec)
-    frozen_spec["opening_count"] = spec.games // 2
+    frozen_spec["opening_count"] = spec.opening_suite_positions
+    frozen_spec["opening_repeats"] = spec.opening_repeats
     return {
         "schema_version": 3,
         "lane": "cloud-linux-github-hosted",

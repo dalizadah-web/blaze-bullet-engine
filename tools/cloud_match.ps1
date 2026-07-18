@@ -6,9 +6,10 @@ param(
     [string]$WorkflowRef = "codex/bullet-beast",
     [string]$CandidateRef = "codex/bullet-beast",
     [string]$BaselineRef = "4d25363fef79ff2025670e248ed07b3d81747d3a",
-    [ValidateRange(2, 1000000)][int]$Games = 500,
-    [ValidateRange(1, 20)][int]$Shards = 10,
-    [ValidateRange(1, 1000000)][int]$OpeningStart = 251,
+    [ValidateRange(2, 1000000)][int]$Games = 10000,
+    [ValidateRange(1, 20)][int]$Shards = 20,
+    [ValidateRange(1, 1000000)][int]$OpeningStart = 1,
+    [ValidateRange(1, 1000000)][int]$OpeningRepeats = 10,
     [string]$TimeControl = "0.5+0",
     [ValidateRange(1, 2)][int]$Threads = 1,
     [ValidateRange(1, 65536)][int]$HashMb = 16,
@@ -21,12 +22,21 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
+$DefaultCloudConfig = Join-Path $ProjectRoot "config/cloud/default-match.json"
+if (-not (Test-Path -LiteralPath $DefaultCloudConfig -PathType Leaf)) {
+    throw "Cloud default config not found: $DefaultCloudConfig"
+}
+$OpeningSuitePositions = [int]((Get-Content -LiteralPath $DefaultCloudConfig -Raw | ConvertFrom-Json).opening_suite_positions)
+if ($OpeningSuitePositions -le 0) {
+    throw "Cloud default config opening_suite_positions must be positive."
+}
 
 if ($Action -eq "Run" -and -not $CloudOnly) {
     & (Join-Path $PSScriptRoot "hybrid_match.ps1") -Repo $Repo `
         -WorkflowRef $WorkflowRef -CandidateRef $CandidateRef -BaselineRef $BaselineRef `
         -CloudGames $Games -LocalGames $Games -CloudShards $Shards `
         -CloudOpeningStart $OpeningStart -LocalOpeningStart 1 `
+        -CloudOpeningRepeats $OpeningRepeats `
         -LocalConcurrency 8 -TimeControl $TimeControl -Threads $Threads `
         -HashMb $HashMb -Elo0 $Elo0 -Elo1 $Elo1
     exit $LASTEXITCODE
@@ -82,12 +92,16 @@ switch ($Action) {
         if ((($Games / 2) % $Shards) -ne 0) {
             throw "The number of game pairs must divide evenly across shards."
         }
+        if (($Games / 2) -ne ($OpeningSuitePositions * $OpeningRepeats)) {
+            throw "Games/2 must equal $OpeningSuitePositions opening positions times OpeningRepeats."
+        }
         & $gh workflow run cloud-match.yml --repo $repository --ref $WorkflowRef `
             -f "candidate_ref=$CandidateRef" `
             -f "baseline_ref=$BaselineRef" `
             -f "games=$Games" `
             -f "shards=$Shards" `
             -f "opening_start=$OpeningStart" `
+            -f "opening_repeats=$OpeningRepeats" `
             -f "time_control=$TimeControl" `
             -f "threads=$Threads" `
             -f "hash_mb=$HashMb" `

@@ -41,6 +41,7 @@ def _base_payload() -> dict[str, object]:
         "opening_sha256": "c" * 64,
         "opening_start": 1,
         "opening_suite_positions": 4,
+        "opening_repeats": 1,
         "sprt": {"elo0": 0.0, "elo1": 5.0, "alpha": 0.05, "beta": 0.05},
     }
 
@@ -79,7 +80,9 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
         "raw_wdl": {"wins": 2, "draws": 2, "losses": 0},
         "clean_wdl": {"wins": 2, "draws": 2, "losses": 0},
         "pair_indexes": pair_indexes,
+        "pair_slots": [{"cycle": 0, "slot": pair} for pair in pair_indexes],
         "source_opening_indexes": [spec.opening_start + pair for pair in pair_indexes],
+        "opening_repeats": spec.opening_repeats,
         "game_ids": [
             game_id
             for pair in pair_indexes

@@ -37,7 +37,8 @@ class AggregateShardsTests(unittest.TestCase):
                     "openings": "openings.epd",
                     "opening_sha256": "c" * 64,
                     "opening_start": 1,
-                    "opening_suite_positions": 500,
+                    "opening_suite_positions": 4,
+                    "opening_repeats": 1,
                     "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
                 }
             ),
@@ -76,7 +77,9 @@ class AggregateShardsTests(unittest.TestCase):
             "raw_wdl": {"wins": wins, "draws": draws, "losses": losses},
             "clean_wdl": {"wins": wins, "draws": draws, "losses": losses},
             "pair_indexes": pair_indexes,
+            "pair_slots": [{"cycle": 0, "slot": pair} for pair in pair_indexes],
             "source_opening_indexes": [self.spec.opening_start + pair for pair in pair_indexes],
+            "opening_repeats": self.spec.opening_repeats,
             "game_ids": [
                 game_id
                 for pair in pair_indexes
@@ -284,6 +287,19 @@ class AggregateShardsTests(unittest.TestCase):
         second.write_text(json.dumps(payload), encoding="utf-8")
 
         with self.assertRaisesRegex(ValueError, "source opening assignment mismatch"):
+            aggregate_shards([first, second], self.spec)
+
+    def test_rejects_missing_or_duplicate_pair_slot_metadata(self) -> None:
+        first = self._write_shard(0, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        second = self._write_shard(1, {"wins2": 2, "wins1_draw1": 0, "draws2": 0, "losses1_draw1": 0, "losses2": 0})
+        payload = json.loads(first.read_text(encoding="utf-8"))
+        payload.pop("pair_slots")
+        first.write_text(json.dumps(payload), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "pair slot assignment"):
+            aggregate_shards([first, second], self.spec)
+        payload["pair_slots"] = [{"cycle": 0, "slot": 0}, {"cycle": 0, "slot": 0}]
+        first.write_text(json.dumps(payload), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "pair slot assignment"):
             aggregate_shards([first, second], self.spec)
 
     def test_rejects_missing_shard(self) -> None:

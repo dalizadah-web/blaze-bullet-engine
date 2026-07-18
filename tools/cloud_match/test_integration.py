@@ -32,8 +32,9 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                 prepared,
                 candidate_ref="aa50f42331323ec06c05b4f5aa4d04437e3d57b9",
                 baseline_ref="e5d7f7b",
-                games=400,
+                games=10000,
                 shards=20,
+                opening_repeats=10,
                 time_control="1+1",
                 threads=1,
                 hash_mb=16,
@@ -61,7 +62,9 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                 shard_dir = root / f"shard-{index}"
                 shard_dir.mkdir()
                 (shard_dir / "games.pgn").write_text("pgn", encoding="utf-8")
-                pair_indexes = [p for p in range(200) if p % 20 == index]
+                pair_indexes = [p for p in range(5000) if p % 20 == index]
+                pair_slots = [{"cycle": p // 500, "slot": p % 500} for p in pair_indexes]
+                pair_count = len(pair_indexes)
                 payload = {
                     "schema_version": 3,
                     "experiment_id": frozen.experiment_id(),
@@ -76,24 +79,26 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                     "expected_games": len(pair_indexes) * 2,
                     "completed_games": len(pair_indexes) * 2,
                     "clean_games": len(pair_indexes) * 2,
-                    "clean_pairs": len(pair_indexes),
+                    "clean_pairs": pair_count,
                     "quarantined_games": 0,
                     "quarantined_pairs": 0,
-                    "raw_wdl": {"wins": 8, "draws": 7, "losses": 5},
-                    "clean_wdl": {"wins": 8, "draws": 7, "losses": 5},
+                    "raw_wdl": {"wins": pair_count * 2, "draws": 0, "losses": 0},
+                    "clean_wdl": {"wins": pair_count * 2, "draws": 0, "losses": 0},
                     "pair_indexes": pair_indexes,
-                    "source_opening_indexes": [frozen.opening_start + pair for pair in pair_indexes],
+                    "pair_slots": pair_slots,
+                    "opening_repeats": frozen.opening_repeats,
+                    "source_opening_indexes": [frozen.opening_start + item["slot"] for item in pair_slots],
                     "game_ids": [
                         game_id
                         for pair in pair_indexes
                         for game_id in (
-                            f"{frozen.experiment_id()}-p{pair:06d}-w",
-                            f"{frozen.experiment_id()}-p{pair:06d}-b",
+                            f"{frozen.experiment_id()}-c{pair // 500:04d}-p{pair % 500:06d}-w",
+                            f"{frozen.experiment_id()}-c{pair // 500:04d}-p{pair % 500:06d}-b",
                         )
                     ],
                     "counts": {
-                        "wins2": 3, "wins1_draw1": 2, "draws2": 2,
-                        "losses1_draw1": 1, "losses2": 2,
+                        "wins2": pair_count, "wins1_draw1": 0, "draws2": 0,
+                        "losses1_draw1": 0, "losses2": 0,
                     },
                     "termination_counts": {
                         "clean": {"ordinary": len(pair_indexes) * 2, "adjudication": 0},
@@ -110,8 +115,8 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                 shards.append(shard_dir / "shard.json")
 
             result = aggregate_shards(shards, frozen)
-            self.assertEqual(result["expected_games"], 400)
-            self.assertEqual(result["clean_pairs"], 200)
+            self.assertEqual(result["expected_games"], 10000)
+            self.assertEqual(result["clean_pairs"], 5000)
 
 
 if __name__ == "__main__":

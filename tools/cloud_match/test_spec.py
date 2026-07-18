@@ -24,8 +24,9 @@ def valid_payload() -> dict[str, object]:
         "hash_mb": 16,
         "openings": "testdata/openings/smoke-v1.epd",
         "opening_sha256": "a" * 64,
-        "opening_start": 251,
-        "opening_suite_positions": 500,
+        "opening_start": 1,
+        "opening_suite_positions": 200,
+        "opening_repeats": 1,
         "sprt": {"elo0": 0.0, "elo1": 5.0, "alpha": 0.05, "beta": 0.05},
     }
 
@@ -40,6 +41,25 @@ class CloudMatchSpecTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "opening_suite_positions"):
                 CloudMatchSpec.from_json(path)
 
+    def test_requires_explicit_positive_opening_repeats(self) -> None:
+        for value in (None, 0, -1, True):
+            payload = valid_payload()
+            if value is None:
+                payload.pop("opening_repeats")
+            else:
+                payload["opening_repeats"] = value
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "spec.json"
+                path.write_text(json.dumps(payload), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "opening_repeats"):
+                    CloudMatchSpec.from_json(path)
+
+    def test_rejects_non_exact_repeat_geometry(self) -> None:
+        payload = valid_payload()
+        payload["opening_repeats"] = 2
+        with self.assertRaisesRegex(ValueError, "games/2"):
+            self.parse(payload)
+
     def parse(self, payload: dict[str, object]) -> CloudMatchSpec:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "match.json"
@@ -50,7 +70,7 @@ class CloudMatchSpecTests(unittest.TestCase):
         spec = self.parse(valid_payload())
         self.assertEqual(spec.games, 400)
         self.assertEqual(spec.shards, 20)
-        self.assertEqual(spec.opening_start, 251)
+        self.assertEqual(spec.opening_start, 1)
         self.assertEqual(len(spec.experiment_id()), 24)
 
     def test_rejects_legacy_spec_without_range_identity(self) -> None:
@@ -68,6 +88,7 @@ class CloudMatchSpecTests(unittest.TestCase):
             ("threads", 3),
             ("opening_sha256", "bad"),
             ("opening_start", 0),
+            ("opening_repeats", 0),
         )
         for field, value in cases:
             with self.subTest(field=field, value=value):

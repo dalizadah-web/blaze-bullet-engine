@@ -54,6 +54,7 @@ class CloudMatchSpec:
     opening_sha256: str
     opening_start: int
     opening_suite_positions: int
+    opening_repeats: int
     sprt: CloudSprtSpec
 
     @classmethod
@@ -83,6 +84,7 @@ class CloudMatchSpec:
             opening_sha256=str(raw.get("opening_sha256", "")).lower(),
             opening_start=raw.get("opening_start"),
             opening_suite_positions=raw.get("opening_suite_positions"),
+            opening_repeats=raw.get("opening_repeats"),
             sprt=CloudSprtSpec(
                 elo0=float(sprt_raw["elo0"]),
                 elo1=float(sprt_raw["elo1"]),
@@ -144,8 +146,18 @@ class CloudMatchSpec:
             or self.opening_suite_positions <= 0
         ):
             raise ValueError("opening_suite_positions must be a positive integer")
-        if self.opening_start + self.games // 2 - 1 > self.opening_suite_positions:
-            raise ValueError("opening range exceeds opening_suite_positions")
+        if (
+            not isinstance(self.opening_repeats, int)
+            or isinstance(self.opening_repeats, bool)
+            or self.opening_repeats <= 0
+        ):
+            raise ValueError("opening_repeats must be a positive integer")
+        expected_pairs = self.opening_suite_positions * self.opening_repeats
+        if self.games // 2 != expected_pairs:
+            raise ValueError(
+                "games/2 must equal opening_suite_positions * opening_repeats "
+                f"({expected_pairs})"
+            )
         if self.sprt.elo1 <= self.sprt.elo0:
             raise ValueError("sprt elo1 must exceed elo0")
         if not 0 < self.sprt.alpha < 1 or not 0 < self.sprt.beta < 1:

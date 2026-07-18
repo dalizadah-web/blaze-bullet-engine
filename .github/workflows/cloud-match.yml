@@ -14,19 +14,24 @@ on:
         default: 4d25363fef79ff2025670e248ed07b3d81747d3a
         type: string
       games:
-        description: Total games (even; pairs must divide by shards)
+        description: Total games (exactly 2 * suite positions * repeats)
         required: true
-        default: 500
+        default: 10000
         type: number
       opening_start:
         description: One-based first suite position for the cloud lane
         required: true
-        default: 251
+        default: 1
+        type: number
+      opening_repeats:
+        description: Explicit complete cycles over the opening suite
+        required: true
+        default: 10
         type: number
       shards:
         description: Parallel runners (1-20)
         required: true
-        default: 10
+        default: 20
         type: number
       time_control:
         description: CuteChess base+increment in seconds
@@ -92,6 +97,7 @@ jobs:
             --baseline-ref '${{ inputs.baseline_ref }}' \
             --games '${{ inputs.games }}' \
             --opening-start '${{ inputs.opening_start }}' \
+            --opening-repeats '${{ inputs.opening_repeats }}' \
             --shards '${{ inputs.shards }}' \
             --time-control '${{ inputs.time_control }}' \
             --threads '${{ inputs.threads }}' \

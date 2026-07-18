@@ -2,7 +2,12 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.cloud_match.worker import _globalize_evidence, run_worker, write_shard_openings
+from tools.cloud_match.shards import game_ids_for_slots
+from tools.cloud_match.worker import (
+    _globalize_evidence,
+    run_worker,
+    write_shard_openings,
+)
 from tools.experiment.match import MatchEvidence
 from tools.experiment.pentanomial import Pentanomial
 
@@ -124,6 +129,32 @@ class WorkerOpeningTests(unittest.TestCase):
                     source, [1, 1], root / "duplicate.epd", opening_start=2
                 )
 
+    def test_repeats_source_openings_only_when_explicitly_enabled(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "openings.epd"
+            source.write_text("a\nb\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate opening source index"):
+                write_shard_openings(source, [0, 1, 0], root / "no-repeat.epd")
+            selected = write_shard_openings(
+                source, [0, 1, 0], root / "repeat.epd", allow_duplicates=True
+            )
+            self.assertEqual(selected, ["a", "b", "a"])
+
+    def test_cycle_qualified_ids_are_unique_and_one_cycle_ids_are_legacy_stable(self) -> None:
+        repeated = game_ids_for_slots(
+            "experiment",
+            [(0, 0), (1, 0)],
+            include_cycle=True,
+        )
+        self.assertEqual(len(repeated), len(set(repeated)))
+        self.assertIn("experiment-c0000-p000000-w", repeated)
+        self.assertIn("experiment-c0001-p000000-w", repeated)
+        self.assertEqual(
+            game_ids_for_slots("experiment", [(0, 0)], include_cycle=False),
+            ["experiment-p000000-w", "experiment-p000000-b"],
+        )
+
     def test_rejects_a_spec_without_frozen_binary_hashes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -148,6 +179,7 @@ class WorkerOpeningTests(unittest.TestCase):
   \"opening_sha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",
   \"opening_start\": 1,
   \"opening_suite_positions\": 1,
+  \"opening_repeats\": 1,
   \"sprt\": {\"elo0\": 0, \"elo1\": 5, \"alpha\": 0.05, \"beta\": 0.05}
 }""",
                 encoding="utf-8",

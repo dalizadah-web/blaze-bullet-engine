@@ -30,6 +30,7 @@ def prepare_spec(
     threads: int,
     hash_mb: int,
     opening_start: int | None = None,
+    opening_repeats: int | None = None,
     repo_root: Path | str | None = None,
     openings: str | None = None,
     opening_sha256: str | None = None,
@@ -49,6 +50,9 @@ def prepare_spec(
         threads=threads,
         hash_mb=hash_mb,
         opening_start=base.opening_start if opening_start is None else opening_start,
+        opening_repeats=(
+            base.opening_repeats if opening_repeats is None else opening_repeats
+        ),
         openings=openings.strip() if openings is not None else base.openings,
         opening_sha256=(opening_sha256 or base.opening_sha256).lower(),
         sprt=CloudSprtSpec(
@@ -102,6 +106,7 @@ def main() -> int:
     parser.add_argument("--threads", type=int, required=True)
     parser.add_argument("--hash-mb", type=int, required=True)
     parser.add_argument("--opening-start", type=int)
+    parser.add_argument("--opening-repeats", type=int)
     parser.add_argument("--repo-root", type=Path)
     parser.add_argument("--openings")
     parser.add_argument("--opening-sha256")
@@ -122,6 +127,7 @@ def main() -> int:
         threads=args.threads,
         hash_mb=args.hash_mb,
         opening_start=args.opening_start,
+        opening_repeats=args.opening_repeats,
         repo_root=args.repo_root,
         openings=args.openings,
         opening_sha256=args.opening_sha256,

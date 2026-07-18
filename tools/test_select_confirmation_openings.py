@@ -223,8 +223,13 @@ class ConfirmationSelectorTests(unittest.TestCase):
                 self.assertEqual(payload.get("opening_sha256"), "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc")
                 self.assertIsInstance(payload.get("opening_start"), int)
                 self.assertEqual(payload.get("opening_suite_positions"), 500)
+                if "opening_repeats" in payload:
+                    self.assertEqual(
+                        payload["games"] // 2,
+                        payload["opening_suite_positions"] * payload["opening_repeats"],
+                    )
                 self.assertLessEqual(
-                    payload["opening_start"] + payload["games"] // 2 - 1,
+                    payload["opening_start"] + payload["opening_suite_positions"] - 1,
                     500,
                 )
 
