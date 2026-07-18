@@ -130,6 +130,22 @@ TEST_CASE(go_stop_and_quit_emit_exactly_one_bestmove) {
     CHECK_EQ(occurrences(output.str(), "bestmove "), 1U);
 }
 
+TEST_CASE(negative_gui_clock_still_emits_one_legal_bestmove) {
+    std::istringstream input(
+        "position startpos\n"
+        "go wtime -22 btime 18 winc 10 binc 10\n"
+        "stop\n"
+        "quit\n");
+    std::ostringstream output;
+    UciSession session(output);
+    session.run(input);
+
+    const std::string transcript = output.str();
+    CHECK_EQ(occurrences(transcript, "bestmove "), 1U);
+    CHECK(transcript.find("bestmove 0000") == std::string::npos);
+    CHECK(transcript.find("invalid value for go wtime") == std::string::npos);
+}
+
 TEST_CASE(repeated_go_replaces_previous_worker_without_duplicate_results) {
     std::istringstream input(
         "position startpos\n"

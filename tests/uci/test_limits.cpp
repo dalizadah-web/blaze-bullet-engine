@@ -22,7 +22,32 @@ TEST_CASE(go_parser_rejects_missing_negative_and_unknown_values) {
     std::string error;
     CHECK(!parse_go("depth", error).has_value());
     CHECK(!parse_go("movetime -1", error).has_value());
+    CHECK(!parse_go("winc -1", error).has_value());
+    CHECK(!parse_go("binc -1", error).has_value());
     CHECK(!parse_go("mystery 5", error).has_value());
+}
+
+TEST_CASE(go_parser_clamps_negative_gui_clock_values_to_zero) {
+    std::string error;
+    const auto go = parse_go("wtime -22 btime -7 winc 10 binc 10", error);
+    CHECK(go.has_value());
+    if (!go) return;
+    CHECK_EQ(go->white_time.count(), 0);
+    CHECK_EQ(go->black_time.count(), 0);
+    CHECK(go->white_time_supplied);
+    CHECK(go->black_time_supplied);
+}
+
+TEST_CASE(supplied_expired_clock_receives_a_finite_emergency_deadline) {
+    std::string error;
+    const auto go = parse_go("wtime 0 btime 0", error);
+    CHECK(go.has_value());
+    if (!go) return;
+
+    const SearchLimits limits = to_search_limits(*go, Color::White);
+    CHECK_EQ(limits.target_time.count(), 1);
+    CHECK_EQ(limits.move_time.count(), 1);
+    CHECK_EQ(limits.regime, SearchRegime::Emergency);
 }
 
 TEST_CASE(movetime_is_an_explicit_search_budget) {

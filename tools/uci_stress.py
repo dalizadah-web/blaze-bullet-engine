@@ -89,6 +89,10 @@ def main() -> int:
             if cycle % 20 == 0:
                 send("go ponder")
                 send("ponderhit")
+            elif cycle % 20 == 1:
+                # Tournament GUIs can report a small negative remaining clock
+                # when an expiry margin is enabled. The engine must still move.
+                send("go wtime -22 btime -7 winc 10 binc 10")
             elif cycle % 4 == 0:
                 send("go infinite")
                 send("stop")
