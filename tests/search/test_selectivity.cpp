@@ -4,6 +4,12 @@
 namespace blaze {
 namespace {
 
+TEST_CASE(extension_budget_allows_tactical_sequences_without_unbounded_growth) {
+    CHECK_EQ(bounded_extension(2, 0), 2);
+    CHECK_EQ(bounded_extension(2, 11), 1);
+    CHECK_EQ(bounded_extension(1, 12), 0);
+}
+
 TEST_CASE(adaptive_lmr_rewards_good_moves_and_penalizes_late_bad_moves) {
     const int good = late_move_reduction(
         SelectivityFeatures{.depth = 8, .move_count = 8, .pv_node = false,
@@ -40,6 +46,7 @@ TEST_CASE(dynamic_null_reduction_grows_only_for_a_large_margin) {
 }
 
 TEST_CASE(selective_pruning_never_applies_to_pv_or_tactical_nodes) {
+    CHECK(enable_razoring_and_reverse_futility);
     CHECK(!should_razor(3, -500, 0, true, false));
     CHECK(!should_reverse_futility(5, 500, 0, true, false));
     CHECK(!should_late_move_prune(4, 20, -10'000, false, true));
@@ -57,6 +64,7 @@ TEST_CASE(quiescence_delta_margin_increases_with_tactical_depth) {
 }
 
 TEST_CASE(correction_history_stays_a_small_static_evaluation_adjustment) {
+    CHECK(enable_correction_history);
     CHECK_EQ(corrected_static_evaluation(100, 4'096), 132);
     CHECK_EQ(corrected_static_evaluation(100, -4'096), 68);
     CHECK_EQ(corrected_static_evaluation(100, 40'000), 132);

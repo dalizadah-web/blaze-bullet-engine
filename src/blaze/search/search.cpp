@@ -503,8 +503,10 @@ int Searcher::negamax(
     const std::size_t color_index = static_cast<std::size_t>(position.side_to_move());
     const std::size_t correction_index = static_cast<std::size_t>(position.key() & 16'383U);
     const int raw_static_evaluation = evaluate_position(position);
-    const int static_evaluation = corrected_static_evaluation(
-        raw_static_evaluation, correction_history_[color_index][correction_index]);
+    const int static_evaluation = enable_correction_history
+        ? corrected_static_evaluation(
+            raw_static_evaluation, correction_history_[color_index][correction_index])
+        : raw_static_evaluation;
     context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_evaluation;
     const bool improving = ply >= 2 &&
         static_evaluation > context.stack[static_cast<std::size_t>(ply - 2)].static_evaluation;
@@ -673,7 +675,7 @@ int Searcher::negamax(
         const int requested_extension = (gives_check ? 1 : 0) + (recaptures ? 1 : 0) +
             singular_extension;
         const int parent_extensions = context.stack[static_cast<std::size_t>(ply)].extension_count;
-        const int extension = std::min(requested_extension, std::max(0, 2 - parent_extensions));
+        const int extension = bounded_extension(requested_extension, parent_extensions);
         const int full_depth = depth - 1 + extension;
         int score = 0;
         context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
@@ -771,7 +773,8 @@ int Searcher::negamax(
     } else if (best_score >= beta) {
         bound = Bound::Lower;
     }
-    if (best_score > -search_mate_threshold && best_score < search_mate_threshold) {
+    if (enable_correction_history &&
+        best_score > -search_mate_threshold && best_score < search_mate_threshold) {
         const int error = best_score - raw_static_evaluation;
         int& correction = correction_history_[color_index][correction_index];
         correction = update_correction_history(correction, error, depth);

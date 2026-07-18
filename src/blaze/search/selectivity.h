@@ -6,6 +6,9 @@
 
 namespace blaze {
 
+inline constexpr bool enable_correction_history = true;
+inline constexpr bool enable_razoring_and_reverse_futility = true;
+
 using MoveHistory = std::array<std::array<int, 64>, 64>;
 using ContinuationSlice = std::array<int, 64>;
 using ContinuationHistory = std::array<ContinuationSlice, 64>;
@@ -19,6 +22,12 @@ struct SelectivityFeatures {
     bool gives_check = false;
     bool expected_cutoff = false;
 };
+
+[[nodiscard]] inline int bounded_extension(int requested, int extensions_on_line) {
+    constexpr int maximum_extensions_per_line = 12;
+    return std::clamp(
+        requested, 0, std::max(0, maximum_extensions_per_line - extensions_on_line));
+}
 
 [[nodiscard]] inline int late_move_reduction(const SelectivityFeatures& features) {
     if (features.pv_node || features.gives_check || features.depth < 3 ||
@@ -46,13 +55,13 @@ struct SelectivityFeatures {
 
 [[nodiscard]] inline bool should_razor(
     int depth, int static_evaluation, int alpha, bool pv_node, bool checked) {
-    return !pv_node && !checked && depth <= 3 &&
+    return enable_razoring_and_reverse_futility && !pv_node && !checked && depth <= 3 &&
         static_evaluation + 120 * depth <= alpha;
 }
 
 [[nodiscard]] inline bool should_reverse_futility(
     int depth, int static_evaluation, int beta, bool pv_node, bool checked) {
-    return !pv_node && !checked && depth <= 6 &&
+    return enable_razoring_and_reverse_futility && !pv_node && !checked && depth <= 6 &&
         static_evaluation - 110 * depth >= beta;
 }
 
