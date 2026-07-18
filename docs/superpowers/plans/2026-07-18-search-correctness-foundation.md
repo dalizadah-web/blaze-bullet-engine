@@ -54,24 +54,21 @@ Append tests that require the shortest available mate and stable mate scores:
 
 ```cpp
 TEST_CASE(search_prefers_the_shortest_forced_mate) {
-    Position root = position("7k/8/5KQ1/8/8/8/8/8 w - - 0 1");
+    Position root = position("6k1/8/5K2/8/8/8/8/3Q4 w - - 0 1");
     TranspositionTable table(4);
     Searcher searcher(table);
     const SearchResult result = searcher.search(root, SearchLimits{.depth = 6});
     CHECK(result.score >= search_mate_threshold);
-    CHECK_EQ(result.score, search_mate_score - 1);
+    CHECK_EQ(result.score, search_mate_score - 3);
+    CHECK_EQ(move_to_uci(result.best_move), "d1g4");
 }
 
-TEST_CASE(mate_score_is_stable_across_deeper_completed_iterations) {
-    Position root = position("7k/8/5KQ1/8/8/8/8/8 w - - 0 1");
-    TranspositionTable shallow_table(4);
-    TranspositionTable deep_table(4);
-    Searcher shallow(shallow_table);
-    Searcher deep(deep_table);
-    const SearchResult at_three = shallow.search(root, SearchLimits{.depth = 3});
-    const SearchResult at_six = deep.search(root, SearchLimits{.depth = 6});
-    CHECK_EQ(at_six.score, at_three.score);
-    CHECK_EQ(at_six.best_move, at_three.best_move);
+TEST_CASE(mate_distance_bounds_reduce_forced_mate_tree) {
+    Position root = position("6k1/8/5K2/8/8/8/8/3Q4 w - - 0 1");
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 6});
+    CHECK(result.nodes < 390);
 }
 ```
 
@@ -83,7 +80,8 @@ Run:
 mingw32-make -f Makefile.blaze test
 ```
 
-Expected: at least one new mate-distance assertion fails against the unbounded search.
+Expected: `mate_distance_bounds_reduce_forced_mate_tree` fails because the
+unbounded baseline searches exactly 390 nodes on this position.
 
 - [ ] **Step 3: Add typed node dispatch**
 
