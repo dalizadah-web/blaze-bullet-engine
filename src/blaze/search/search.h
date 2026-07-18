@@ -43,6 +43,7 @@ struct SearchResult {
     std::uint64_t nodes = 0;
 #ifndef NDEBUG
     int maximum_extension_count = 0;
+    int effective_maximum_ply = 128;
     std::uint64_t probcut_legal_checks = 0;
     std::uint64_t null_move_searches = 0;
     std::uint64_t null_move_pv_searches = 0;

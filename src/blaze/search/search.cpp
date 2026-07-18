@@ -223,6 +223,7 @@ SearchResult Searcher::search(
     result.nodes = context.nodes;
 #ifndef NDEBUG
     result.maximum_extension_count = context.maximum_extension_count;
+    result.effective_maximum_ply = context.limits.maximum_ply;
     result.probcut_legal_checks = context.probcut_legal_checks;
     result.null_move_searches = context.null_move_searches;
     result.null_move_pv_searches = context.null_move_pv_searches;
@@ -255,6 +256,9 @@ SearchResult Searcher::search_parallel(
     }
 
     SearchResult result;
+#ifndef NDEBUG
+    result.effective_maximum_ply = std::clamp(limits.maximum_ply, 1, maximum_ply);
+#endif
     if (legal_moves.empty()) {
         result.score = in_check(position) ? -search_mate_score : 0;
         return result;
@@ -497,6 +501,7 @@ SearchResult Searcher::search_window(
     result.nodes = context.nodes;
 #ifndef NDEBUG
     result.maximum_extension_count = context.maximum_extension_count;
+    result.effective_maximum_ply = context.limits.maximum_ply;
     result.null_move_searches = context.null_move_searches;
     result.null_move_pv_searches = context.null_move_pv_searches;
     result.null_move_verifications = context.null_move_verifications;

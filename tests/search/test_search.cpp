@@ -57,15 +57,37 @@ TEST_CASE(check_and_recapture_extensions_respect_the_path_budget) {
     CHECK(root.is_legal(result.best_move));
 }
 
-TEST_CASE(selective_check_extension_is_exercised) {
+TEST_CASE(full_search_maximum_ply_checked_nonmate_uses_bounded_fallback) {
     Position root = position("6k1/8/8/8/8/8/8/3Q2K1 w - - 0 1");
     TranspositionTable table(1);
     Searcher searcher(table);
     SearchLimits limits{.depth = 4};
     limits.maximum_ply = 1;
     limits.search_moves = {Move(Square::D1, Square::D8)};
+
+    Position checked = root;
+    StateInfo state;
+    CHECK(checked.make_move(limits.search_moves.front(), state));
+    CHECK(in_check(checked));
+    MoveList evasions;
+    generate_legal(checked, evasions);
+    CHECK(!evasions.empty());
+    CHECK(evaluate(checked) != 0);
+
     const SearchResult result = searcher.search(root, limits);
+    CHECK_EQ(result.score, 0);
     CHECK_EQ(result.maximum_extension_count, 1);
+    CHECK(root.is_legal(result.best_move));
+}
+
+TEST_CASE(checking_recapture_adds_one_extension_and_path_caps_at_two) {
+    Position root = position("5rkr/K4p2/8/8/8/5Q2/8/5R2 w - - 0 1");
+    TranspositionTable table(1);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 4};
+    limits.search_moves = {Move(Square::F3, Square::F7, MoveFlag::Capture)};
+    const SearchResult result = searcher.search(root, limits);
+    CHECK_EQ(result.maximum_extension_count, 2);
     CHECK(root.is_legal(result.best_move));
 }
 
@@ -99,6 +121,16 @@ TEST_CASE(debug_maximum_ply_is_clamped_to_the_safe_range) {
     limits.search_moves = {Move(Square::G6, Square::G7)};
     const SearchResult result = searcher.search(root, limits);
     CHECK_EQ(result.score, search_mate_score - 1);
+}
+
+TEST_CASE(debug_maximum_ply_upper_bound_is_clamped_to_stack_capacity) {
+    Position root = position("7k/8/5KQ1/8/8/8/8/8 w - - 0 1");
+    TranspositionTable table(1);
+    Searcher searcher(table);
+    SearchLimits limits{.depth = 1};
+    limits.maximum_ply = 129;
+    const SearchResult result = searcher.search(root, limits);
+    CHECK_EQ(result.effective_maximum_ply, 128);
 }
 
 TEST_CASE(parallel_root_split_preserves_original_ply_and_mate_distance) {
