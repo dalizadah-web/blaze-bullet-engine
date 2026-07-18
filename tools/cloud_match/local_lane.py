@@ -6,6 +6,7 @@ import argparse
 from dataclasses import asdict, replace
 import json
 from pathlib import Path
+import platform
 
 from tools.cloud_match.spec import CloudMatchSpec
 from tools.experiment.manifest import ArtifactIdentity, sha256_file
@@ -97,6 +98,12 @@ def main() -> int:
         "decision": result.decision,
         "configuration": configuration,
         "local_concurrency": args.concurrency,
+        "environment": {
+            "machine": platform.machine(),
+            "os": platform.platform(),
+            "processor": platform.processor(),
+            "python": platform.python_version(),
+        },
         "artifacts": {
             "candidate_sha256": ArtifactIdentity.from_path(args.candidate).sha256,
             "baseline_sha256": baseline_identity.sha256,

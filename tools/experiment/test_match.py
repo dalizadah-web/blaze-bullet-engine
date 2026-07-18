@@ -153,6 +153,40 @@ class MatchSpecTests(unittest.TestCase):
         opening_options = command[command.index("-openings") + 1 : command.index("-games")]
         self.assertIn("start=3", opening_options)
 
+    def test_runner_command_uses_two_game_rounds_and_recovers_engines(self) -> None:
+        spec = MatchSpec(
+            schema_version=2,
+            name="rounds",
+            games=10,
+            concurrency=2,
+            time_control="1+0",
+            threads=1,
+            hash_mb=16,
+            repeat=True,
+            opening_format="epd",
+            openings="openings.epd",
+            opening_sha256="0" * 64,
+            opponent_sha256=None,
+            sprt=SprtSpec(0.0, 5.0, 0.05, 0.05),
+            opening_start=1,
+        )
+        command = build_runner_command(
+            spec,
+            runner=Path("cutechess-cli"),
+            candidate=Path("candidate"),
+            opponent=Path("baseline"),
+            openings=Path("openings.epd"),
+            pgn=Path("games.pgn"),
+            games=10,
+            candidate_name="Candidate",
+            opponent_name="Baseline",
+        )
+
+        self.assertEqual(command[command.index("-games") + 1], "2")
+        self.assertEqual(command[command.index("-rounds") + 1], "5")
+        self.assertIn("-repeat", command)
+        self.assertIn("-recover", command)
+
 
 class PgnPairTests(unittest.TestCase):
     def _parse(self, first_headers: str, second_headers: str):
@@ -161,7 +195,7 @@ class PgnPairTests(unittest.TestCase):
         pgn = (
             '[Event "paired"]\n[Round "1"]\n[White "Blaze"]\n[Black "Opponent"]\n'
             f"{first_headers}\n\n1. e4 e5 {first_result}\n\n"
-            '[Event "paired"]\n[Round "2"]\n[White "Opponent"]\n[Black "Blaze"]\n'
+            '[Event "paired"]\n[Round "1"]\n[White "Opponent"]\n[Black "Blaze"]\n'
             f"{second_headers}\n\n1. e4 e5 {second_result}"
         )
         with tempfile.TemporaryDirectory() as directory:
@@ -339,7 +373,7 @@ class PgnPairTests(unittest.TestCase):
         pgn = textwrap.dedent(
             """
             [Event "paired"]
-            [Round "2"]
+            [Round "1"]
             [White "Opponent"]
             [Black "Blaze"]
             [Result "0-1"]
@@ -371,7 +405,7 @@ class PgnPairTests(unittest.TestCase):
             1. e5 1-0
 
             [Event "paired"]
-            [Round "2"]
+            [Round "1"]
             [White "Opponent"]
             [Black "Blaze"]
             [Result "0-1"]
@@ -401,7 +435,7 @@ class PgnPairTests(unittest.TestCase):
             1. e4 e5 0-1
 
             [Event "paired"]
-            [Round "2"]
+            [Round "1"]
             [White "Opponent"]
             [Black "Blaze"]
             [Result "0-1"]
@@ -429,8 +463,8 @@ class PgnPairTests(unittest.TestCase):
 
             [Event "paired"]
             [Round "1"]
-            [White "Opponent"]
-            [Black "Blaze"]
+            [White "Blaze"]
+            [Black "Opponent"]
             [Result "1/2-1/2"]
 
             1. e4 e5 1/2-1/2
@@ -440,7 +474,7 @@ class PgnPairTests(unittest.TestCase):
             path = Path(directory) / "games.pgn"
             path.write_text(pgn + "\n", encoding="utf-8")
 
-            with self.assertRaisesRegex(ValueError, "duplicate PGN Round"):
+            with self.assertRaisesRegex(ValueError, "duplicate candidate color"):
                 parse_paired_pgn(path, "Blaze", "Opponent", expected_games=2)
 
     def test_maps_color_swapped_wins_to_two_win_category(self) -> None:
@@ -455,7 +489,7 @@ class PgnPairTests(unittest.TestCase):
             1. e4 e5 1-0
 
             [Event "paired"]
-            [Round "2"]
+            [Round "1"]
             [White "Opponent"]
             [Black "Blaze"]
             [Result "0-1"]
@@ -483,7 +517,7 @@ class PgnPairTests(unittest.TestCase):
             1. e4 e5 1/2-1/2
 
             [Event "paired"]
-            [Round "2"]
+            [Round "1"]
             [White "Blaze"]
             [Black "Opponent"]
             [Result "1/2-1/2"]
@@ -495,8 +529,82 @@ class PgnPairTests(unittest.TestCase):
             path = Path(directory) / "games.pgn"
             path.write_text(pgn + "\n", encoding="utf-8")
 
-            with self.assertRaisesRegex(ValueError, "swap colors"):
+            with self.assertRaisesRegex(ValueError, "duplicate candidate color"):
                 parse_paired_pgn(path, "Blaze", "Opponent", expected_games=2)
+
+    def test_live_round_format_groups_shuffled_completion_order(self) -> None:
+        games = [
+            (2, "Opponent", "Blaze"),
+            (1, "Blaze", "Opponent"),
+            (2, "Blaze", "Opponent"),
+            (1, "Opponent", "Blaze"),
+        ]
+        pgn = "\n\n".join(
+            f'[Event "paired"]\n[Round "{round_number}"]\n[White "{white}"]\n'
+            f'[Black "{black}"]\n[Result "1/2-1/2"]\n\n1. e4 e5 1/2-1/2'
+            for round_number, white, black in games
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "games.pgn"
+            path.write_text(pgn + "\n", encoding="utf-8")
+            evidence = parse_paired_pgn(path, "Blaze", "Opponent", expected_games=4)
+
+        self.assertEqual(evidence.clean_pairs, 2)
+        self.assertEqual(evidence.counts.as_tuple(), (0, 0, 2, 0, 0))
+
+    def test_rejects_a_third_or_duplicate_color_game_in_one_round(self) -> None:
+        pgn = "\n\n".join(
+            f'[Event "paired"]\n[Round "1"]\n[White "{white}"]\n'
+            f'[Black "{black}"]\n[Result "1/2-1/2"]\n\n1. e4 e5 1/2-1/2'
+            for white, black in (
+                ("Blaze", "Opponent"),
+                ("Opponent", "Blaze"),
+                ("Blaze", "Opponent"),
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "games.pgn"
+            path.write_text(pgn + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate candidate color|more than two"):
+                parse_paired_pgn(path, "Blaze", "Opponent", expected_games=2)
+
+    def test_missing_half_pair_uses_round_and_candidate_color_slot(self) -> None:
+        pgn = textwrap.dedent(
+            """
+            [Event "paired"]
+            [Round "1"]
+            [White "Blaze"]
+            [Black "Opponent"]
+            [Result "1/2-1/2"]
+
+            1. e4 e5 1/2-1/2
+
+            [Event "paired"]
+            [Round "1"]
+            [White "Opponent"]
+            [Black "Blaze"]
+            [Result "1/2-1/2"]
+
+            1. e4 e5 1/2-1/2
+
+            [Event "paired"]
+            [Round "2"]
+            [White "Opponent"]
+            [Black "Blaze"]
+            [Result "1/2-1/2"]
+
+            1. d4 d5 1/2-1/2
+            """
+        ).strip()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "games.pgn"
+            path.write_text(pgn + "\n", encoding="utf-8")
+            evidence = parse_paired_pgn(path, "Blaze", "Opponent", expected_games=4)
+
+        self.assertEqual(evidence.clean_pairs, 1)
+        self.assertEqual(evidence.quarantined_pairs, 1)
+        missing = next(record for record in evidence.abnormal_games if record["reason"] == "PGN game is missing")
+        self.assertEqual((missing["round"], missing["candidate_color"], missing["game_index"]), ("2", "white", 2))
 
 
 class MatchExecutionTests(unittest.TestCase):
@@ -536,21 +644,21 @@ class MatchExecutionTests(unittest.TestCase):
                     '[Event "partial"]\n[Round "1"]\n[White "Blaze"]\n'
                     '[Black "Opponent"]\n[Result "0-1"]\n[Termination "time forfeit"]\n\n'
                     '1. e4 e5 0-1\n\n'
+                    '[Event "partial"]\n[Round "1"]\n[White "Opponent"]\n'
+                    '[Black "Blaze"]\n[Result "0-1"]\n\n1. e4 e5 0-1\n\n'
+                    '[Event "partial"]\n[Round "2"]\n[White "Blaze"]\n'
+                    '[Black "Opponent"]\n[Result "1-0"]\n[Termination "future runner reason"]\n\n'
+                    '1. e4 e5 1-0\n\n'
                     '[Event "partial"]\n[Round "2"]\n[White "Opponent"]\n'
                     '[Black "Blaze"]\n[Result "0-1"]\n\n1. e4 e5 0-1\n\n'
                     '[Event "partial"]\n[Round "3"]\n[White "Blaze"]\n'
-                    '[Black "Opponent"]\n[Result "1-0"]\n[Termination "future runner reason"]\n\n'
-                    '1. e4 e5 1-0\n\n'
-                    '[Event "partial"]\n[Round "4"]\n[White "Opponent"]\n'
-                    '[Black "Blaze"]\n[Result "0-1"]\n\n1. e4 e5 0-1\n\n'
-                    '[Event "partial"]\n[Round "5"]\n[White "Blaze"]\n'
                     '[Black "Opponent"]\n[Result "*"]\n[Termination "unterminated"]\n\n'
                     '1. e4 e5 *\n\n'
-                    '[Event "partial"]\n[Round "6"]\n[White "Opponent"]\n'
+                    '[Event "partial"]\n[Round "3"]\n[White "Opponent"]\n'
                     '[Black "Blaze"]\n[Result "0-1"]\n\n1. e4 e5 0-1\n\n'
-                    '[Event "partial"]\n[Round "7"]\n[White "Blaze"]\n'
+                    '[Event "partial"]\n[Round "4"]\n[White "Blaze"]\n'
                     '[Black "Opponent"]\n[Result "1-0"]\n\n1. e5 1-0\n\n'
-                    '[Event "partial"]\n[Round "8"]\n[White "Opponent"]\n'
+                    '[Event "partial"]\n[Round "4"]\n[White "Opponent"]\n'
                     '[Black "Blaze"]\n[Result "1/2-1/2"]\n[Termination "time forfeit"]\n\n'
                     '1. e4 e5 1/2-1/2\n',
                     encoding="utf-8",
@@ -639,7 +747,7 @@ class MatchExecutionTests(unittest.TestCase):
                         1. e4 e5 1/2-1/2
 
                         [Event "paired"]
-                        [Round "2"]
+                        [Round "1"]
                         [White "Opponent"]
                         [Black "Blaze"]
                         [Result "1/2-1/2"]

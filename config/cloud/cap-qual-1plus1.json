@@ -16,6 +16,7 @@
   "openings": "testdata/openings/uho-lichess-500-v1.epd",
   "opening_sha256": "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc",
   "opening_start": 1,
+  "opening_suite_positions": 500,
   "sprt": {
     "elo0": 0.0,
     "elo1": 5.0,

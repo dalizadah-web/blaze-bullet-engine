@@ -10,7 +10,7 @@ from collections import Counter
 
 import chess
 
-from tools.select_confirmation_openings import select_openings
+from tools.select_confirmation_openings import _offer, select_openings
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +31,53 @@ def _digest(tag: bytes, seed: int, line_number: int, line: bytes) -> bytes:
 
 
 class ConfirmationSelectorTests(unittest.TestCase):
+    def test_duplicate_updates_compact_the_lazy_heap_to_a_bounded_size(self) -> None:
+        heap: list[tuple[int, int, bytes]] = []
+        active: dict[bytes, tuple[bytes, int]] = {}
+        line = b"8/8/8/8/8/8/4K3/7k w - - 0 1"
+        for value in range(1000, 0, -1):
+            _offer(
+                heap,
+                active,
+                digest=value.to_bytes(32, "big"),
+                line_number=value,
+                line=line,
+                quota=1,
+            )
+        self.assertLessEqual(len(heap), 4)
+        self.assertEqual(len(active), 1)
+
+    def test_verifies_the_source_archive_hash_before_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / "source.zip"
+            archive.write_bytes(b"frozen archive bytes")
+            source = root / "source.epd"
+            source.write_text(
+                "8/8/8/8/8/8/4K3/7k w - - 0 1\n"
+                "8/8/8/8/8/8/4K3/7k b - - 0 1\n",
+                encoding="ascii",
+            )
+            with self.assertRaisesRegex(ValueError, "source archive SHA-256 mismatch"):
+                select_openings(
+                    source,
+                    root / "out.epd",
+                    seed=1,
+                    quota_per_side=1,
+                    source_archive=archive,
+                    expected_source_archive_sha256="0" * 64,
+                )
+            expected = hashlib.sha256(archive.read_bytes()).hexdigest()
+            metadata = select_openings(
+                source,
+                root / "out.epd",
+                seed=1,
+                quota_per_side=1,
+                source_archive=archive,
+                expected_source_archive_sha256=expected,
+            )
+            self.assertEqual(metadata["source_archive_sha256"], expected)
+
     def test_streaming_selector_uses_frozen_priority_order_and_interleaves_sides(self) -> None:
         lines = [
             b"8/8/8/8/8/8/4K3/7k w - - 0 1",
@@ -175,6 +222,7 @@ class ConfirmationSelectorTests(unittest.TestCase):
                 self.assertNotIn("smoke-v1", str(payload.get("openings", "")))
                 self.assertEqual(payload.get("opening_sha256"), "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc")
                 self.assertIsInstance(payload.get("opening_start"), int)
+                self.assertEqual(payload.get("opening_suite_positions"), 500)
                 self.assertLessEqual(
                     payload["opening_start"] + payload["games"] // 2 - 1,
                     500,

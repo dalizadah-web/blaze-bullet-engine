@@ -37,6 +37,7 @@ class AggregateShardsTests(unittest.TestCase):
                     "openings": "openings.epd",
                     "opening_sha256": "c" * 64,
                     "opening_start": 1,
+                    "opening_suite_positions": 500,
                     "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
                 }
             ),
@@ -92,6 +93,7 @@ class AggregateShardsTests(unittest.TestCase):
                 "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0, "paired_quarantine": 0},
             },
             "abnormal_games": [],
+            "environment": {"os": "linux", "machine": f"runner-{index}"},
             "pgn": "games.pgn",
         }
         manifest = shard / "shard.json"
@@ -121,6 +123,13 @@ class AggregateShardsTests(unittest.TestCase):
             "losses2": 1,
         })
         self.assertIn(result["decision"], ("accept", "reject", "continue"))
+        self.assertEqual(
+            result["environment"]["shard_environments"],
+            [
+                {"os": "linux", "machine": "runner-0"},
+                {"os": "linux", "machine": "runner-1"},
+            ],
+        )
 
     def test_quarantines_abnormal_pair_and_rejects_forged_termination_counts(self) -> None:
         first = self._write_shard(

@@ -36,7 +36,7 @@ class WorkerOpeningTests(unittest.TestCase):
                 "reason": "engine failure",
             }, {
                 "game_index": 1,
-                "round": "2",
+                "round": "1",
                 "result": "1/2-1/2",
                 "candidate_color": "black",
                 "termination": "",
@@ -52,6 +52,36 @@ class WorkerOpeningTests(unittest.TestCase):
         self.assertEqual(payload["quarantined_pairs"], 1)
         self.assertEqual(payload["abnormal_games"][0]["game_id"], "experiment-p000000-w")
         self.assertNotIn("game_index", payload["abnormal_games"][0])
+
+    def test_globalizes_by_round_and_candidate_color_not_record_order(self) -> None:
+        evidence = MatchEvidence(
+            expected_games=2,
+            completed_games=0,
+            clean_games=0,
+            clean_pairs=0,
+            quarantined_games=2,
+            quarantined_pairs=1,
+            raw_wdl={"wins": 0, "draws": 0, "losses": 0},
+            clean_wdl={"wins": 0, "draws": 0, "losses": 0},
+            counts=Pentanomial(0, 0, 0, 0, 0),
+            termination_counts={
+                "clean": {"ordinary": 0, "adjudication": 0},
+                "candidate": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                "infrastructure_unknown": {"unterminated": 2, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0, "paired_quarantine": 0},
+            },
+            abnormal_games=(
+                {"game_index": 0, "round": "1", "candidate_color": "black"},
+                {"game_index": 1, "round": "1", "candidate_color": "white"},
+            ),
+        )
+
+        payload = _globalize_evidence(evidence, ["round1-white", "round1-black"])
+
+        self.assertEqual(
+            [record["game_id"] for record in payload["abnormal_games"]],
+            ["round1-black", "round1-white"],
+        )
 
     def test_selects_deterministic_cyclic_openings_for_shard(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

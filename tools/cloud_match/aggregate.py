@@ -58,6 +58,7 @@ def aggregate_shards(
     clean_wdl = {"wins": 0, "draws": 0, "losses": 0}
     termination_counts: dict[str, dict[str, int]] | None = None
     abnormal_games: list[dict[str, Any]] = []
+    environments: list[dict[str, Any]] = []
 
     for path in paths:
         raw = _load_manifest(path)
@@ -160,6 +161,9 @@ def aggregate_shards(
             for key, value in values.items():
                 termination_counts[group][key] += value
         abnormal_games.extend(dict(record) for record in evidence.abnormal_games)
+        environment = raw.get("environment")
+        if isinstance(environment, dict) and environment not in environments:
+            environments.append(dict(environment))
 
     if seen_indexes != expected_indexes:
         raise ValueError("missing shard indexes")
@@ -206,6 +210,10 @@ def aggregate_shards(
         "llr": llr,
         "decision": decision,
         "artifacts": common_hashes,
+        "environment": {
+            "platform": "cloud-linux-github-hosted",
+            "shard_environments": environments,
+        },
         "spec": frozen_spec,
     }
 

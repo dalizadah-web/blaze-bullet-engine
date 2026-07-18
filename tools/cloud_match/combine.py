@@ -21,6 +21,7 @@ _COMPATIBILITY_KEYS = (
     "threads",
     "hash_mb",
     "opening_sha256",
+    "opening_suite_positions",
     "sprt",
 )
 
@@ -41,6 +42,13 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         common["opening_sha256"]
     ):
         raise ValueError("lanes require a frozen full-suite opening SHA-256")
+    suite_positions = common["opening_suite_positions"]
+    if (
+        not isinstance(suite_positions, int)
+        or isinstance(suite_positions, bool)
+        or suite_positions <= 0
+    ):
+        raise ValueError("lanes require a positive opening_suite_positions")
     totals = [0, 0, 0, 0, 0]
     expected_games = completed_games = clean_games = clean_pairs = 0
     quarantined_games = quarantined_pairs = 0
@@ -50,6 +58,7 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
     abnormal_games: list[dict[str, Any]] = []
     lane_records: list[dict[str, Any]] = []
     opening_ranges: list[dict[str, Any]] = []
+    lane_directions: list[dict[str, Any]] = []
     for index, lane in enumerate(items):
         if lane.get("schema_version") != 3:
             raise ValueError(f"unsupported lane schema at index {index}")
@@ -107,6 +116,16 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
                 "lane": lane_name,
                 **evidence.to_dict(),
                 "artifacts": lane.get("artifacts", {}),
+                "environment": lane.get("environment", {}),
+            }
+        )
+        score_delta = evidence.clean_wdl["wins"] - evidence.clean_wdl["losses"]
+        lane_directions.append(
+            {
+                "lane": lane_name,
+                "clean_pairs": evidence.clean_pairs,
+                "score_delta_games": score_delta,
+                "direction": 1 if score_delta > 0 else -1 if score_delta < 0 else 0,
             }
         )
     combined = Pentanomial(*totals)
@@ -118,19 +137,41 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         if start > expected_start:
             raise ValueError("opening lane ranges leave uncovered positions")
         expected_start = start + opening_range["opening_count"]
+    if expected_start != suite_positions + 1:
+        raise ValueError(
+            "opening lane ranges leave an uncovered tail: "
+            f"covered through {expected_start - 1}, suite has {suite_positions} positions"
+        )
     sprt = common["sprt"]
     if clean_pairs == 0:
         llr = 0.0
         decision = "no_clean_pairs"
+        pooled = False
+        gate_reason = "no clean pairs"
     else:
-        llr = sprt_llr(combined, float(sprt["elo0"]), float(sprt["elo1"]))
-        decision = sprt_decision(
-            combined,
-            float(sprt["elo0"]),
-            float(sprt["elo1"]),
-            float(sprt["alpha"]),
-            float(sprt["beta"]),
-        )
+        nonzero_directions = {
+            item["direction"] for item in lane_directions if item["direction"] != 0
+        }
+        all_lanes_have_clean_pairs = all(item["clean_pairs"] > 0 for item in lane_directions)
+        pooled = len(nonzero_directions) <= 1 and all_lanes_have_clean_pairs
+        if pooled:
+            gate_reason = "lane directions are consistent"
+            llr = sprt_llr(combined, float(sprt["elo0"]), float(sprt["elo1"]))
+            decision = sprt_decision(
+                combined,
+                float(sprt["elo0"]),
+                float(sprt["elo1"]),
+                float(sprt["alpha"]),
+                float(sprt["beta"]),
+            )
+        else:
+            gate_reason = (
+                "lane directions oppose"
+                if len(nonzero_directions) > 1
+                else "one or more lanes have no clean pairs"
+            )
+            llr = None
+            decision = "stratified_inconclusive"
     assert termination_counts is not None
     return {
         "schema_version": 3,
@@ -143,11 +184,20 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "quarantined_pairs": quarantined_pairs,
         "raw_wdl": raw_wdl,
         "clean_wdl": clean_wdl,
-        "counts": dict(zip(_COUNT_KEYS, combined.as_tuple(), strict=True)),
+        "counts": (
+            dict(zip(_COUNT_KEYS, combined.as_tuple(), strict=True))
+            if pooled
+            else None
+        ),
         "termination_counts": termination_counts,
         "abnormal_games": abnormal_games,
         "llr": llr,
         "decision": decision,
+        "platform_gate": {
+            "pooled": pooled,
+            "reason": gate_reason,
+            "lanes": lane_directions,
+        },
         "configuration": common,
         "opening_ranges": opening_ranges,
         "lanes": lane_records,

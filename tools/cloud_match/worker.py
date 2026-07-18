@@ -21,15 +21,27 @@ def _globalize_evidence(
         raise ValueError("game ID count does not match evidence")
     payload = {"schema_version": 3, **evidence.to_dict()}
     records: list[dict[str, object]] = []
+    seen_slots: set[int] = set()
     for raw_record in evidence.abnormal_games:
         record = dict(raw_record)
-        game_index = record.pop("game_index", None)
+        record.pop("game_index", None)
+        try:
+            round_number = int(str(record.get("round", "")))
+        except ValueError:
+            raise ValueError("abnormal game has an invalid round identity") from None
+        candidate_color = record.get("candidate_color")
+        game_index = (round_number - 1) * 2 + (
+            0 if candidate_color == "white" else 1 if candidate_color == "black" else -1
+        )
         if (
-            not isinstance(game_index, int)
-            or isinstance(game_index, bool)
+            round_number <= 0
+            or candidate_color not in ("white", "black")
             or not 0 <= game_index < len(game_ids)
         ):
-            raise ValueError("abnormal game index is outside shard assignment")
+            raise ValueError("abnormal game identity is outside shard assignment")
+        if game_index in seen_slots:
+            raise ValueError("duplicate abnormal game round/color identity")
+        seen_slots.add(game_index)
         record["game_id"] = game_ids[game_index]
         records.append(record)
     payload["abnormal_games"] = records

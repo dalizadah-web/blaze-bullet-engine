@@ -13,6 +13,25 @@ from typing import BinaryIO
 ALGORITHM_VERSION = "sha256-priority-side-balanced-v1"
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _compact_heap(
+    heap: list[tuple[int, int, bytes]],
+    active: dict[bytes, tuple[bytes, int]],
+) -> None:
+    heap[:] = [
+        (-int.from_bytes(value[0], "big"), -value[1], selected_line)
+        for selected_line, value in active.items()
+    ]
+    heapq.heapify(heap)
+
+
 def _selection_digest(tag: bytes, seed: bytes, line_number: int, line: bytes) -> bytes:
     return hashlib.sha256(
         tag
@@ -45,6 +64,8 @@ def _offer(
     if previous is not None:
         active[line] = (digest, line_number)
         heapq.heappush(heap, item)
+        if len(heap) > quota * 4:
+            _compact_heap(heap, active)
         return
     while heap:
         negative_digest, negative_line, worst_line = heap[0]
@@ -64,11 +85,7 @@ def _offer(
         active[line] = (digest, line_number)
         heapq.heappush(heap, item)
     if len(heap) > quota * 4:
-        heap[:] = [
-            (-int.from_bytes(value[0], "big"), -value[1], selected_line)
-            for selected_line, value in active.items()
-        ]
-        heapq.heapify(heap)
+        _compact_heap(heap, active)
 
 
 def _stream_candidates(
@@ -109,12 +126,27 @@ def select_openings(
     quota_per_side: int,
     expected_source_sha256: str | None = None,
     expected_source_nonempty_lines: int | None = None,
+    source_archive: Path | str | None = None,
+    expected_source_archive_sha256: str | None = None,
 ) -> dict[str, object]:
     if seed < 0:
         raise ValueError("seed must be nonnegative")
     if quota_per_side <= 0:
         raise ValueError("quota_per_side must be positive")
     seed_bytes = str(seed).encode("ascii")
+    archive_sha256 = None
+    if expected_source_archive_sha256 is not None and source_archive is None:
+        raise ValueError("source_archive is required to verify its SHA-256")
+    if source_archive is not None:
+        archive_sha256 = _sha256_file(Path(source_archive))
+        if (
+            expected_source_archive_sha256 is not None
+            and archive_sha256 != expected_source_archive_sha256.lower()
+        ):
+            raise ValueError(
+                "source archive SHA-256 mismatch: "
+                f"expected {expected_source_archive_sha256.lower()}, got {archive_sha256}"
+            )
     source_path = Path(source)
     with source_path.open("rb") as stream:
         selected_by_side, source_sha256, side_counts, nonempty = _stream_candidates(
@@ -166,7 +198,7 @@ def select_openings(
     line_number_bytes = b"".join(
         str(line_number).encode("ascii") + b"\n" for line_number in source_line_numbers
     )
-    return {
+    metadata: dict[str, object] = {
         "algorithm_version": ALGORITHM_VERSION,
         "seed": seed,
         "quota_per_side": quota_per_side,
@@ -180,6 +212,9 @@ def select_openings(
         "ordered_source_line_sha256": hashlib.sha256(line_number_bytes).hexdigest(),
         "selected_source_lines": source_line_numbers,
     }
+    if archive_sha256 is not None:
+        metadata["source_archive_sha256"] = archive_sha256
+    return metadata
 
 
 def main() -> int:
@@ -190,6 +225,8 @@ def main() -> int:
     parser.add_argument("--quota-per-side", type=int, required=True)
     parser.add_argument("--expected-source-sha256")
     parser.add_argument("--expected-source-nonempty-lines", type=int)
+    parser.add_argument("--source-archive", type=Path)
+    parser.add_argument("--expected-source-archive-sha256")
     parser.add_argument("--metadata", type=Path)
     args = parser.parse_args()
     metadata = select_openings(
@@ -199,6 +236,8 @@ def main() -> int:
         quota_per_side=args.quota_per_side,
         expected_source_sha256=args.expected_source_sha256,
         expected_source_nonempty_lines=args.expected_source_nonempty_lines,
+        source_archive=args.source_archive,
+        expected_source_archive_sha256=args.expected_source_archive_sha256,
     )
     encoded = json.dumps(metadata, indent=2, sort_keys=True) + "\n"
     if args.metadata:

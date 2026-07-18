@@ -620,21 +620,36 @@ class _StrictResultBuilder(chess.pgn.GameBuilder):
         return game
 
 
-def _read_pgn_slots(path: Path | str, expected_games: int) -> list[chess.pgn.Game | None]:
+def _read_pgn_slots(
+    path: Path | str,
+    expected_games: int,
+    candidate_name: str,
+    opponent_name: str,
+) -> list[chess.pgn.Game | None]:
     games: list[chess.pgn.Game] = []
     with Path(path).open(encoding="utf-8") as stream:
         while game := chess.pgn.read_game(stream, Visitor=_StrictResultBuilder):
             games.append(game)
     if len(games) > expected_games:
-        raise ValueError(f"expected at most {expected_games} games, found {len(games)}")
+        raise ValueError(f"PGN contains more than two games per expected round")
     slots: list[chess.pgn.Game | None] = [None] * expected_games
     for game in games:
         round_key = _round_key(game)
-        if len(round_key) != 1 or not 1 <= round_key[0] <= expected_games:
-            raise ValueError("PGN requires unique numeric Round slots in the expected range")
-        slot = round_key[0] - 1
+        expected_pairs = expected_games // 2
+        if len(round_key) != 1 or not 1 <= round_key[0] <= expected_pairs:
+            raise ValueError("PGN requires integer Round values in the expected pair range")
+        if {game.headers.get("White"), game.headers.get("Black")} != {
+            candidate_name,
+            opponent_name,
+        }:
+            raise ValueError("PGN game contains unexpected engine names")
+        candidate_is_white = game.headers.get("White") == candidate_name
+        slot = (round_key[0] - 1) * 2 + (0 if candidate_is_white else 1)
         if slots[slot] is not None:
-            raise ValueError(f"duplicate PGN Round slot: {round_key[0]}")
+            color = "white" if candidate_is_white else "black"
+            raise ValueError(
+                f"duplicate candidate color {color} in PGN round {round_key[0]}"
+            )
         header_result = getattr(game, "_blaze_header_result", None)
         movetext_result = getattr(game, "_blaze_movetext_result", None)
         if header_result is None:
@@ -655,7 +670,7 @@ def parse_paired_pgn(
     *,
     expected_games: int,
 ) -> MatchEvidence:
-    slots = _read_pgn_slots(path, expected_games)
+    slots = _read_pgn_slots(path, expected_games, candidate_name, opponent_name)
 
     pair_scores: list[tuple[float, float]] = []
     raw_wdl = {"wins": 0, "draws": 0, "losses": 0}
@@ -664,14 +679,8 @@ def parse_paired_pgn(
     abnormal_games: list[dict[str, object]] = []
     completed_games = 0
     clean_pairs = 0
-    expected_players = {candidate_name, opponent_name}
     for index in range(0, expected_games, 2):
         first, second = slots[index], slots[index + 1]
-        for game in (first, second):
-            if game is None:
-                continue
-            if {game.headers.get("White"), game.headers.get("Black")} != expected_players:
-                raise ValueError("PGN game contains unexpected engine names")
         if first is not None and second is not None:
             if first.headers.get("White") == second.headers.get("White"):
                 raise ValueError("paired games must swap colors")
@@ -683,10 +692,10 @@ def parse_paired_pgn(
                 abnormal = {
                     "game_index": game_index,
                     "game_id": f"game-{game_index + 1:06d}",
-                    "round": str(game_index + 1),
+                    "round": str(game_index // 2 + 1),
                     "result": "*",
                     "termination": "",
-                    "candidate_color": "unknown",
+                    "candidate_color": "white" if game_index % 2 == 0 else "black",
                     "category": "unterminated",
                     "offender": "unknown",
                     "reason": "PGN game is missing",
@@ -780,7 +789,7 @@ def _runner_failure_evidence(
                 "round": (
                     game.headers.get("Round", "")
                     if game is not None
-                    else str(index + 1)
+                    else str(index // 2 + 1)
                 ),
                 "result": game.headers.get("Result", "*") if game is not None else "*",
                 "termination": (
@@ -793,7 +802,9 @@ def _runner_failure_evidence(
                     if game is not None and game.headers.get("White") == candidate_name
                     else "black"
                     if game is not None and game.headers.get("Black") == candidate_name
-                    else "unknown"
+                    else "white"
+                    if index % 2 == 0
+                    else "black"
                 ),
                 "category": "runner_failure",
                 "offender": "unknown",
@@ -860,8 +871,11 @@ def build_runner_command(
         f"order={spec.opening_order}",
         f"start={spec.opening_start}",
         "-games",
-        str(games),
+        "2",
+        "-rounds",
+        str(games // 2),
         "-repeat",
+        "-recover",
         "-concurrency",
         str(min(spec.concurrency, games)),
         "-maxmoves",
@@ -933,6 +947,8 @@ def run_match(
     configuration = asdict(spec)
     configuration["games"] = game_count
     configuration["opening_count"] = game_count // 2
+    if spec.opening_format == "epd":
+        configuration["opening_suite_positions"] = opening_count
     manifest = ExperimentManifest.create(
         experiment_id=f"{spec.name}-{source_commit[:12]}",
         source_commit=source_commit,
@@ -971,7 +987,9 @@ def run_match(
         slots = None
         if pgn_path.is_file():
             try:
-                slots = _read_pgn_slots(pgn_path, game_count)
+                slots = _read_pgn_slots(
+                    pgn_path, game_count, candidate_name, opponent_name
+                )
                 partial = parse_paired_pgn(
                     pgn_path,
                     candidate_name,

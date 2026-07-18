@@ -11,6 +11,7 @@ def lane(
     *,
     quarantined_pairs: int = 0,
     opening_start: int = 1,
+    suite_positions: int = 2,
 ) -> dict:
     clean_pairs = wins + losses
     clean_games = clean_pairs * 2
@@ -71,23 +72,28 @@ def lane(
             "opening_sha256": "a" * 64,
             "opening_start": opening_start,
             "opening_count": clean_pairs + quarantined_pairs,
+            "opening_suite_positions": suite_positions,
             "sprt": {"elo0": 0.0, "elo1": 5.0, "alpha": 0.05, "beta": 0.05},
         },
         "artifacts": {"candidate_sha256": name * 64},
+        "environment": {"os": name, "machine": "x86_64"},
     }
 
 
 class CombineLanesTests(unittest.TestCase):
     def test_combines_cross_platform_lane_evidence(self) -> None:
-        result = combine_lanes([lane("c", 2, 0), lane("l", 1, 1, opening_start=3)])
+        result = combine_lanes([
+            lane("c", 2, 0, suite_positions=4),
+            lane("l", 1, 1, opening_start=3, suite_positions=4),
+        ])
         self.assertEqual(result["expected_games"], 8)
         self.assertEqual(result["counts"]["wins2"], 3)
         self.assertEqual(result["counts"]["losses2"], 1)
         self.assertEqual(len(result["lanes"]), 2)
 
     def test_preserves_quarantined_pairs_and_lane_strata(self) -> None:
-        cloud = lane("c", 1, 0, quarantined_pairs=1)
-        local = lane("l", 0, 1, quarantined_pairs=2, opening_start=3)
+        cloud = lane("c", 1, 0, quarantined_pairs=1, suite_positions=5)
+        local = lane("l", 0, 1, quarantined_pairs=2, opening_start=3, suite_positions=5)
 
         result = combine_lanes([cloud, local])
 
@@ -177,6 +183,26 @@ class CombineLanesTests(unittest.TestCase):
                 lane("local", 1, 0, opening_start=1),
                 lane("cloud", 1, 0, opening_start=3),
             ])
+
+    def test_rejects_an_uncovered_tail_of_the_declared_suite(self) -> None:
+        with self.assertRaisesRegex(ValueError, "uncovered tail"):
+            combine_lanes([
+                lane("local", 1, 0, opening_start=1, suite_positions=3),
+                lane("cloud", 1, 0, opening_start=2, suite_positions=3),
+            ])
+
+    def test_opposed_platform_directions_remain_stratified_without_pooled_claim(self) -> None:
+        local = lane("local-windows", 2, 0, opening_start=1, suite_positions=4)
+        cloud = lane("cloud-linux", 0, 2, opening_start=3, suite_positions=4)
+
+        result = combine_lanes([local, cloud])
+
+        self.assertEqual(result["decision"], "stratified_inconclusive")
+        self.assertIsNone(result["llr"])
+        self.assertIsNone(result["counts"])
+        self.assertFalse(result["platform_gate"]["pooled"])
+        self.assertEqual(result["lanes"][0]["environment"]["os"], "local-windows")
+        self.assertEqual(result["lanes"][1]["environment"]["os"], "cloud-linux")
 
 
 if __name__ == "__main__":

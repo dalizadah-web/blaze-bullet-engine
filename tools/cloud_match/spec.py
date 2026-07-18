@@ -53,6 +53,7 @@ class CloudMatchSpec:
     openings: str
     opening_sha256: str
     opening_start: int
+    opening_suite_positions: int
     sprt: CloudSprtSpec
 
     @classmethod
@@ -81,6 +82,7 @@ class CloudMatchSpec:
             openings=str(raw.get("openings", "")).strip(),
             opening_sha256=str(raw.get("opening_sha256", "")).lower(),
             opening_start=raw.get("opening_start"),
+            opening_suite_positions=raw.get("opening_suite_positions", 500),
             sprt=CloudSprtSpec(
                 elo0=float(sprt_raw["elo0"]),
                 elo1=float(sprt_raw["elo1"]),
@@ -136,6 +138,14 @@ class CloudMatchSpec:
             or self.opening_start <= 0
         ):
             raise ValueError("opening_start must be a positive one-based index")
+        if (
+            not isinstance(self.opening_suite_positions, int)
+            or isinstance(self.opening_suite_positions, bool)
+            or self.opening_suite_positions <= 0
+        ):
+            raise ValueError("opening_suite_positions must be a positive integer")
+        if self.opening_start + self.games // 2 - 1 > self.opening_suite_positions:
+            raise ValueError("opening range exceeds opening_suite_positions")
         if self.sprt.elo1 <= self.sprt.elo0:
             raise ValueError("sprt elo1 must exceed elo0")
         if not 0 < self.sprt.alpha < 1 or not 0 < self.sprt.beta < 1:
