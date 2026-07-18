@@ -26,6 +26,7 @@ import time
 
 mode = sys.argv[1]
 log_path = sys.argv[2]
+ready_count = 0
 
 def emit(line):
     print(line, flush=True)
@@ -42,7 +43,11 @@ for raw in sys.stdin:
             emit("option name Threads type spin default 1 min 1 max 128")
         emit("uciok")
     elif command == "isready":
-        emit("readyok")
+        ready_count += 1
+        if mode == "stall-ready" and ready_count > 1:
+            time.sleep(5)
+        else:
+            emit("readyok")
     elif command.startswith("go nodes "):
         if mode == "timeout":
             time.sleep(5)
@@ -351,6 +356,19 @@ class UciEngineTests(unittest.TestCase):
 
         engine.close()
         self.assertIsNotNone(engine.returncode)
+
+    def test_per_position_readiness_timeout_closes_process_and_reader(self) -> None:
+        engine = UciEngine(self.command("stall-ready"), timeout=0.5)
+        try:
+            with self.assertRaisesRegex(TimeoutError, "readyok"):
+                engine.search(
+                    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    100,
+                )
+            self.assertIsNotNone(engine.returncode)
+            self.assertFalse(engine.reader_alive)
+        finally:
+            engine.close()
 
     def test_close_kills_engine_that_ignores_quit(self) -> None:
         engine = UciEngine(

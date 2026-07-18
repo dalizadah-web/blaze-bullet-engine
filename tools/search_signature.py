@@ -314,6 +314,17 @@ class UciEngine:
         if board.is_game_over(claim_draw=False):
             raise ValueError("signature positions must have at least one legal move")
 
+        try:
+            return self._search_protocol(board, fen, nodes)
+        except BaseException:
+            # Once a per-position protocol exchange starts, any failure can leave
+            # unread output or an outstanding command. Never reuse that session.
+            self.close()
+            raise
+
+    def _search_protocol(
+        self, board: chess.Board, fen: str, nodes: int
+    ) -> dict[str, object]:
         self._send("ucinewgame")
         self._send("isready")
         self._wait_for("readyok")
