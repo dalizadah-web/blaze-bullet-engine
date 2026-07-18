@@ -144,6 +144,73 @@ class PgnPairTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "raw W/D/L does not reconcile"):
             validate_evidence_payload(payload, context="local test")
 
+    def test_known_runner_terminations_cannot_be_relabelled(self) -> None:
+        cases = (
+            ("time forfeit", "time_loss"),
+            ("illegal move", "illegal_move"),
+            ("abandoned", "disconnect"),
+            ("stalled connection", "stall"),
+        )
+        for termination, category in cases:
+            with self.subTest(termination=termination):
+                evidence = self._parse(
+                    f'[Result "0-1"]\n[Termination "{termination}"]',
+                    '[Result "0-1"]',
+                )
+                payload = {"schema_version": 3, **evidence.to_dict()}
+                payload["termination_counts"]["candidate"][category] = 0
+                payload["termination_counts"]["infrastructure_unknown"]["paired_quarantine"] = 2
+                payload["abnormal_games"][0]["category"] = "paired_quarantine"
+                payload["abnormal_games"][0]["offender"] = "unknown"
+
+                with self.assertRaisesRegex(ValueError, "termination semantics"):
+                    validate_evidence_payload(payload, context="local test")
+
+    def test_unknown_and_unterminated_categories_cannot_be_relabelled(self) -> None:
+        cases = (
+            ("future runner reason", "unknown"),
+            ("unterminated", "unterminated"),
+        )
+        for termination, category in cases:
+            with self.subTest(termination=termination):
+                evidence = self._parse(
+                    f'[Result "0-1"]\n[Termination "{termination}"]',
+                    '[Result "0-1"]',
+                )
+                payload = {"schema_version": 3, **evidence.to_dict()}
+                payload["termination_counts"]["infrastructure_unknown"][category] = 0
+                payload["termination_counts"]["infrastructure_unknown"]["runner_failure"] = 1
+                payload["abnormal_games"][0]["category"] = "runner_failure"
+                payload["abnormal_games"][0]["reason"] = "match runner exited with 17"
+
+                with self.assertRaisesRegex(ValueError, "termination semantics"):
+                    validate_evidence_payload(payload, context="local test")
+
+    def test_paired_and_malformed_records_cannot_be_interchanged(self) -> None:
+        evidence = self._parse(
+            '[Result "0-1"]\n[Termination "time forfeit"]',
+            '[Result "0-1"]',
+        )
+        payload = {"schema_version": 3, **evidence.to_dict()}
+        payload["termination_counts"]["infrastructure_unknown"]["paired_quarantine"] = 0
+        payload["termination_counts"]["infrastructure_unknown"]["unknown"] = 1
+        payload["abnormal_games"][1]["category"] = "unknown"
+        with self.assertRaisesRegex(ValueError, "termination semantics"):
+            validate_evidence_payload(payload, context="local test")
+
+        payload = {"schema_version": 3, **evidence.to_dict()}
+        payload["termination_counts"]["infrastructure_unknown"]["paired_quarantine"] = 0
+        payload["termination_counts"]["infrastructure_unknown"]["malformed"] = 1
+        payload["abnormal_games"][1]["category"] = "malformed"
+        payload["abnormal_games"][1]["reason"] = "illegal san: e5"
+        validate_evidence_payload(payload, context="local test")
+
+        payload["termination_counts"]["infrastructure_unknown"]["malformed"] = 0
+        payload["termination_counts"]["infrastructure_unknown"]["paired_quarantine"] = 1
+        payload["abnormal_games"][1]["category"] = "paired_quarantine"
+        with self.assertRaisesRegex(ValueError, "termination semantics"):
+            validate_evidence_payload(payload, context="local test")
+
     def test_time_forfeits_are_attributed_to_the_losing_engine(self) -> None:
         evidence = self._parse(
             '[Result "0-1"]\n[Termination "time forfeit"]',
@@ -382,7 +449,7 @@ class MatchExecutionTests(unittest.TestCase):
             spec = MatchSpec(
                 schema_version=1,
                 name="failed-runner",
-                games=4,
+                games=10,
                 concurrency=1,
                 time_control="1+0.01",
                 threads=1,
@@ -402,12 +469,29 @@ class MatchExecutionTests(unittest.TestCase):
                     '[Black "Opponent"]\n[Result "0-1"]\n[Termination "time forfeit"]\n\n'
                     '1. e4 e5 0-1\n\n'
                     '[Event "partial"]\n[Round "2"]\n[White "Opponent"]\n'
-                    '[Black "Blaze"]\n[Result "0-1"]\n\n1. e4 e5 0-1\n',
+                    '[Black "Blaze"]\n[Result "0-1"]\n\n1. e4 e5 0-1\n\n'
+                    '[Event "partial"]\n[Round "3"]\n[White "Blaze"]\n'
+                    '[Black "Opponent"]\n[Result "1-0"]\n[Termination "future runner reason"]\n\n'
+                    '1. e4 e5 1-0\n\n'
+                    '[Event "partial"]\n[Round "4"]\n[White "Opponent"]\n'
+                    '[Black "Blaze"]\n[Result "0-1"]\n\n1. e4 e5 0-1\n\n'
+                    '[Event "partial"]\n[Round "5"]\n[White "Blaze"]\n'
+                    '[Black "Opponent"]\n[Result "*"]\n[Termination "unterminated"]\n\n'
+                    '1. e4 e5 *\n\n'
+                    '[Event "partial"]\n[Round "6"]\n[White "Opponent"]\n'
+                    '[Black "Blaze"]\n[Result "0-1"]\n\n1. e4 e5 0-1\n\n'
+                    '[Event "partial"]\n[Round "7"]\n[White "Blaze"]\n'
+                    '[Black "Opponent"]\n[Result "1-0"]\n\n1. e5 1-0\n\n'
+                    '[Event "partial"]\n[Round "8"]\n[White "Opponent"]\n'
+                    '[Black "Blaze"]\n[Result "1/2-1/2"]\n[Termination "time forfeit"]\n\n'
+                    '1. e4 e5 1/2-1/2\n',
                     encoding="utf-8",
                 )
                 return subprocess.CompletedProcess(command, 17, stdout="runner crashed\n")
 
-            with patch("tools.experiment.match.sprt_llr", side_effect=AssertionError("SPRT called")), patch(
+            with self.assertLogs("chess.pgn", level="ERROR"), patch(
+                "tools.experiment.match.sprt_llr", side_effect=AssertionError("SPRT called")
+            ), patch(
                 "tools.experiment.match.sprt_decision", side_effect=AssertionError("SPRT called")
             ):
                 result = run_match(
@@ -422,18 +506,22 @@ class MatchExecutionTests(unittest.TestCase):
 
         self.assertEqual(result.decision, "no_clean_pairs")
         self.assertEqual(result.llr, 0.0)
-        self.assertEqual(result.evidence.completed_games, 2)
-        self.assertEqual(result.evidence.raw_wdl, {"wins": 1, "draws": 0, "losses": 1})
-        self.assertEqual(result.evidence.quarantined_pairs, 2)
+        self.assertEqual(result.evidence.completed_games, 7)
+        self.assertEqual(result.evidence.raw_wdl, {"wins": 5, "draws": 1, "losses": 1})
+        self.assertEqual(result.evidence.quarantined_pairs, 5)
         self.assertEqual(result.evidence.abnormal_games[0]["category"], "time_loss")
         self.assertEqual(result.evidence.abnormal_games[0]["offender"], "candidate")
         self.assertEqual(result.evidence.abnormal_games[1]["category"], "runner_failure")
         self.assertEqual(result.evidence.abnormal_games[1]["result"], "0-1")
         self.assertEqual(result.evidence.abnormal_games[1]["candidate_color"], "black")
-        self.assertEqual(result.evidence.abnormal_games[2]["result"], "*")
+        self.assertEqual(result.evidence.abnormal_games[2]["category"], "unknown")
+        self.assertEqual(result.evidence.abnormal_games[4]["category"], "unterminated")
+        self.assertEqual(result.evidence.abnormal_games[6]["category"], "malformed")
+        self.assertEqual(result.evidence.abnormal_games[7]["category"], "contradictory")
+        self.assertEqual(result.evidence.abnormal_games[8]["result"], "*")
         self.assertEqual(
             result.evidence.termination_counts["infrastructure_unknown"]["runner_failure"],
-            3,
+            5,
         )
 
     def test_run_match_writes_hashed_manifest_and_paired_result(self) -> None:

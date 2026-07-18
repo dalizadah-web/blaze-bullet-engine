@@ -194,6 +194,41 @@ def _abnormal_pair_key(record: dict[str, Any], context: str) -> str:
     raise ValueError(f"abnormal game has no auditable pair identity in {context}")
 
 
+def _semantic_category_and_offender(record: dict[str, Any]) -> tuple[str, str]:
+    termination = str(record.get("termination", "")).casefold().strip()
+    result = record.get("result")
+    candidate_color = record.get("candidate_color")
+    reason = str(record.get("reason", ""))
+    engine_categories = {
+        "time forfeit": "time_loss",
+        "illegal move": "illegal_move",
+        "abandoned": "disconnect",
+        "stalled connection": "stall",
+    }
+    if termination in engine_categories:
+        if result not in ("1-0", "0-1") or candidate_color not in ("white", "black"):
+            return "contradictory", "unknown"
+        candidate_lost = (candidate_color == "white" and result == "0-1") or (
+            candidate_color == "black" and result == "1-0"
+        )
+        return engine_categories[termination], "candidate" if candidate_lost else "opponent"
+    if termination == "unterminated":
+        return "unterminated", "unknown"
+    if termination not in ("", "adjudication"):
+        return "unknown", "unknown"
+    if reason.startswith(("match runner exited with ", "match runner produced no PGN")):
+        return "runner_failure", "unknown"
+    if reason == "color-paired game was quarantined":
+        if result in ("1-0", "0-1", "1/2-1/2"):
+            return "paired_quarantine", "unknown"
+        return "unterminated", "unknown"
+    if reason and reason not in ("game has no completed result", "PGN game is missing"):
+        return "malformed", "unknown"
+    if result not in ("1-0", "0-1", "1/2-1/2"):
+        return "unterminated", "unknown"
+    return "unknown", "unknown"
+
+
 def validate_evidence_payload(
     payload: dict[str, Any], *, context: str, expected_games: int | None = None
 ) -> MatchEvidence:
@@ -301,6 +336,9 @@ def validate_evidence_payload(
     for record in abnormal_games:
         offender = record.get("offender")
         category = record.get("category")
+        semantic_category, semantic_offender = _semantic_category_and_offender(record)
+        if category != semantic_category or offender != semantic_offender:
+            raise ValueError(f"record contradicts raw termination semantics in {context}")
         group = offender if offender in ("candidate", "opponent") else "infrastructure_unknown"
         if not isinstance(category, str) or category not in observed_counts[group]:
             raise ValueError(f"invalid abnormal termination category in {context}")
@@ -326,6 +364,13 @@ def validate_evidence_payload(
         observed_counts[group][category] += 1
         result = record.get("result")
         candidate_color = record.get("candidate_color")
+        game_id = record.get("game_id")
+        if isinstance(game_id, str) and game_id.endswith(("-w", "-b")):
+            suffix_color = "white" if game_id.endswith("-w") else "black"
+            if candidate_color in ("white", "black") and candidate_color != suffix_color:
+                raise ValueError(f"game ID suffix contradicts candidate color in {context}")
+            if result in ("1-0", "0-1", "1/2-1/2") and candidate_color != suffix_color:
+                raise ValueError(f"game ID suffix lacks completed-game candidate color in {context}")
         if result == "1/2-1/2":
             abnormal_wdl["draws"] += 1
             completed_abnormal_games += 1
@@ -483,31 +528,6 @@ def _termination_record(
             "white" if game.headers.get("White") == candidate_name else "black"
         ),
     }
-    if game.errors:
-        return None, {
-            **base,
-            "category": "malformed",
-            "offender": "unknown",
-            "reason": "; ".join(str(error) for error in game.errors),
-        }
-    if result not in ("1-0", "0-1", "1/2-1/2"):
-        return None, {
-            **base,
-            "category": "unterminated",
-            "offender": "unknown",
-            "reason": "game has no completed result",
-        }
-    if not termination:
-        return "ordinary", None
-    if termination == "adjudication":
-        return "adjudication", None
-    if termination == "unterminated":
-        return None, {
-            **base,
-            "category": "unterminated",
-            "offender": "unknown",
-            "reason": "runner marked the game unterminated",
-        }
     engine_categories = {
         "time forfeit": "time_loss",
         "illegal move": "illegal_move",
@@ -529,6 +549,38 @@ def _termination_record(
             "offender": offender,
             "reason": "engine failure",
         }
+    if termination == "unterminated":
+        return None, {
+            **base,
+            "category": "unterminated",
+            "offender": "unknown",
+            "reason": "runner marked the game unterminated",
+        }
+    if termination not in ("", "adjudication"):
+        return None, {
+            **base,
+            "category": "unknown",
+            "offender": "unknown",
+            "reason": "unrecognized termination",
+        }
+    if game.errors:
+        return None, {
+            **base,
+            "category": "malformed",
+            "offender": "unknown",
+            "reason": "; ".join(str(error) for error in game.errors),
+        }
+    if result not in ("1-0", "0-1", "1/2-1/2"):
+        return None, {
+            **base,
+            "category": "unterminated",
+            "offender": "unknown",
+            "reason": "game has no completed result",
+        }
+    if not termination:
+        return "ordinary", None
+    if termination == "adjudication":
+        return "adjudication", None
     return None, {
         **base,
         "category": "unknown",
@@ -708,7 +760,7 @@ def _runner_failure_evidence(
         preserved = None
         if game is not None:
             _, typed = _termination_record(game, candidate_name, opponent_name, index)
-            if typed is not None and typed.get("offender") in ("candidate", "opponent"):
+            if typed is not None:
                 preserved = typed
         if preserved is not None:
             record = preserved
@@ -725,7 +777,7 @@ def _runner_failure_evidence(
                 "termination": (
                     game.headers.get("Termination", "").strip()
                     if game is not None
-                    else reason
+                    else ""
                 ),
                 "candidate_color": (
                     "white"

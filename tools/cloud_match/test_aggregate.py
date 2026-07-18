@@ -172,6 +172,13 @@ class AggregateShardsTests(unittest.TestCase):
         self.assertIn("Candidate time_loss: 1", markdown)
         self.assertIn(payload["game_ids"][2], markdown)
 
+        forged_color = json.loads(json.dumps(payload))
+        forged_color["abnormal_games"][1]["candidate_color"] = "white"
+        first.write_text(json.dumps(forged_color), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "game ID suffix"):
+            aggregate_shards([first, second], self.spec)
+        first.write_text(json.dumps(payload), encoding="utf-8")
+
         forged = json.loads(first.read_text(encoding="utf-8"))
         forged["termination_counts"]["candidate"]["time_loss"] = 2
         first.write_text(json.dumps(forged), encoding="utf-8")
@@ -181,7 +188,7 @@ class AggregateShardsTests(unittest.TestCase):
         contradictory = json.loads(json.dumps(payload))
         contradictory["abnormal_games"][0]["result"] = "1-0"
         first.write_text(json.dumps(contradictory), encoding="utf-8")
-        with self.assertRaisesRegex(ValueError, "contradictory offender/result"):
+        with self.assertRaisesRegex(ValueError, "termination semantics"):
             aggregate_shards([first, second], self.spec)
 
         forged_clean = json.loads(json.dumps(payload))
@@ -223,7 +230,7 @@ class AggregateShardsTests(unittest.TestCase):
                     "termination": "",
                     "category": "paired_quarantine",
                     "offender": "unknown",
-                    "reason": "quarantined",
+                    "reason": "color-paired game was quarantined",
                 }
                 for i, game_id in enumerate(payload["game_ids"])
             ]
