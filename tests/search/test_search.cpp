@@ -136,6 +136,27 @@ TEST_CASE(search_parallel_root_split_returns_a_complete_legal_adaptive_search) {
     CHECK(!many.stopped);
 }
 
+TEST_CASE(search_parallel_depth_one_searches_root_moves) {
+    Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    SearchLimits limits{.depth = 1};
+    limits.search_moves = {
+        Move(Square::A2, Square::A3),
+        Move(Square::E2, Square::E4, MoveFlag::DoublePush),
+    };
+
+    TranspositionTable single_table(2);
+    Searcher single(single_table);
+    const SearchResult expected = single.search(root, limits);
+
+    TranspositionTable parallel_table(2);
+    Searcher parallel(parallel_table);
+    limits.threads = 4;
+    const SearchResult actual = parallel.search(root, limits);
+
+    CHECK_EQ(actual.best_move, expected.best_move);
+    CHECK_EQ(actual.score, expected.score);
+}
+
 TEST_CASE(search_parallel_root_split_preserves_loaded_network_evaluation) {
     constexpr std::size_t input_bytes = 768U * 256U * 2U;
     constexpr std::size_t hidden_bias_bytes = 256U * 4U;

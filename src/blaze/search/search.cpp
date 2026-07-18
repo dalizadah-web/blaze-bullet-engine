@@ -2,6 +2,7 @@
 
 #include "blaze/core/movegen.h"
 #include "blaze/eval/classical.h"
+#include "blaze/search/search_legality.h"
 #include "blaze/search/see.h"
 
 #include <algorithm>
@@ -272,12 +273,6 @@ SearchResult Searcher::search_parallel(
             result.stopped = true;
             break;
         }
-        if (depth == 1) {
-            result.depth = 1;
-            result.score = evaluate_position(position);
-            continue;
-        }
-
         struct TaskResult {
             Move move;
             int score = -infinity;
@@ -574,8 +569,7 @@ int Searcher::negamax(
             if (static_exchange_evaluation(position, move) < 0) continue;
             StateInfo state;
             if (!position.make_move(move, state)) continue;
-            const Color moving_side = position.side_to_move();
-            if (!king_is_safe_after_move(position, moving_side)) {
+            if (!last_move_kept_own_king_safe(position)) {
                 position.unmake_move(move, state);
                 continue;
             }
@@ -646,7 +640,7 @@ int Searcher::negamax(
         if (!position.make_move(move, state)) {
             continue;
         }
-        if (!king_is_safe_after_move(position, opposite(position.side_to_move()))) {
+        if (!last_move_kept_own_king_safe(position)) {
             position.unmake_move(move, state);
             continue;
         }
@@ -862,7 +856,7 @@ int Searcher::quiescence(
         if (!position.make_move(move, state)) {
             continue;
         }
-        if (!king_is_safe_after_move(position, opposite(position.side_to_move()))) {
+        if (!last_move_kept_own_king_safe(position)) {
             position.unmake_move(move, state);
             continue;
         }
