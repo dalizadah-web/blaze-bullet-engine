@@ -63,7 +63,7 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                 (shard_dir / "games.pgn").write_text("pgn", encoding="utf-8")
                 pair_indexes = [p for p in range(200) if p % 20 == index]
                 payload = {
-                    "schema_version": 2,
+                    "schema_version": 3,
                     "experiment_id": frozen.experiment_id(),
                     "shard_index": index,
                     "shard_count": 20,
@@ -80,6 +80,7 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                     "quarantined_games": 0,
                     "quarantined_pairs": 0,
                     "raw_wdl": {"wins": 8, "draws": 7, "losses": 5},
+                    "clean_wdl": {"wins": 8, "draws": 7, "losses": 5},
                     "pair_indexes": pair_indexes,
                     "game_ids": [
                         game_id
@@ -97,7 +98,7 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                         "clean": {"ordinary": len(pair_indexes) * 2, "adjudication": 0},
                         "candidate": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
                         "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
-                        "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0},
+                        "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0, "paired_quarantine": 0},
                     },
                     "abnormal_games": [],
                     "pgn": "games.pgn",

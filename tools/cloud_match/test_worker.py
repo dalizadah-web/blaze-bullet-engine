@@ -17,27 +17,38 @@ class WorkerOpeningTests(unittest.TestCase):
             quarantined_games=2,
             quarantined_pairs=1,
             raw_wdl={"wins": 0, "draws": 1, "losses": 1},
+            clean_wdl={"wins": 0, "draws": 0, "losses": 0},
             counts=Pentanomial(0, 0, 0, 0, 0),
             termination_counts={
                 "clean": {"ordinary": 1, "adjudication": 0},
                 "candidate": {"time_loss": 1, "illegal_move": 0, "disconnect": 0, "stall": 0},
                 "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
-                "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0},
+                "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0, "paired_quarantine": 1},
             },
             abnormal_games=({
                 "game_index": 0,
                 "round": "1",
                 "result": "0-1",
+                "candidate_color": "white",
                 "termination": "time forfeit",
                 "category": "time_loss",
                 "offender": "candidate",
                 "reason": "engine failure",
-            },),
+            }, {
+                "game_index": 1,
+                "round": "2",
+                "result": "1/2-1/2",
+                "candidate_color": "black",
+                "termination": "",
+                "category": "paired_quarantine",
+                "offender": "unknown",
+                "reason": "color-paired game was quarantined",
+            }),
         )
 
         payload = _globalize_evidence(evidence, ["experiment-p000000-w", "experiment-p000000-b"])
 
-        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(payload["schema_version"], 3)
         self.assertEqual(payload["quarantined_pairs"], 1)
         self.assertEqual(payload["abnormal_games"][0]["game_id"], "experiment-p000000-w")
         self.assertNotIn("game_index", payload["abnormal_games"][0])

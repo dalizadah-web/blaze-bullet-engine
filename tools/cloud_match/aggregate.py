@@ -54,12 +54,13 @@ def aggregate_shards(
     completed_games = clean_games = clean_pairs = 0
     quarantined_games = quarantined_pairs = 0
     raw_wdl = {"wins": 0, "draws": 0, "losses": 0}
+    clean_wdl = {"wins": 0, "draws": 0, "losses": 0}
     termination_counts: dict[str, dict[str, int]] | None = None
     abnormal_games: list[dict[str, Any]] = []
 
     for path in paths:
         raw = _load_manifest(path)
-        if raw.get("schema_version") != 2:
+        if raw.get("schema_version") != 3:
             raise ValueError(f"unsupported shard schema in {path}")
         if raw.get("experiment_id") != experiment_id:
             raise ValueError(f"experiment ID mismatch in {path}")
@@ -141,6 +142,7 @@ def aggregate_shards(
         quarantined_pairs += evidence.quarantined_pairs
         for key in raw_wdl:
             raw_wdl[key] += evidence.raw_wdl[key]
+            clean_wdl[key] += evidence.clean_wdl[key]
         if termination_counts is None:
             termination_counts = {
                 group: {key: 0 for key in values}
@@ -171,7 +173,7 @@ def aggregate_shards(
         )
     assert termination_counts is not None
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "experiment_id": experiment_id,
         "expected_games": spec.games,
         "completed_games": completed_games,
@@ -180,6 +182,7 @@ def aggregate_shards(
         "quarantined_games": quarantined_games,
         "quarantined_pairs": quarantined_pairs,
         "raw_wdl": raw_wdl,
+        "clean_wdl": clean_wdl,
         "shards": spec.shards,
         "counts": dict(zip(_COUNT_KEYS, counts.as_tuple(), strict=True)),
         "termination_counts": termination_counts,
@@ -200,6 +203,8 @@ def summary_markdown(result: dict[str, Any]) -> str:
         f"- Quarantined: {result['quarantined_games']} games ({result['quarantined_pairs']} pairs)\n"
         f"- Raw candidate W/D/L: {result['raw_wdl']['wins']}/"
         f"{result['raw_wdl']['draws']}/{result['raw_wdl']['losses']}\n"
+        f"- Clean candidate W/D/L: {result['clean_wdl']['wins']}/"
+        f"{result['clean_wdl']['draws']}/{result['clean_wdl']['losses']}\n"
         f"- Shards: {result['shards']}\n"
         f"- SPRT decision: **{result['decision']}**\n"
         f"- LLR: `{result['llr']:.6f}`\n"

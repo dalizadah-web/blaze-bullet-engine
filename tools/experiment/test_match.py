@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import textwrap
 import unittest
+from unittest.mock import patch
 
 from tools.experiment.match import (
     MatchSpec,
@@ -12,6 +13,7 @@ from tools.experiment.match import (
     build_runner_command,
     parse_paired_pgn,
     run_match,
+    validate_evidence_payload,
 )
 from tools.experiment.manifest import sha256_file
 
@@ -107,6 +109,7 @@ class PgnPairTests(unittest.TestCase):
         self.assertEqual(evidence.quarantined_pairs, 0)
         self.assertEqual(evidence.counts.as_tuple(), (0, 1, 0, 0, 0))
         self.assertEqual(evidence.raw_wdl, {"wins": 1, "draws": 1, "losses": 0})
+        self.assertEqual(evidence.clean_wdl, {"wins": 1, "draws": 1, "losses": 0})
         self.assertEqual(evidence.termination_counts["clean"], {"ordinary": 2, "adjudication": 0})
 
     def test_adjudication_is_explicitly_accepted_as_clean(self) -> None:
@@ -117,6 +120,29 @@ class PgnPairTests(unittest.TestCase):
 
         self.assertEqual(evidence.clean_pairs, 1)
         self.assertEqual(evidence.termination_counts["clean"], {"ordinary": 0, "adjudication": 2})
+
+    def test_draws2_clean_wdl_disambiguates_two_draws_from_win_loss(self) -> None:
+        evidence = self._parse('[Result "1-0"]', '[Result "1-0"]')
+
+        self.assertEqual(evidence.counts.as_tuple(), (0, 0, 1, 0, 0))
+        self.assertEqual(evidence.clean_wdl, {"wins": 1, "draws": 0, "losses": 1})
+        payload = {"schema_version": 3, **evidence.to_dict()}
+        validate_evidence_payload(payload, context="local test")
+
+        payload["clean_wdl"] = {"wins": 0, "draws": 1, "losses": 1}
+        with self.assertRaisesRegex(ValueError, "clean W/D/L"):
+            validate_evidence_payload(payload, context="local test")
+
+    def test_local_validator_rejects_forged_raw_wdl(self) -> None:
+        evidence = self._parse(
+            '[Result "0-1"]\n[Termination "time forfeit"]',
+            '[Result "0-1"]',
+        )
+        payload = {"schema_version": 3, **evidence.to_dict()}
+        payload["raw_wdl"] = {"wins": 0, "draws": 1, "losses": 1}
+
+        with self.assertRaisesRegex(ValueError, "raw W/D/L does not reconcile"):
+            validate_evidence_payload(payload, context="local test")
 
     def test_time_forfeits_are_attributed_to_the_losing_engine(self) -> None:
         evidence = self._parse(
@@ -129,6 +155,8 @@ class PgnPairTests(unittest.TestCase):
         self.assertEqual(evidence.termination_counts["candidate"]["time_loss"], 1)
         self.assertEqual(evidence.termination_counts["opponent"]["time_loss"], 1)
         self.assertEqual(evidence.raw_wdl, {"wins": 1, "draws": 0, "losses": 1})
+        self.assertEqual(evidence.clean_wdl, {"wins": 0, "draws": 0, "losses": 0})
+        self.assertEqual(len(evidence.abnormal_games), 2)
         self.assertEqual(evidence.counts.pairs, 0)
 
     def test_abnormal_termination_categories_are_auditable(self) -> None:
@@ -147,6 +175,8 @@ class PgnPairTests(unittest.TestCase):
                 )
                 self.assertEqual(evidence.clean_pairs, 0)
                 self.assertEqual(evidence.quarantined_pairs, 1)
+                self.assertEqual(len(evidence.abnormal_games), 2)
+                self.assertEqual(evidence.abnormal_games[1]["category"], "paired_quarantine")
                 self.assertEqual(evidence.termination_counts[side][category], 1)
                 self.assertEqual(evidence.abnormal_games[0]["game_id"], "game-000001")
                 self.assertEqual(evidence.abnormal_games[0]["termination"], termination)
@@ -225,6 +255,60 @@ class PgnPairTests(unittest.TestCase):
         self.assertEqual(evidence.clean_pairs, 0)
         self.assertEqual(evidence.termination_counts["infrastructure_unknown"]["malformed"], 1)
 
+    def test_rejects_header_and_movetext_result_disagreement(self) -> None:
+        pgn = textwrap.dedent(
+            """
+            [Event "paired"]
+            [Round "1"]
+            [White "Blaze"]
+            [Black "Opponent"]
+            [Result "1-0"]
+
+            1. e4 e5 0-1
+
+            [Event "paired"]
+            [Round "2"]
+            [White "Opponent"]
+            [Black "Blaze"]
+            [Result "0-1"]
+
+            1. e4 e5 0-1
+            """
+        ).strip()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "games.pgn"
+            path.write_text(pgn + "\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "movetext result"):
+                parse_paired_pgn(path, "Blaze", "Opponent", expected_games=2)
+
+    def test_rejects_duplicate_round_slots_even_when_game_count_is_complete(self) -> None:
+        pgn = textwrap.dedent(
+            """
+            [Event "paired"]
+            [Round "1"]
+            [White "Blaze"]
+            [Black "Opponent"]
+            [Result "1/2-1/2"]
+
+            1. e4 e5 1/2-1/2
+
+            [Event "paired"]
+            [Round "1"]
+            [White "Opponent"]
+            [Black "Blaze"]
+            [Result "1/2-1/2"]
+
+            1. e4 e5 1/2-1/2
+            """
+        ).strip()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "games.pgn"
+            path.write_text(pgn + "\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "duplicate PGN Round"):
+                parse_paired_pgn(path, "Blaze", "Opponent", expected_games=2)
+
     def test_maps_color_swapped_wins_to_two_win_category(self) -> None:
         pgn = textwrap.dedent(
             """
@@ -298,7 +382,7 @@ class MatchExecutionTests(unittest.TestCase):
             spec = MatchSpec(
                 schema_version=1,
                 name="failed-runner",
-                games=2,
+                games=4,
                 concurrency=1,
                 time_control="1+0.01",
                 threads=1,
@@ -315,29 +399,41 @@ class MatchExecutionTests(unittest.TestCase):
                 pgn_path = Path(command[command.index("-pgnout") + 1])
                 pgn_path.write_text(
                     '[Event "partial"]\n[Round "1"]\n[White "Blaze"]\n'
-                    '[Black "Opponent"]\n[Result "1-0"]\n\n1. e4 e5 1-0\n',
+                    '[Black "Opponent"]\n[Result "0-1"]\n[Termination "time forfeit"]\n\n'
+                    '1. e4 e5 0-1\n\n'
+                    '[Event "partial"]\n[Round "2"]\n[White "Opponent"]\n'
+                    '[Black "Blaze"]\n[Result "0-1"]\n\n1. e4 e5 0-1\n',
                     encoding="utf-8",
                 )
                 return subprocess.CompletedProcess(command, 17, stdout="runner crashed\n")
 
-            result = run_match(
-                spec,
-                candidate=candidate,
-                opponent=opponent,
-                runner=runner,
-                output=root / "result",
-                source_commit="0" * 40,
-                executor=failed_executor,
-            )
+            with patch("tools.experiment.match.sprt_llr", side_effect=AssertionError("SPRT called")), patch(
+                "tools.experiment.match.sprt_decision", side_effect=AssertionError("SPRT called")
+            ):
+                result = run_match(
+                    spec,
+                    candidate=candidate,
+                    opponent=opponent,
+                    runner=runner,
+                    output=root / "result",
+                    source_commit="0" * 40,
+                    executor=failed_executor,
+                )
 
         self.assertEqual(result.decision, "no_clean_pairs")
         self.assertEqual(result.llr, 0.0)
-        self.assertEqual(result.evidence.completed_games, 1)
-        self.assertEqual(result.evidence.raw_wdl, {"wins": 1, "draws": 0, "losses": 0})
-        self.assertEqual(result.evidence.quarantined_pairs, 1)
+        self.assertEqual(result.evidence.completed_games, 2)
+        self.assertEqual(result.evidence.raw_wdl, {"wins": 1, "draws": 0, "losses": 1})
+        self.assertEqual(result.evidence.quarantined_pairs, 2)
+        self.assertEqual(result.evidence.abnormal_games[0]["category"], "time_loss")
+        self.assertEqual(result.evidence.abnormal_games[0]["offender"], "candidate")
+        self.assertEqual(result.evidence.abnormal_games[1]["category"], "runner_failure")
+        self.assertEqual(result.evidence.abnormal_games[1]["result"], "0-1")
+        self.assertEqual(result.evidence.abnormal_games[1]["candidate_color"], "black")
+        self.assertEqual(result.evidence.abnormal_games[2]["result"], "*")
         self.assertEqual(
             result.evidence.termination_counts["infrastructure_unknown"]["runner_failure"],
-            2,
+            3,
         )
 
     def test_run_match_writes_hashed_manifest_and_paired_result(self) -> None:

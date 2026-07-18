@@ -86,7 +86,7 @@ def main() -> int:
         )
     )
     summary = {
-        "schema_version": 2,
+        "schema_version": 3,
         "lane": "local-windows-16-thread-cpu",
         **result.evidence.to_dict(),
         "llr": result.llr,

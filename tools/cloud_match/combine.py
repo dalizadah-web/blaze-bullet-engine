@@ -39,11 +39,12 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
     expected_games = completed_games = clean_games = clean_pairs = 0
     quarantined_games = quarantined_pairs = 0
     raw_wdl = {"wins": 0, "draws": 0, "losses": 0}
+    clean_wdl = {"wins": 0, "draws": 0, "losses": 0}
     termination_counts: dict[str, dict[str, int]] | None = None
     abnormal_games: list[dict[str, Any]] = []
     lane_records: list[dict[str, Any]] = []
     for index, lane in enumerate(items):
-        if lane.get("schema_version") != 2:
+        if lane.get("schema_version") != 3:
             raise ValueError(f"unsupported lane schema at index {index}")
         if _configuration(lane) != common:
             raise ValueError(f"incompatible lane configuration at index {index}")
@@ -58,6 +59,7 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         quarantined_pairs += evidence.quarantined_pairs
         for key in raw_wdl:
             raw_wdl[key] += evidence.raw_wdl[key]
+            clean_wdl[key] += evidence.clean_wdl[key]
         if termination_counts is None:
             termination_counts = {
                 group: {key: 0 for key in entries}
@@ -73,7 +75,7 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         )
         lane_records.append(
             {
-                "schema_version": 2,
+                "schema_version": 3,
                 "lane": lane_name,
                 **evidence.to_dict(),
                 "artifacts": lane.get("artifacts", {}),
@@ -95,7 +97,7 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         )
     assert termination_counts is not None
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "kind": "hybrid-meta-analysis",
         "expected_games": expected_games,
         "completed_games": completed_games,
@@ -104,6 +106,7 @@ def combine_lanes(lanes: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "quarantined_games": quarantined_games,
         "quarantined_pairs": quarantined_pairs,
         "raw_wdl": raw_wdl,
+        "clean_wdl": clean_wdl,
         "counts": dict(zip(_COUNT_KEYS, combined.as_tuple(), strict=True)),
         "termination_counts": termination_counts,
         "abnormal_games": abnormal_games,

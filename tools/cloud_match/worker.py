@@ -19,7 +19,7 @@ def _globalize_evidence(
 ) -> dict[str, Any]:
     if len(game_ids) != evidence.expected_games:
         raise ValueError("game ID count does not match evidence")
-    payload = {"schema_version": 2, **evidence.to_dict()}
+    payload = {"schema_version": 3, **evidence.to_dict()}
     records: list[dict[str, object]] = []
     for raw_record in evidence.abnormal_games:
         record = dict(raw_record)

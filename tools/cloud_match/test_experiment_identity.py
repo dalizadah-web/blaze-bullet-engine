@@ -58,7 +58,7 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
     (shard / "games.pgn").write_text("pgn", encoding="utf-8")
     pair_indexes = [index, index + 2]
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "experiment_id": spec.experiment_id(),
         "shard_index": index,
         "shard_count": 2,
@@ -75,6 +75,7 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
         "quarantined_games": 0,
         "quarantined_pairs": 0,
         "raw_wdl": {"wins": 2, "draws": 2, "losses": 0},
+        "clean_wdl": {"wins": 2, "draws": 2, "losses": 0},
         "pair_indexes": pair_indexes,
         "game_ids": [
             game_id
@@ -92,7 +93,7 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
             "clean": {"ordinary": 4, "adjudication": 0},
             "candidate": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
             "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
-            "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0},
+            "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0, "paired_quarantine": 0},
         },
         "abnormal_games": [],
         "pgn": "games.pgn",
