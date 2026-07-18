@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "search_corpora": [
+    {
+      "path": "testdata/search/correctness-v1.epd",
+      "sha256": "97e21e16ae9da9de83389fa59303a329db5022b076902951c43a613d3683db33",
+      "position_count": 64,
+      "source_method": "independently selected legal opening and middlegame sequences plus hand-authored tactical, quiet, and rules-edge positions, validated with python-chess 1.11.2",
+      "license": "CC0-1.0",
+      "purpose": "deterministic search correctness and node signatures",
+      "stockfish_derived": false
+    }
+  ]
+}
