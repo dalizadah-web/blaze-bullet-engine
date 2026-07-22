@@ -56,6 +56,8 @@ class CloudMatchSpec:
     opening_suite_positions: int
     opening_repeats: int
     sprt: CloudSprtSpec
+    candidate_initstr: str = ""
+    baseline_initstr: str = ""
 
     @classmethod
     def from_json(cls, path: Path | str) -> "CloudMatchSpec":
@@ -91,6 +93,8 @@ class CloudMatchSpec:
                 alpha=float(sprt_raw["alpha"]),
                 beta=float(sprt_raw["beta"]),
             ),
+            candidate_initstr=str(raw.get("candidate_initstr", "")),
+            baseline_initstr=str(raw.get("baseline_initstr", "")),
         )
         spec.validate()
         return spec

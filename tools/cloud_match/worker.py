@@ -148,6 +148,8 @@ def run_worker(
         opening_format="epd",
         openings=str(shard_openings),
         opening_sha256=sha256_file(shard_openings),
+        candidate_initstr=spec.candidate_initstr,
+        opponent_initstr=spec.baseline_initstr,
         opponent_sha256=baseline_identity.sha256,
         sprt=SprtSpec(
             elo0=spec.sprt.elo0,

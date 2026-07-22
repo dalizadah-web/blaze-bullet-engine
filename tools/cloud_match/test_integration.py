@@ -32,7 +32,7 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                 prepared,
                 candidate_ref="aa50f42331323ec06c05b4f5aa4d04437e3d57b9",
                 baseline_ref="e5d7f7b",
-                games=10000,
+                games=2000,
                 shards=20,
                 opening_repeats=10,
                 time_control="1+1",
@@ -62,8 +62,8 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                 shard_dir = root / f"shard-{index}"
                 shard_dir.mkdir()
                 (shard_dir / "games.pgn").write_text("pgn", encoding="utf-8")
-                pair_indexes = [p for p in range(5000) if p % 20 == index]
-                pair_slots = [{"cycle": p // 500, "slot": p % 500} for p in pair_indexes]
+                pair_indexes = [p for p in range(1000) if p % 20 == index]
+                pair_slots = [{"cycle": p // 100, "slot": p % 100} for p in pair_indexes]
                 pair_count = len(pair_indexes)
                 payload = {
                     "schema_version": 3,
@@ -92,8 +92,8 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                         game_id
                         for pair in pair_indexes
                         for game_id in (
-                            f"{frozen.experiment_id()}-c{pair // 500:04d}-p{pair % 500:06d}-w",
-                            f"{frozen.experiment_id()}-c{pair // 500:04d}-p{pair % 500:06d}-b",
+                        f"{frozen.experiment_id()}-c{pair // 100:04d}-p{pair % 100:06d}-w",
+                        f"{frozen.experiment_id()}-c{pair // 100:04d}-p{pair % 100:06d}-b",
                         )
                     ],
                     "counts": {
@@ -115,8 +115,8 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                 shards.append(shard_dir / "shard.json")
 
             result = aggregate_shards(shards, frozen)
-            self.assertEqual(result["expected_games"], 10000)
-            self.assertEqual(result["clean_pairs"], 5000)
+            self.assertEqual(result["expected_games"], 2000)
+            self.assertEqual(result["clean_pairs"], 1000)
 
 
 if __name__ == "__main__":

@@ -49,6 +49,8 @@ class MatchSpec:
     sprt: SprtSpec
     time_margin_ms: int = 150
     max_moves: int = 200
+    candidate_initstr: str = ""
+    opponent_initstr: str = ""
     opening_order: str = "sequential"
     opening_plies: int = 0
     opening_start: int = 1
@@ -143,6 +145,8 @@ class MatchSpec:
             opening_plies=int(raw.get("opening_plies", 0)),
             opening_start=opening_start,
             opening_suite_positions=opening_suite_positions,
+            candidate_initstr=str(raw.get("candidate_initstr", "")),
+            opponent_initstr=str(raw.get("opponent_initstr", "")),
         )
 
 
@@ -867,12 +871,20 @@ def build_runner_command(
         "proto=uci",
         f"option.Hash={spec.hash_mb}",
         f"option.Threads={spec.threads}",
+    ]
+    if spec.candidate_initstr:
+        command.append(f"initstr={spec.candidate_initstr}")
+    command.extend([
         "-engine",
         f"name={opponent_name}",
         f"cmd={opponent}",
         "proto=uci",
         f"option.Hash={spec.hash_mb}",
         f"option.Threads={spec.threads}",
+    ])
+    if spec.opponent_initstr:
+        command.append(f"initstr={spec.opponent_initstr}")
+    command.extend([
         "-each",
         f"tc={spec.time_control}",
         f"timemargin={spec.time_margin_ms}",
@@ -894,7 +906,7 @@ def build_runner_command(
         "-pgnout",
         str(pgn),
         "fi",
-    ]
+    ])
     if spec.opening_plies > 0:
         opening_index = command.index("-games")
         command[opening_index:opening_index] = ["plies=" + str(spec.opening_plies)]

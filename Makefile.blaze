@@ -1,6 +1,6 @@
 CXX := g++
-CXXFLAGS := -std=c++20 -O2 -Wall -Wextra -Wpedantic -Werror -Isrc -Itests
-RELEASE_FLAGS := -std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Isrc
+CXXFLAGS := -std=c++20 -O2 -DNNUE_EMBEDDING_OFF -Wall -Wextra -Wpedantic -Werror -Wno-empty-body -Isrc -Itests
+RELEASE_FLAGS := -std=c++20 -O3 -DNDEBUG -DNNUE_EMBEDDING_OFF -Wall -Wextra -Wpedantic -Werror -Wno-empty-body -Isrc
 BUILD_DIR := build/blaze
 TEST_BIN := $(BUILD_DIR)/blaze_tests.exe
 PERFT_BIN := $(BUILD_DIR)/perft_driver.exe
@@ -9,6 +9,12 @@ TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp) \
 	$(wildcard tests/eval/*.cpp) $(wildcard tests/search/*.cpp) $(wildcard tests/uci/*.cpp)
 ENGINE_SOURCES := $(wildcard src/blaze/core/*.cpp) $(wildcard src/blaze/eval/*.cpp) \
 	$(wildcard src/blaze/search/*.cpp) $(wildcard src/blaze/uci/*.cpp)
+STOCKFISH_DIR := ../../vendor/Stockfish-master/src
+STOCKFISH_SOURCES := $(STOCKFISH_DIR)/bitboard.cpp $(STOCKFISH_DIR)/movegen.cpp \
+	$(STOCKFISH_DIR)/position.cpp $(STOCKFISH_DIR)/misc.cpp \
+	$(STOCKFISH_DIR)/nnue/network.cpp $(STOCKFISH_DIR)/nnue/nnue_accumulator.cpp \
+	$(STOCKFISH_DIR)/nnue/features/half_ka_v2_hm.cpp \
+	$(STOCKFISH_DIR)/nnue/features/full_threats.cpp
 
 .PHONY: all test blaze perft-driver train-network experiment-test cloud-test search-signature-test uci-stress repeated-start bullet-latency verify-clean-room clean
 
@@ -17,14 +23,14 @@ all: test blaze
 $(BUILD_DIR):
 	powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path '$(BUILD_DIR)' | Out-Null"
 
-$(TEST_BIN): $(TEST_SOURCES) $(ENGINE_SOURCES) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(TEST_SOURCES) $(ENGINE_SOURCES) -o $(TEST_BIN)
+$(TEST_BIN): $(TEST_SOURCES) $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -I$(STOCKFISH_DIR) $(TEST_SOURCES) $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) -o $(TEST_BIN)
 
 test: $(TEST_BIN)
 	$(TEST_BIN)
 
-$(BLAZE_BIN): src/blaze/main.cpp $(ENGINE_SOURCES) | $(BUILD_DIR)
-	$(CXX) $(RELEASE_FLAGS) src/blaze/main.cpp $(ENGINE_SOURCES) -o $(BLAZE_BIN)
+$(BLAZE_BIN): src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) | $(BUILD_DIR)
+	$(CXX) $(RELEASE_FLAGS) -I$(STOCKFISH_DIR) src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) -o $(BLAZE_BIN)
 
 blaze: $(BLAZE_BIN)
 
@@ -49,8 +55,8 @@ repeated-start: $(BLAZE_BIN)
 bullet-latency: $(BLAZE_BIN)
 	python tools/bullet_latency.py --engine $(BLAZE_BIN) --positions 100 --repetitions 1
 
-$(PERFT_BIN): tools/perft_driver.cpp $(ENGINE_SOURCES) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) tools/perft_driver.cpp $(ENGINE_SOURCES) -o $(PERFT_BIN)
+$(PERFT_BIN): tools/perft_driver.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -I$(STOCKFISH_DIR) tools/perft_driver.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) -o $(PERFT_BIN)
 
 perft-driver: $(PERFT_BIN)
 

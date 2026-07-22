@@ -271,14 +271,7 @@ bool UciSession::start_search(std::string_view arguments) {
     const Position root = position_;
     if (use_nnue_ && !network_evaluator_) {
         std::string error;
-        const auto network = NetworkLoader::load(eval_file_, error);
-        if (!network) {
-            pondering_ = false;
-            write_line("info string critical NNUE unavailable: " + error);
-            write_line("bestmove 0000");
-            return false;
-        }
-        network_evaluator_ = NetworkEvaluator::create(*network, error);
+        network_evaluator_ = NetworkEvaluator::create(eval_file_, error);
         if (!network_evaluator_) {
             pondering_ = false;
             write_line("info string critical NNUE unavailable: " + error);
