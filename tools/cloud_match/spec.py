@@ -124,8 +124,8 @@ class CloudMatchSpec:
             raise ValueError("baseline_commit must be a 40-char Git SHA-1")
         if not isinstance(self.games, int) or self.games <= 0 or self.games % 2:
             raise ValueError("games must be a positive even number")
-        if not isinstance(self.shards, int) or not 1 <= self.shards <= 20:
-            raise ValueError("shards must be between 1 and 20")
+        if not isinstance(self.shards, int) or not 1 <= self.shards <= 40:
+            raise ValueError("shards must be between 1 and 40")
         if (self.games // 2) % self.shards:
             raise ValueError("game pairs must divide evenly across shards")
         if not isinstance(self.concurrency, int) or not 1 <= self.concurrency <= 2:
