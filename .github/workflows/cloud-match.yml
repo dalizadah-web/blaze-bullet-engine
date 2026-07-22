@@ -126,11 +126,13 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.candidate_commit }}
           path: candidate-src
+          submodules: recursive
       - name: Checkout baseline
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare.outputs.baseline_commit }}
           path: baseline-src
+          submodules: recursive
       - uses: actions/download-artifact@v4
         with:
           name: match-spec-${{ needs.prepare.outputs.experiment_id }}
@@ -155,6 +157,11 @@ jobs:
           mv squashfs-root bundle/cutechess-root
           cp farm-src/tools/cloud_match/cutechess-appimage-wrapper.sh bundle/cutechess-cli
           chmod +x bundle/cutechess-cli
+      - name: Fetch Stockfish source
+        shell: bash
+        run: |
+          mkdir -p vendor
+          git clone --depth 1 https://github.com/official-stockfish/Stockfish.git vendor/Stockfish-master
       - name: Build candidate and baseline
         shell: bash
         run: |
