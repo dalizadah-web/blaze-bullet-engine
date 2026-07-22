@@ -58,6 +58,11 @@ on:
         required: true
         default: 5
         type: number
+      stockfish_elo:
+        description: Use Stockfish as baseline with this UCI_Elo rating
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -90,6 +95,11 @@ jobs:
         id: spec
         shell: bash
         run: |
+          STOCKFISH_ELO=${{ inputs.stockfish_elo }}
+          BASELINE_INITSTR_FLAG=""
+          if [ -n "$STOCKFISH_ELO" ]; then
+            BASELINE_INITSTR_FLAG="--baseline-initstr UCI_Elo=$STOCKFISH_ELO"
+          fi
           python -m tools.cloud_match.prepare \
             --base config/cloud/default-match.json \
             --output prepared/spec.json \
@@ -105,6 +115,7 @@ jobs:
             --repo-root . \
             --elo0 '${{ inputs.elo0 }}' \
             --elo1 '${{ inputs.elo1 }}' \
+            $BASELINE_INITSTR_FLAG \
             --github-output "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
@@ -159,13 +170,27 @@ jobs:
           chmod +x bundle/cutechess-cli
       - name: Build candidate and baseline
         shell: bash
+        env:
+          STOCKFISH_ELO: ${{ inputs.stockfish_elo }}
         run: |
-          mkdir -p candidate-src/build/blaze baseline-src/build/blaze bundle
+          mkdir -p candidate-src/build/blaze bundle
           make -C candidate-src -f Makefile.blaze blaze -j2
-          make -C baseline-src -f Makefile.blaze blaze -j2 \
-            RELEASE_FLAGS='-std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Isrc'
           cp candidate-src/build/blaze/blaze.exe bundle/candidate
-          cp baseline-src/build/blaze/blaze.exe bundle/baseline
+          chmod +x bundle/candidate
+          if [ -n "$STOCKFISH_ELO" ]; then
+            curl --fail --location --retry 3 \
+              -o stockfish.tar \
+              'https://github.com/official-stockfish/Stockfish/releases/download/sf_18/stockfish-ubuntu-x86-64-avx2.tar'
+            tar -xf stockfish.tar
+            stockfish_bin="$(find . -type f -name stockfish | head -1)"
+            cp "$stockfish_bin" bundle/baseline
+            chmod +x bundle/baseline
+          else
+            mkdir -p baseline-src/build/blaze
+            make -C baseline-src -f Makefile.blaze blaze -j2 \
+              RELEASE_FLAGS='-std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Isrc'
+            cp baseline-src/build/blaze/blaze.exe bundle/baseline
+          fi
           cp prepared/spec.json bundle/spec.json
           python - <<'PY'
           import json
