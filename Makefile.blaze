@@ -9,7 +9,7 @@ TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp) \
 	$(wildcard tests/eval/*.cpp) $(wildcard tests/search/*.cpp) $(wildcard tests/uci/*.cpp)
 ENGINE_SOURCES := $(wildcard src/blaze/core/*.cpp) $(wildcard src/blaze/eval/*.cpp) \
 	$(wildcard src/blaze/search/*.cpp) $(wildcard src/blaze/uci/*.cpp)
-STOCKFISH_DIR := ../../vendor/Stockfish-master/src
+STOCKFISH_DIR := vendor/Stockfish-master/src
 STOCKFISH_SOURCES := $(STOCKFISH_DIR)/bitboard.cpp $(STOCKFISH_DIR)/movegen.cpp \
 	$(STOCKFISH_DIR)/position.cpp $(STOCKFISH_DIR)/misc.cpp \
 	$(STOCKFISH_DIR)/nnue/network.cpp $(STOCKFISH_DIR)/nnue/nnue_accumulator.cpp \
