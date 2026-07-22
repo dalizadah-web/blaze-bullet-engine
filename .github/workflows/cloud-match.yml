@@ -29,9 +29,9 @@ on:
         default: 10
         type: number
       shards:
-        description: Parallel runners (1-20)
+        description: Parallel runners (1-40)
         required: true
-        default: 20
+        default: 40
         type: number
       time_control:
         description: CuteChess base+increment in seconds
@@ -226,7 +226,7 @@ jobs:
     needs: [prepare, build]
     strategy:
       fail-fast: false
-      max-parallel: 20
+      max-parallel: 40
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     runs-on: ubuntu-24.04
     steps:
