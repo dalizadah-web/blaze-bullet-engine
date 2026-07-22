@@ -160,8 +160,8 @@ jobs:
       - name: Fetch Stockfish source
         shell: bash
         run: |
-          mkdir -p vendor
-          git clone --depth 1 https://github.com/official-stockfish/Stockfish.git vendor/Stockfish-master
+          mkdir -p ../vendor
+          git clone --depth 1 https://github.com/official-stockfish/Stockfish.git ../vendor/Stockfish-master
       - name: Build candidate and baseline
         shell: bash
         run: |
