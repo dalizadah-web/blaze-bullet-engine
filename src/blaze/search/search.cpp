@@ -921,6 +921,47 @@ int Searcher::quiescence(
     }
 
     const bool checked = in_check(position);
+
+    // Clamp alpha/beta to mate-distance bounds (same as main search).
+    // This ensures TT mate scores from different plies are compared safely.
+    alpha = std::max(alpha, -search_mate_score + ply);
+    beta = std::min(beta, search_mate_score - ply - 1);
+    if (alpha >= beta) {
+        return alpha;
+    }
+
+    // Transposition-table probe
+    Move tt_move;
+    int static_eval = tt_no_static_evaluation;
+    if (!checked) {
+        const auto tt_hit = table_.probe(position.key(), ply, position.rule50());
+        if (tt_hit) {
+            tt_move = tt_hit->move;
+            static_eval = tt_hit->static_evaluation;
+            if (static_eval != tt_no_static_evaluation) {
+                context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_eval;
+            }
+            const bool rule50_safe = tt_hit->rule50 == std::min(position.rule50(), 100);
+            if (rule50_safe && tt_hit->depth >= 0) {
+                if (tt_hit->bound == Bound::Exact) {
+                    return tt_hit->score;
+                }
+                if (tt_hit->bound == Bound::Lower && tt_hit->score >= beta) {
+                    return tt_hit->score;
+                }
+                if (tt_hit->bound == Bound::Upper && tt_hit->score <= alpha) {
+                    return tt_hit->score;
+                }
+            }
+        }
+    } else {
+        // In check: probe TT for the TT move only (no cutoffs, no static eval)
+        const auto tt_hit = table_.probe(position.key(), ply, position.rule50());
+        if (tt_hit) {
+            tt_move = tt_hit->move;
+        }
+    }
+
     MoveList legal_moves;
     generate_pseudo_legal(
         position,
@@ -939,20 +980,50 @@ int Searcher::quiescence(
             ? 0
             : -search_mate_score + ply;
     }
-    int stand_pat = -infinity;
+
+    const int original_alpha = alpha;
+    int best_score = -infinity;
+    Move best_move;
+
+    // Stand-pat evaluation (use TT static_eval if available)
     if (!checked) {
-        stand_pat = evaluate_position(position);
+        int stand_pat;
+        if (static_eval != tt_no_static_evaluation) {
+            stand_pat = static_eval;
+        } else {
+            stand_pat = evaluate_position(position);
+            static_eval = stand_pat;
+        }
         if (stand_pat >= beta) {
+            table_.store(position.key(), Move{}, stand_pat, 0, Bound::Lower, ply,
+                         position.rule50(), static_eval, false);
             return stand_pat;
         }
         alpha = std::max(alpha, stand_pat);
+        best_score = stand_pat;
     }
 
-    // Sort captures by MVV-LVA for quiescence search (fixed-capacity buffer)
+    // Build tactical move buffer (fixed capacity), with TT move first
     std::array<std::pair<int, Move>, MoveList::capacity> q_buffer;
     int q_count = 0;
+
+    bool tt_used = false;
+    if (tt_move.is_valid()) {
+        StateInfo tt_state;
+        if (position.make_move(tt_move, tt_state)) {
+            if (king_is_safe_after_move(position, opposite(position.side_to_move()))) {
+                position.unmake_move(tt_move, tt_state);
+                tt_used = true;
+                q_buffer[static_cast<std::size_t>(q_count++)] = {2'000'000, tt_move};
+            } else {
+                position.unmake_move(tt_move, tt_state);
+            }
+        }
+    }
+
     for (std::size_t i = 0; i < legal_moves.size(); ++i) {
         const Move m = legal_moves[i];
+        if (tt_used && m == tt_move) continue;
         if (!checked && !m.has_flag(MoveFlag::Capture) &&
             !m.has_flag(MoveFlag::EnPassant) && !m.has_flag(MoveFlag::Promotion)) {
             continue;
@@ -972,6 +1043,7 @@ int Searcher::quiescence(
     }
     std::sort(q_buffer.begin(), q_buffer.begin() + q_count,
         [](const auto& a, const auto& b) { return a.first > b.first; });
+
     int legal_count = 0;
     for (int i = 0; i < q_count; ++i) {
         const Move move = q_buffer[static_cast<std::size_t>(i)].second;
@@ -993,18 +1065,39 @@ int Searcher::quiescence(
         if (context.stopped) {
             return 0;
         }
+        if (score > best_score) {
+            best_score = score;
+            best_move = move;
+        }
         if (score > alpha) {
             alpha = score;
             pv.prepend(move, child_pv);
             if (alpha >= beta) {
-                break;
+                // Tactical beta cutoff — store as lower bound
+                table_.store(position.key(), best_move, best_score, 0, Bound::Lower, ply,
+                             position.rule50(), static_eval, false);
+                return best_score;
             }
         }
     }
+
     if (checked && legal_count == 0) {
         return -search_mate_score + ply;
     }
-    return alpha;
+
+    // Store qsearch result in TT
+    if (legal_count > 0 || !checked) {
+        Bound bound = Bound::Exact;
+        if (best_score <= original_alpha) {
+            bound = Bound::Upper;
+        } else if (best_score >= beta) {
+            bound = Bound::Lower;
+        }
+        table_.store(position.key(), best_move, best_score, 0, bound, ply,
+                     position.rule50(), static_eval, false);
+    }
+
+    return best_score;
 }
 
 bool Searcher::should_stop(Context& context) const {
