@@ -49,6 +49,9 @@ struct SearchResult {
     std::uint64_t null_move_searches = 0;
     std::uint64_t null_move_pv_searches = 0;
     std::uint64_t null_move_verifications = 0;
+    std::uint64_t rfp_attempts = 0;
+    std::uint64_t rfp_cutoffs = 0;
+    std::array<std::uint64_t, 7> rfp_by_depth{};
 #endif
     std::vector<Move> pv;
     bool stopped = false;
@@ -101,6 +104,10 @@ private:
         std::vector<Move> root_moves;
         std::array<SearchStackEntry, 132> stack{};
         MovePicker::Stats picker_stats;
+        // Reverse futility pruning counters
+        std::uint64_t rfp_attempts = 0;
+        std::uint64_t rfp_cutoffs = 0;
+        std::array<std::uint64_t, 7> rfp_by_depth{};
     };
 
     TranspositionTable& table_;

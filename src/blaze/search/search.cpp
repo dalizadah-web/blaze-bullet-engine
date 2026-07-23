@@ -516,6 +516,9 @@ SearchResult Searcher::search_window(
     result.null_move_searches = context.null_move_searches;
     result.null_move_pv_searches = context.null_move_pv_searches;
     result.null_move_verifications = context.null_move_verifications;
+    result.rfp_attempts = context.rfp_attempts;
+    result.rfp_cutoffs = context.rfp_cutoffs;
+    result.rfp_by_depth = context.rfp_by_depth;
 #endif
     result.stopped = context.stopped;
     result.picker_stats = context.picker_stats;
@@ -612,6 +615,16 @@ int Searcher::negamax(
             static_eval = evaluate_position(position);
         }
         context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_eval;
+        if (depth >= 2 && depth <= 6 && !checked &&
+            beta < search_mate_threshold) {
+            const int rfp_margin = 100 * depth;
+            ++context.rfp_attempts;
+            ++context.rfp_by_depth[static_cast<std::size_t>(depth)];
+            if (static_eval - rfp_margin >= beta) {
+                ++context.rfp_cutoffs;
+                return static_eval;
+            }
+        }
         const bool null_enabled =
 #ifndef NDEBUG
             context.limits.enable_null_move;
