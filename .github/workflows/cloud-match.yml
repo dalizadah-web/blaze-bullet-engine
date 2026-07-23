@@ -11,7 +11,7 @@ on:
       baseline_ref:
         description: Baseline branch, tag, or commit
         required: true
-        default: a2d25cade5e722da2e1a70f84a0270a08ad9956d
+        default: 05398d62357202d8539244f4735e44e758ef8b05
         type: string
       games:
         description: Total games (exactly 2 * suite positions * repeats)
