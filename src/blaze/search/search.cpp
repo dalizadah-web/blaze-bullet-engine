@@ -809,6 +809,17 @@ int Searcher::negamax(
                     ++reduction;
                 }
                 if (depth >= 8 && move_count >= 12) ++reduction;
+                const int history_score = history_[color_index]
+                    [static_cast<std::size_t>(square_index(move.from()))]
+                    [static_cast<std::size_t>(square_index(move.to()))];
+                if (history_score < 20000) {
+                    ++reduction;
+                    ++context.lmr_increases;
+                } else if (history_score > 60000 && reduction > 1) {
+                    --reduction;
+                    ++context.lmr_decreases;
+                }
+                ++context.lmr_adjustments;
             }
             score = -negamax<NodeType::NonPV>(
                 position,

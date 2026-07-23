@@ -101,6 +101,10 @@ private:
         std::vector<Move> root_moves;
         std::array<SearchStackEntry, 132> stack{};
         MovePicker::Stats picker_stats;
+        // Dynamic LMR counters
+        std::uint64_t lmr_adjustments = 0;
+        std::uint64_t lmr_increases = 0;
+        std::uint64_t lmr_decreases = 0;
     };
 
     TranspositionTable& table_;
