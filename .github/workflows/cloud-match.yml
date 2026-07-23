@@ -255,9 +255,10 @@ jobs:
               -o "bundle/$file" \
               "https://tests.stockfishchess.org/api/nn/$file"
             got="$(sha256sum "bundle/$file" | awk '{print $1}')"
-            expected_prefix="${file%.nnue}"
-            if [[ "$got" != "$expected_prefix"* ]]; then
-              echo "ERROR: $file SHA-256 $got does not start with $expected_prefix" >&2
+          expected_prefix="${file%.nnue}"
+          expected_prefix="${expected_prefix#nn-}"
+          if [[ "$got" != "$expected_prefix"* ]]; then
+            echo "ERROR: $file SHA-256 $got does not start with $expected_prefix" >&2
               exit 1
             fi
             echo "$got  bundle/$file" >> bundle/nnue-sha256.txt
@@ -282,7 +283,7 @@ jobs:
           echo "All NNUE preflight checks passed"
           tar -czf frozen-match.tar.gz -C bundle .
       - name: Verify frozen artifact hashes
-        run: sha256sum bundle/candidate bundle/baseline bundle/cutechess-cli bundle/nn-c288c895ea92.nnue bundle/nn-04cf2b4ed1da.nnue frozen-match.tar.gz
+        run: sha256sum bundle/candidate bundle/baseline bundle/cutechess-cli bundle/*.nnue bundle/nnue-sha256.txt frozen-match.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: frozen-match-${{ needs.prepare.outputs.experiment_id }}
