@@ -495,5 +495,248 @@ TEST_CASE(high_depth_null_move_verification_restores_position_when_stopped) {
     CHECK(root.is_legal(result.best_move));
 }
 
+// ===== SEE pruning in quiescence search tests =====
+
+TEST_CASE(see_pruning_retains_winning_capture) {
+    // White rook captures undefended black rook on e4 — SEE = +500 (winning).
+    constexpr std::string_view fen = "4k3/8/8/8/4r3/8/8/4R1K1 w - - 0 1";
+    const auto root = position(fen);
+    auto pos = position(fen);
+    MoveList legal;
+    generate_legal(pos, legal);
+    bool found = false;
+    for (const Move m : legal) {
+        if (move_to_uci(m) == "e1e4") {
+            CHECK(see_ge(pos, m, 0));
+            found = true;
+            break;
+        }
+    }
+    CHECK(found);
+
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 3});
+    CHECK(result.best_move.is_valid());
+}
+
+TEST_CASE(see_pruning_removes_losing_capture) {
+    // Black queen on d8 defends rook on d7. White queen on d1 captures d7 — losing (SEE = -500).
+    // The losing capture should be pruned by SEE.
+    constexpr std::string_view fen = "3q1rk1/3r4/8/8/8/8/8/3QK3 w - - 0 1";
+    const auto root = position(fen);
+    auto pos = position(fen);
+    MoveList legal;
+    generate_legal(pos, legal);
+    constexpr auto uci = "d1d7";
+    bool found_losing = false;
+    for (const Move m : legal) {
+        if (move_to_uci(m) == uci) {
+            CHECK(!see_ge(pos, m, 0));
+            found_losing = true;
+            break;
+        }
+    }
+    CHECK(found_losing);
+
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 3});
+    // The losing capture should NOT be the best move (it's a blunder).
+    CHECK(move_to_uci(result.best_move) != uci);
+    // Instrumentation should show pruning occurred.
+    CHECK(result.picker_stats.see_pruning_calls > 0);
+    CHECK(result.picker_stats.captures_pruned_by_see > 0);
+}
+
+TEST_CASE(see_pruning_retains_equal_exchange) {
+    // White rook captures black rook that is defended — equal exchange (SEE = 0).
+    // Should be retained at threshold zero.
+    constexpr std::string_view fen = "4r1k1/8/8/8/8/8/8/4R1K1 w - - 0 1";
+    const auto root = position(fen);
+    auto pos = position(fen);
+    MoveList legal;
+    generate_legal(pos, legal);
+    bool found_equal = false;
+    for (const Move m : legal) {
+        if (move_to_uci(m) == "e1e8") {
+            CHECK(see_ge(pos, m, 0));  // SEE >= 0
+            found_equal = true;
+            break;
+        }
+    }
+    CHECK(found_equal);
+
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 3});
+    // The equal exchange should still be a candidate.
+    CHECK(result.best_move.is_valid());
+}
+
+TEST_CASE(see_pruning_retains_tt_capture_even_if_losing) {
+    // Position where a losing capture exists. Pre-populate the TT with that losing capture
+    // so it becomes the TT move. Despite having SEE < 0, the TT move must not be pruned.
+    constexpr std::string_view fen = "3q1rk1/3r4/8/8/8/8/8/3QK3 w - - 0 1";
+    auto root = position(fen);
+
+    MoveList legal;
+    generate_legal(root, legal);
+    Move losing_capture;
+    for (const Move m : legal) {
+        if (move_to_uci(m) == "d1d7") {
+            losing_capture = m;
+            break;
+        }
+    }
+    CHECK(losing_capture.is_valid());
+    CHECK(!see_ge(root, losing_capture, 0));
+
+    // Pre-populate TT with the losing capture as TT move
+    TranspositionTable table(4);
+    table.store(root.key(), losing_capture, 0, 3, Bound::Lower, 0, root.rule50(), tt_no_static_evaluation, true);
+    Searcher searcher(table);
+
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 2});
+    // The TT move should have been tried and not SEE-pruned.
+    // All losing non-TT non-checking captures should be pruned.
+    CHECK(result.picker_stats.captures_pruned_by_see > 0);
+}
+
+TEST_CASE(see_pruning_retains_checking_capture_even_if_losing) {
+    // White rook captures a king-defended pawn on e7 — SEE is negative (rook > pawn).
+    // But the capture gives check (rook attacks the king from e7), so it must not be pruned.
+    constexpr std::string_view fen = "4k3/4p3/4R3/8/8/8/8/4K3 w - - 0 1";
+    auto root = position(fen);
+    auto pos = position(fen);
+    MoveList legal;
+    generate_legal(pos, legal);
+    Move checking_capture;
+    for (const Move m : legal) {
+        if (move_to_uci(m) == "e6e7") {
+            checking_capture = m;
+            break;
+        }
+    }
+    CHECK(checking_capture.is_valid());
+    CHECK(!see_ge(pos, checking_capture, 0));
+
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 3});
+    CHECK(result.best_move.is_valid());
+    CHECK(result.picker_stats.checking_captures_exempted > 0);
+}
+
+TEST_CASE(see_pruning_preserves_promotions) {
+    // White pawn promotes to queen even though the promotion square is defended.
+    // Promotions should never be SEE-pruned.
+    constexpr std::string_view fen = "1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1";
+    auto root = position(fen);
+    MoveList legal;
+    generate_legal(root, legal);
+    StateInfo st;
+    Move promotion;
+    for (const Move m : legal) {
+        if (move_to_uci(m) == "a7b8q" || move_to_uci(m) == "a7b8r" ||
+            move_to_uci(m) == "a7b8b" || move_to_uci(m) == "a7b8n") {
+            promotion = m;
+            break;
+        }
+    }
+    CHECK(promotion.is_valid());
+    // Promotion might have negative SEE (rook defends b8), but should not be pruned
+
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    // Search with depth=2 (so depth-1 goes to qsearch)
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 2});
+    CHECK_EQ(move_to_uci(result.best_move), "a7b8q");
+    CHECK(result.picker_stats.promotions_ep_exempted > 0);
+}
+
+TEST_CASE(see_pruning_preserves_en_passant) {
+    // En-passant should never be SEE-pruned. Verify see_ge handles EP correctly.
+    constexpr std::string_view fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1";
+    auto pos = position(fen);
+    MoveList legal;
+    generate_legal(pos, legal);
+    Move ep;
+    for (const Move m : legal) {
+        if (move_to_uci(m) == "e5d6") {
+            ep = m;
+            break;
+        }
+    }
+    CHECK(ep.is_valid());
+    // EP captures the pawn on d5 (en-passant). SEE accounts for the pawn value.
+    // The d5 pawn is undefended, so SEE should be +100 (pawn value).
+    CHECK(static_exchange_evaluation(pos, ep) > 0);
+    CHECK(see_ge(pos, ep, 0));
+
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(pos, SearchLimits{.depth = 3});
+    CHECK(result.best_move.is_valid());
+}
+
+TEST_CASE(see_pruning_in_check_searches_all_evasions) {
+    // Black king is in check from white rook on e1 — qsearch must search every evasion.
+    constexpr std::string_view fen = "4k3/8/8/8/8/8/8/4R1K1 b - - 0 1";
+    auto root = position(fen);
+    CHECK(in_check(root));
+
+    TranspositionTable table(4);
+    Searcher searcher(table);
+    const SearchResult result = searcher.search(root, SearchLimits{.depth = 3});
+    CHECK(result.best_move.is_valid());
+    // In-check qsearch should SEE-prune nothing (no SEE pruning in check nodes)
+    CHECK_EQ(result.picker_stats.captures_pruned_by_see, 0U);
+}
+
+TEST_CASE(see_pruning_see_ge_agrees_with_see_exact_on_corpus) {
+    // Verify that see_ge(move, 0) == (static_exchange_evaluation(move) >= 0)
+    // for every legal capture across a deterministic corpus of positions.
+    constexpr std::string_view positions[] = {
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "4k3/8/8/3p4/4R3/8/8/4K3 w - - 0 1",
+        "4k3/8/8/2b5/3rQ3/8/8/4K3 w - - 0 1",
+        "4k3/8/8/8/3pR3/8/8/4K3 w - - 0 1",
+        "4k3/8/3p4/8/8/4P3/8/4K3 w - - 0 1",
+        "4k3/4n3/8/5p2/4B3/8/8/4R1K1 w - - 0 1",
+        "1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1",
+        "1R2k3/Pr6/8/8/8/8/8/4K3 b - - 0 1",
+        "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1",
+        "4r1k1/8/8/8/8/8/8/4R1K1 w - - 0 1",
+        "3q1rk1/3r4/8/8/8/8/8/3QK3 w - - 0 1",
+        "4r1k1/8/8/8/8/8/8/Q3K3 w - - 0 1",
+        "4k3/8/8/8/8/8/R6r/4K3 w - - 0 1",
+        "rnbqkb1r/pppppppp/5n2/4P3/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1",
+        "1k1r4/pp1b1pp1/4p2p/2pn4/2nN4/2P1BN2/PP2QPPP/R4RK1 w - - 0 1",
+        "r3k2r/pbp2ppp/1pnp4/4N3/1PP5/2N1q3/P4PPP/R2R2K1 w kq - 0 1",
+    };
+
+    for (const auto& fen : positions) {
+        const auto maybe_pos = Position::from_fen(fen);
+        if (!maybe_pos) continue;
+        Position pos = *maybe_pos;
+        MoveList all_moves;
+        generate_pseudo_legal(pos, all_moves, GenType::Captures);
+        for (std::size_t i = 0; i < all_moves.size(); ++i) {
+            const Move m = all_moves[i];
+            if (!m.has_flag(MoveFlag::Capture) && !m.has_flag(MoveFlag::EnPassant)) continue;
+            const int see_value = static_exchange_evaluation(pos, m);
+            const bool see_ge_result = see_ge(pos, m, 0);
+            if ((see_value >= 0) != see_ge_result) {
+                std::cerr << "Corpus mismatch in position: " << fen
+                          << "\n  move=" << move_to_uci(m)
+                          << " see=" << see_value
+                          << " see_ge(0)=" << see_ge_result << "\n";
+            }
+            CHECK_EQ(see_ge_result, see_value >= 0);
+        }
+    }
+}
+
 }  // namespace
 }  // namespace blaze

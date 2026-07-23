@@ -38,6 +38,14 @@ public:
         std::array<std::uint64_t, 5> stage_counts{};
         // Per-stage cutoff counts
         std::array<std::uint64_t, 5> stage_cutoffs{};
+        // Qsearch SEE-pruning instrumentation
+        std::uint64_t qnodes = 0;
+        std::uint64_t tactical_moves_generated = 0;
+        std::uint64_t see_pruning_calls = 0;
+        std::uint64_t captures_pruned_by_see = 0;
+        std::uint64_t checking_captures_exempted = 0;
+        std::uint64_t promotions_ep_exempted = 0;
+        std::uint64_t qnodes_with_see_pruning = 0;
 
         void accumulate(const Stats& other) {
             first_move_cutoffs += other.first_move_cutoffs;
@@ -51,6 +59,13 @@ public:
                 stage_counts[i] += other.stage_counts[i];
                 stage_cutoffs[i] += other.stage_cutoffs[i];
             }
+            qnodes += other.qnodes;
+            tactical_moves_generated += other.tactical_moves_generated;
+            see_pruning_calls += other.see_pruning_calls;
+            captures_pruned_by_see += other.captures_pruned_by_see;
+            checking_captures_exempted += other.checking_captures_exempted;
+            promotions_ep_exempted += other.promotions_ep_exempted;
+            qnodes_with_see_pruning += other.qnodes_with_see_pruning;
         }
     };
 

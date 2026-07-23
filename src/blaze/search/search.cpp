@@ -911,6 +911,7 @@ int Searcher::quiescence(
     if (!consume_node(context)) {
         return 0;
     }
+    ++context.picker_stats.qnodes;
 
 #ifndef NDEBUG
     if (ply >= context.limits.maximum_ply) {
@@ -1021,6 +1022,7 @@ int Searcher::quiescence(
         }
     }
 
+    bool pruned_this_node = false;
     for (std::size_t i = 0; i < legal_moves.size(); ++i) {
         const Move m = legal_moves[i];
         if (tt_used && m == tt_move) continue;
@@ -1028,6 +1030,31 @@ int Searcher::quiescence(
             !m.has_flag(MoveFlag::EnPassant) && !m.has_flag(MoveFlag::Promotion)) {
             continue;
         }
+
+        // SEE pruning: only in non-check nodes, for ordinary captures only.
+        // Never prune the TT move, promotions, en-passant, or checking captures.
+        if (!checked && m.has_flag(MoveFlag::Capture) &&
+            !m.has_flag(MoveFlag::Promotion) && !m.has_flag(MoveFlag::EnPassant)) {
+            ++context.picker_stats.see_pruning_calls;
+            if (!see_ge(position, m, 0)) {
+                StateInfo si;
+                bool gives_check = false;
+                if (position.make_move(m, si)) {
+                    gives_check = in_check(position);
+                    position.unmake_move(m, si);
+                }
+                if (!gives_check) {
+                    ++context.picker_stats.captures_pruned_by_see;
+                    pruned_this_node = true;
+                    continue;
+                }
+                ++context.picker_stats.checking_captures_exempted;
+            }
+        } else if (!checked &&
+                   (m.has_flag(MoveFlag::Promotion) || m.has_flag(MoveFlag::EnPassant))) {
+            ++context.picker_stats.promotions_ep_exempted;
+        }
+
         int score = 0;
         if (m.has_flag(MoveFlag::Capture) || m.has_flag(MoveFlag::EnPassant)) {
             const Piece victim = m.has_flag(MoveFlag::EnPassant)
@@ -1041,6 +1068,11 @@ int Searcher::quiescence(
         }
         q_buffer[static_cast<std::size_t>(q_count++)] = {score, m};
     }
+
+    if (pruned_this_node) {
+        ++context.picker_stats.qnodes_with_see_pruning;
+    }
+    context.picker_stats.tactical_moves_generated += q_count;
     std::sort(q_buffer.begin(), q_buffer.begin() + q_count,
         [](const auto& a, const auto& b) { return a.first > b.first; });
 
