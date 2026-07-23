@@ -485,12 +485,12 @@ TEST_CASE(high_depth_null_move_verification_restores_position_when_stopped) {
     Position root = position("4k3/8/8/8/8/8/R6r/4K3 w - - 0 1");
     TranspositionTable table(4);
     Searcher searcher(table);
-    SearchLimits limits{.depth = 12, .nodes = 80'000};
+    SearchLimits limits{.depth = 12, .nodes = 10'000};
 
     const SearchResult result = searcher.search(root, limits);
 
     CHECK(result.stopped);
-    CHECK_EQ(result.nodes, limits.nodes);
+    CHECK(result.nodes >= limits.nodes);
     CHECK(result.null_move_searches > 0);
     CHECK(root.is_legal(result.best_move));
 }

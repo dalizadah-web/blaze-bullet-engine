@@ -769,6 +769,27 @@ int Searcher::negamax(
             continue;
         }
         ++legal_count;
+        if constexpr (node_type == NodeType::NonPV) {
+            if (depth <= 3 && !checked && beta < search_mate_threshold &&
+                beta > -search_mate_threshold) {
+                const bool quiet = !move.has_flag(MoveFlag::Capture) &&
+                    !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
+                if (quiet) {
+                    ++context.lmp_eligible;
+                    ++context.lmp_by_depth[static_cast<std::size_t>(depth)];
+                    if (move_count > 3 + depth * depth &&
+                        move != tt_move &&
+                        move != context.stack[static_cast<std::size_t>(ply)].killers[0] &&
+                        move != context.stack[static_cast<std::size_t>(ply)].killers[1] &&
+                        move != counter_move &&
+                        !in_check(position)) {
+                        position.unmake_move(move, state);
+                        ++context.lmp_pruned;
+                        continue;
+                    }
+                }
+            }
+        }
         context.keys.push_back(position.key());
         table_.prefetch(position.key());
         PvLine child_pv;

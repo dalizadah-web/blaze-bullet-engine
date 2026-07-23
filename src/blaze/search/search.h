@@ -101,6 +101,10 @@ private:
         std::vector<Move> root_moves;
         std::array<SearchStackEntry, 132> stack{};
         MovePicker::Stats picker_stats;
+        // Late move pruning counters
+        std::uint64_t lmp_eligible = 0;
+        std::uint64_t lmp_pruned = 0;
+        std::array<std::uint64_t, 4> lmp_by_depth{};
     };
 
     TranspositionTable& table_;
