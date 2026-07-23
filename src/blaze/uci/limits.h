@@ -16,6 +16,10 @@ namespace blaze {
 struct GoParameters {
     std::chrono::milliseconds white_time{0};
     std::chrono::milliseconds black_time{0};
+    bool white_time_supplied = false;
+    bool black_time_supplied = false;
+    bool white_time_expired = false;
+    bool black_time_expired = false;
     std::chrono::milliseconds white_increment{0};
     std::chrono::milliseconds black_increment{0};
     std::chrono::milliseconds move_time{0};

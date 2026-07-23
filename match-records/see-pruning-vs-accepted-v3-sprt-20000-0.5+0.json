@@ -1,0 +1,107 @@
+﻿{
+  "abnormal_games": [],
+  "artifacts": {
+    "baseline_commit": "839f9f0dd442b3a3f89ce2c87fc815ae1d6d4fc2",
+    "baseline_sha256": "da369dbc8d278abc0a4ebbacf363a208d276d4a7965e0024caa3fc471c161abb",
+    "candidate_commit": "5245d6e6ce04a61df3ddc7e88e18d0bb5e933fb1",
+    "candidate_sha256": "12582a59dea879e1b01c085fcfea30e580a2a7759ee783384463e2aa8228f46a",
+    "openings_sha256": "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc",
+    "runner_sha256": "e177d85cb44598d1798a4bf6f307dba8d0a09e767744bf74a050ff3490a7d2d6"
+  },
+  "clean_games": 20000,
+  "clean_pairs": 10000,
+  "clean_wdl": {
+    "draws": 5184,
+    "losses": 6838,
+    "wins": 7978
+  },
+  "completed_games": 20000,
+  "counts": {
+    "draws2": 3646,
+    "losses1_draw1": 1733,
+    "losses2": 1069,
+    "wins1_draw1": 2093,
+    "wins2": 1459
+  },
+  "decision": "accept",
+  "environment": {
+    "platform": "cloud-linux-github-hosted",
+    "shard_environments": [
+      {
+        "machine": "x86_64",
+        "os": "Linux-6.17.0-1020-azure-x86_64-with-glibc2.39",
+        "processor": "x86_64"
+      }
+    ]
+  },
+  "expected_games": 20000,
+  "experiment_id": "ab400892246a26b9361cb158",
+  "lane": "cloud-linux-github-hosted",
+  "llr": 20.67665545086129,
+  "quarantined_games": 0,
+  "quarantined_pairs": 0,
+  "raw_wdl": {
+    "draws": 5184,
+    "losses": 6838,
+    "wins": 7978
+  },
+  "schema_version": 3,
+  "shards": 40,
+  "spec": {
+    "baseline_commit": "839f9f0dd442b3a3f89ce2c87fc815ae1d6d4fc2",
+    "baseline_initstr": "UseNNUE=true\nEvalFile=nn-04cf2b4ed1da.nnue",
+    "baseline_ref": "839f9f0dd442b3a3f89ce2c87fc815ae1d6d4fc2",
+    "baseline_sha256": "da369dbc8d278abc0a4ebbacf363a208d276d4a7965e0024caa3fc471c161abb",
+    "candidate_commit": "5245d6e6ce04a61df3ddc7e88e18d0bb5e933fb1",
+    "candidate_initstr": "UseNNUE=true\nEvalFile=nn-c288c895ea92.nnue",
+    "candidate_ref": "codex/bullet-beast",
+    "candidate_sha256": "12582a59dea879e1b01c085fcfea30e580a2a7759ee783384463e2aa8228f46a",
+    "concurrency": 2,
+    "games": 20000,
+    "hash_mb": 16,
+    "name": "blaze-cloud-nnue-compare",
+    "opening_count": 100,
+    "opening_repeats": 100,
+    "opening_sha256": "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc",
+    "opening_start": 1,
+    "opening_suite_positions": 100,
+    "openings": "testdata/openings/uho-lichess-500-v1.epd",
+    "schema_version": 2,
+    "shards": 40,
+    "sprt": {
+      "alpha": 0.05,
+      "beta": 0.05,
+      "elo0": 0.0,
+      "elo1": 5.0
+    },
+    "threads": 1,
+    "time_control": "0.5+0"
+  },
+  "termination_counts": {
+    "candidate": {
+      "disconnect": 0,
+      "illegal_move": 0,
+      "stall": 0,
+      "time_loss": 0
+    },
+    "clean": {
+      "adjudication": 2,
+      "ordinary": 19998
+    },
+    "infrastructure_unknown": {
+      "contradictory": 0,
+      "malformed": 0,
+      "paired_quarantine": 0,
+      "runner_failure": 0,
+      "unknown": 0,
+      "unterminated": 0
+    },
+    "opponent": {
+      "disconnect": 0,
+      "illegal_move": 0,
+      "stall": 0,
+      "time_loss": 0
+    }
+  }
+}
+

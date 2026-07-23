@@ -63,6 +63,12 @@ MoveBudget BulletTimeManager::allocate(
     // volatile position may use more of the allowance, but never risks the clock.
     result.hard = std::min(
         usable, std::max(scaled(base, 1.65), base + Milliseconds(1)));
+    if (clock.increment > Milliseconds(0) && bankroll <= Milliseconds(3000)) {
+        const Milliseconds growth_cap =
+            scaled(clock.increment, 0.60) + scaled(clock.remaining, 0.08);
+        result.hard = std::min(
+            result.hard, std::max(growth_cap, base + Milliseconds(1)));
+    }
     if (result.hard > Milliseconds(1)) {
         const double complexity = std::clamp(telemetry.complexity, 0.65, 1.45);
         result.target = std::clamp(

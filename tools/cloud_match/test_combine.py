@@ -1,12 +1,33 @@
 import unittest
+from unittest.mock import patch
 
 from tools.cloud_match.combine import combine_lanes
+from tools.experiment.match import validate_evidence_payload
 
 
-def lane(name: str, wins: int, losses: int) -> dict:
+def lane(
+    name: str,
+    wins: int,
+    losses: int,
+    *,
+    quarantined_pairs: int = 0,
+    opening_start: int = 1,
+    suite_positions: int = 2,
+) -> dict:
+    clean_pairs = wins + losses
+    clean_games = clean_pairs * 2
+    quarantined_games = quarantined_pairs * 2
     return {
+        "schema_version": 3,
         "lane": name,
-        "games": (wins + losses) * 2,
+        "expected_games": clean_games + quarantined_games,
+        "completed_games": clean_games + quarantined_games,
+        "clean_games": clean_games,
+        "clean_pairs": clean_pairs,
+        "quarantined_games": quarantined_games,
+        "quarantined_pairs": quarantined_pairs,
+        "raw_wdl": {"wins": wins * 2, "draws": quarantined_pairs, "losses": losses * 2 + quarantined_pairs},
+        "clean_wdl": {"wins": wins * 2, "draws": 0, "losses": losses * 2},
         "counts": {
             "wins2": wins,
             "wins1_draw1": 0,
@@ -14,6 +35,35 @@ def lane(name: str, wins: int, losses: int) -> dict:
             "losses1_draw1": 0,
             "losses2": losses,
         },
+        "termination_counts": {
+            "clean": {"ordinary": clean_games, "adjudication": 0},
+            "candidate": {"time_loss": quarantined_pairs, "illegal_move": 0, "disconnect": 0, "stall": 0},
+            "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+            "infrastructure_unknown": {"unterminated": 0, "malformed": 0, "unknown": 0, "contradictory": 0, "runner_failure": 0, "paired_quarantine": quarantined_pairs},
+        },
+        "abnormal_games": [
+            record
+            for index in range(quarantined_pairs)
+            for record in ({
+                "game_id": f"{name}-p{index:06d}-w",
+                "round": str(clean_games + index + 1),
+                "result": "0-1",
+                "candidate_color": "white",
+                "termination": "time forfeit",
+                "category": "time_loss",
+                "offender": "candidate",
+                "reason": "engine failure",
+            }, {
+                "game_id": f"{name}-p{index:06d}-b",
+                "round": str(clean_games + index + 2),
+                "result": "1/2-1/2",
+                "candidate_color": "black",
+                "termination": "",
+                "category": "paired_quarantine",
+                "offender": "unknown",
+                "reason": "color-paired game was quarantined",
+            })
+        ],
         "configuration": {
             "candidate_ref": "candidate",
             "baseline_ref": "baseline",
@@ -21,19 +71,72 @@ def lane(name: str, wins: int, losses: int) -> dict:
             "threads": 1,
             "hash_mb": 16,
             "opening_sha256": "a" * 64,
+            "opening_start": opening_start,
+            "opening_count": clean_pairs + quarantined_pairs,
+            "opening_suite_positions": suite_positions,
             "sprt": {"elo0": 0.0, "elo1": 5.0, "alpha": 0.05, "beta": 0.05},
         },
         "artifacts": {"candidate_sha256": name * 64},
+        "environment": {"os": name, "machine": "x86_64"},
     }
 
 
 class CombineLanesTests(unittest.TestCase):
     def test_combines_cross_platform_lane_evidence(self) -> None:
-        result = combine_lanes([lane("c", 2, 0), lane("l", 1, 1)])
-        self.assertEqual(result["games"], 8)
+        result = combine_lanes([
+            lane("c", 2, 0, suite_positions=4),
+            lane("l", 1, 1, opening_start=3, suite_positions=4),
+        ])
+        self.assertEqual(result["expected_games"], 8)
         self.assertEqual(result["counts"]["wins2"], 3)
         self.assertEqual(result["counts"]["losses2"], 1)
         self.assertEqual(len(result["lanes"]), 2)
+
+    def test_preserves_quarantined_pairs_and_lane_strata(self) -> None:
+        cloud = lane("c", 1, 0, quarantined_pairs=1, suite_positions=5)
+        local = lane("l", 0, 1, quarantined_pairs=2, opening_start=3, suite_positions=5)
+
+        result = combine_lanes([cloud, local])
+
+        self.assertEqual(result["expected_games"], 10)
+        self.assertEqual(result["clean_pairs"], 2)
+        self.assertEqual(result["quarantined_pairs"], 3)
+        self.assertEqual(result["lanes"][0]["quarantined_pairs"], 1)
+        self.assertEqual(result["lanes"][1]["quarantined_pairs"], 2)
+        self.assertEqual(len(result["lanes"][1]["abnormal_games"]), 4)
+
+    def test_rejects_backward_incompatible_lane_schema(self) -> None:
+        cloud = lane("c", 1, 0)
+        local = lane("l", 1, 0)
+        local["schema_version"] = 2
+
+        with self.assertRaisesRegex(ValueError, "unsupported lane schema"):
+            combine_lanes([cloud, local])
+
+    def test_rejects_forged_lane_wdl_evidence(self) -> None:
+        cloud = lane("c", 1, 0)
+        local = lane("l", 1, 0)
+        local["clean_wdl"] = {"wins": 1, "draws": 1, "losses": 0}
+
+        with self.assertRaisesRegex(ValueError, "clean W/D/L contradicts"):
+            combine_lanes([cloud, local])
+
+        local = lane("l", 1, 0, quarantined_pairs=1)
+        local["raw_wdl"] = {"wins": 2, "draws": 2, "losses": 0}
+        with self.assertRaisesRegex(ValueError, "raw W/D/L does not reconcile"):
+            combine_lanes([cloud, local])
+
+    def test_zero_clean_lanes_never_call_sprt(self) -> None:
+        cloud = lane("c", 0, 0, quarantined_pairs=1)
+        local = lane("l", 0, 0, quarantined_pairs=1, opening_start=2)
+
+        with patch("tools.cloud_match.combine.sprt_llr", side_effect=AssertionError("SPRT called")), patch(
+            "tools.cloud_match.combine.sprt_decision", side_effect=AssertionError("SPRT called")
+        ):
+            result = combine_lanes([cloud, local])
+
+        self.assertEqual(result["decision"], "no_clean_pairs")
+        self.assertEqual(result["llr"], 0.0)
 
     def test_rejects_incompatible_time_controls(self) -> None:
         cloud = lane("c", 1, 0)
@@ -41,6 +144,67 @@ class CombineLanesTests(unittest.TestCase):
         local["configuration"]["time_control"] = "1+0"
         with self.assertRaisesRegex(ValueError, "incompatible lane configuration"):
             combine_lanes([cloud, local])
+
+    def test_rejects_incompatible_sprt_parameters(self) -> None:
+        cloud = lane("c", 1, 0)
+        local = lane("l", 1, 0)
+        local["configuration"]["sprt"] = {"elo0": 0.0, "elo1": 10.0, "alpha": 0.05, "beta": 0.05}
+        with self.assertRaisesRegex(ValueError, "incompatible lane configuration"):
+            combine_lanes([cloud, local])
+
+    def test_rejects_lanes_without_a_frozen_full_suite_hash(self) -> None:
+        local = lane("local", 1, 0, opening_start=1)
+        cloud = lane("cloud", 1, 0, opening_start=2)
+        local["configuration"].pop("opening_sha256")
+        cloud["configuration"].pop("opening_sha256")
+
+        with self.assertRaisesRegex(ValueError, "full-suite opening SHA-256"):
+            combine_lanes([local, cloud])
+
+    def test_accepts_exact_disjoint_coverage_and_preserves_platform_strata(self) -> None:
+        local = lane("local-windows", 1, 0, opening_start=1)
+        cloud = lane("cloud-linux", 1, 0, opening_start=2)
+
+        result = combine_lanes([local, cloud])
+
+        self.assertEqual(result["opening_ranges"], [
+            {"lane": "local-windows", "opening_start": 1, "opening_count": 1},
+            {"lane": "cloud-linux", "opening_start": 2, "opening_count": 1},
+        ])
+        self.assertEqual([item["lane"] for item in result["lanes"]], ["local-windows", "cloud-linux"])
+
+    def test_rejects_overlapping_or_uncovered_opening_ranges(self) -> None:
+        with self.assertRaisesRegex(ValueError, "overlap"):
+            combine_lanes([
+                lane("local", 1, 0, opening_start=1),
+                lane("cloud", 1, 0, opening_start=1),
+            ])
+        with self.assertRaisesRegex(ValueError, "uncovered"):
+            combine_lanes([
+                lane("local", 1, 0, opening_start=1),
+                lane("cloud", 1, 0, opening_start=3),
+            ])
+
+    def test_rejects_an_uncovered_tail_of_the_declared_suite(self) -> None:
+        with self.assertRaisesRegex(ValueError, "uncovered tail"):
+            combine_lanes([
+                lane("local", 1, 0, opening_start=1, suite_positions=3),
+                lane("cloud", 1, 0, opening_start=2, suite_positions=3),
+            ])
+
+    def test_opposed_platform_directions_remain_stratified_without_pooled_claim(self) -> None:
+        local = lane("local-windows", 2, 0, opening_start=1, suite_positions=4)
+        cloud = lane("cloud-linux", 0, 2, opening_start=3, suite_positions=4)
+
+        result = combine_lanes([local, cloud])
+
+        self.assertEqual(result["decision"], "stratified_inconclusive")
+        self.assertIsNone(result["llr"])
+        self.assertFalse(result["platform_gate"]["pooled"])
+        self.assertEqual(result["lanes"][0]["environment"]["os"], "local-windows")
+        self.assertEqual(result["lanes"][1]["environment"]["os"], "cloud-linux")
+        validated = validate_evidence_payload(result, context="stratified hybrid result")
+        self.assertEqual(validated.counts.as_tuple(), (2, 0, 0, 0, 2))
 
 
 if __name__ == "__main__":

@@ -271,14 +271,7 @@ bool UciSession::start_search(std::string_view arguments) {
     const Position root = position_;
     if (use_nnue_ && !network_evaluator_) {
         std::string error;
-        const auto network = NetworkLoader::load(eval_file_, error);
-        if (!network) {
-            pondering_ = false;
-            write_line("info string critical NNUE unavailable: " + error);
-            write_line("bestmove 0000");
-            return false;
-        }
-        network_evaluator_ = NetworkEvaluator::create(*network, error);
+        network_evaluator_ = NetworkEvaluator::create(eval_file_, error);
         if (!network_evaluator_) {
             pondering_ = false;
             write_line("info string critical NNUE unavailable: " + error);
@@ -337,7 +330,10 @@ bool UciSession::start_search(std::string_view arguments) {
         } else {
             info << "cp " << result.score;
         }
-        info << " nodes " << result.nodes << " time " << elapsed.count();
+        info << " nodes " << result.nodes << " nps ";
+        const auto elapsed_ms = std::max<std::int64_t>(elapsed.count(), 1);
+        info << (result.nodes * 1000U) / static_cast<std::uint64_t>(elapsed_ms);
+        info << " hashfull " << table_.hashfull() << " time " << elapsed.count();
         if (!result.pv.empty()) {
             info << " pv";
             for (const Move move : result.pv) info << ' ' << move_to_uci(move);

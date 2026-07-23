@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "match_date": "2026-07-23",
+  "tag": "accepted-v1",
+  "description": "Four P0 fixes: staged move picker, per-thread NNUE cache, chunked node budget, serial first root with aspiration",
+  "experiment_id": "4daac46c16880d2ea0d94cc2",
+  "run_url": "https://github.com/dalizadah-web/blaze-bullet-engine/actions/runs/30003686681",
+  "candidate": {
+    "ref": "codex/bullet-beast",
+    "commit": "a2d25cade5e722da2e1a70f84a0270a08ad9956d",
+    "sha256": "83a78a3c499ec0d03cf14b752d155c857865b7de8591f2500bfc0c3c08433321",
+    "initstr": "UseNNUE=true\nEvalFile=nn-c288c895ea92.nnue",
+    "build_flags": "-std=c++20 -O3 -DNDEBUG -DNNUE_EMBEDDING_OFF -Wall -Wextra -Wpedantic -Werror -Wno-empty-body -Isrc",
+    "compiler": "g++ (Ubuntu 24.04 default)"
+  },
+  "baseline": {
+    "ref": "966f4e4",
+    "commit": "966f4e43390c34d4e729f87d14976c61e89ce1b7",
+    "sha256": "221c1c3552119eb455a3f103ab2992eef5369e041a19183b19d44b0fd130cb9f",
+    "initstr": "UseNNUE=true\nEvalFile=nn-04cf2b4ed1da.nnue",
+    "build_flags": "-std=c++20 -O3 -DNDEBUG -DNNUE_EMBEDDING_OFF -Wall -Wextra -Wpedantic -Wno-empty-body -Isrc",
+    "compiler": "g++ (Ubuntu 24.04 default)"
+  },
+  "runner": {
+    "name": "cutechess-cli 1.5.1 (AppImage)",
+    "sha256": "e177d85cb44598d1798a4bf6f307dba8d0a09e767744bf74a050ff3490a7d2d6"
+  },
+  "openings": {
+    "file": "testdata/openings/uho-lichess-500-v1.epd",
+    "sha256": "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc",
+    "suite_positions": 100,
+    "repeats": 100,
+    "start": 1
+  },
+  "match": {
+    "platform": "GitHub Actions ubuntu-24.04 (x86_64, Linux 6.17.0-1020-azure)",
+    "shards": 40,
+    "concurrency": 2,
+    "threads": 1,
+    "hash_mb": 16,
+    "time_control": "1+0",
+    "expected_games": 20000,
+    "completed_games": 20000,
+    "clean_games": 20000,
+    "quarantined_games": 0,
+    "sprt": {
+      "elo0": 0.0,
+      "elo1": 5.0,
+      "alpha": 0.05,
+      "beta": 0.05,
+      "llr": 17.437852790546458,
+      "decision": "accept"
+    },
+    "results": {
+      "pentanomial": [1086, 2573, 3368, 2101, 872],
+      "raw_wdl": { "wins": 6666, "draws": 7568, "losses": 5766 },
+      "clean_wdl": { "wins": 6666, "draws": 7568, "losses": 5766 },
+      "score_pct": 52.25,
+      "elo_estimate": 15.6
+    },
+    "terminations": {
+      "clean_ordinary": 20000,
+      "clean_adjudication": 0,
+      "candidate_time_loss": 0,
+      "candidate_illegal_move": 0,
+      "candidate_disconnect": 0,
+      "candidate_stall": 0,
+      "opponent_time_loss": 0,
+      "opponent_illegal_move": 0,
+      "opponent_disconnect": 0,
+      "opponent_stall": 0,
+      "infra_unknown": 0
+    }
+  }
+}
