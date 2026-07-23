@@ -93,6 +93,7 @@ private:
         std::uint64_t null_move_verifications = 0;
 #endif
         bool stopped = false;
+        std::uint64_t local_node_budget = 0;
         std::vector<std::uint64_t> keys;
         std::vector<Move> root_moves;
         std::array<SearchStackEntry, 132> stack{};

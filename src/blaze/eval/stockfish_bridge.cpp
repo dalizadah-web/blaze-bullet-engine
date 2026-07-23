@@ -36,6 +36,13 @@ struct GlobalState {
 GlobalState* g_state = nullptr;
 
 int evaluate_state(const std::string& fen) {
+    thread_local Eval::NNUE::AccumulatorCaches::Cache<FTDimensions> tls_cache{};
+    thread_local bool tls_cache_ready = false;
+    if (!tls_cache_ready) {
+        tls_cache.clear(g_state->network);
+        tls_cache_ready = true;
+    }
+
     Position pos;
     StateInfo si;
     pos.set(fen, false, &si);
@@ -44,7 +51,7 @@ int evaluate_state(const std::string& fen) {
     stack->reset();
     stack->push();
 
-    const auto result = g_state->network.evaluate(pos, *stack, g_state->cache);
+    const auto result = g_state->network.evaluate(pos, *stack, tls_cache);
     const auto [psqt, positional] = result;
 
     constexpr int OutputScale = 16;

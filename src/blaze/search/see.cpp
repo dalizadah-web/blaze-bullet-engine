@@ -97,6 +97,21 @@ int exchange(Position& position, Square target, Color side) {
 
 }  // namespace
 
+bool see_ge(const Position& position, Move move, int threshold) {
+    if (threshold <= 0) return true;
+    if (!move.is_valid()) return false;
+    if (!move.has_flag(MoveFlag::Capture) && !move.has_flag(MoveFlag::EnPassant)) {
+        if (move.has_flag(MoveFlag::Promotion)) {
+            const int promo_gain =
+                value(make_piece(position.side_to_move(), move.promotion())) -
+                value(make_piece(position.side_to_move(), PieceType::Pawn));
+            return promo_gain >= threshold;
+        }
+        return false;
+    }
+    return static_exchange_evaluation(position, move) >= threshold;
+}
+
 int static_exchange_evaluation(const Position& position, Move move) {
     if (!move.is_valid() ||
         (!move.has_flag(MoveFlag::Capture) && !move.has_flag(MoveFlag::EnPassant))) {

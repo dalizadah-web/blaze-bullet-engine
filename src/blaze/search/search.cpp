@@ -18,7 +18,6 @@ namespace {
 constexpr int infinity = search_mate_score + 1;
 constexpr int maximum_ply = 128;
 constexpr int maximum_extensions = 2;
-const std::array<std::array<int, 64>, 64> empty_history{};
 
 bool has_non_pawn_material(const Position& position, Color color) {
     return (position.pieces(color, PieceType::Knight) |
@@ -55,72 +54,6 @@ bool has_any_legal_move(Position& position, const MoveList& candidates) {
 int victim_value(Piece piece) {
     constexpr std::array<int, 7> values = {0, 100, 320, 335, 500, 900, 20000};
     return values[static_cast<std::size_t>(type_of(piece))];
-}
-
-int move_order_score(
-    const Position& position,
-    Move move,
-    Move tt_move,
-    Move first_killer,
-    Move second_killer,
-    const std::array<std::array<int, 64>, 64>& history,
-    Move counter_move) {
-    if (tt_move.is_valid() && move == tt_move) {
-        return 1'000'000;
-    }
-    int score = 0;
-    if (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant)) {
-        const Piece victim = move.has_flag(MoveFlag::EnPassant)
-            ? make_piece(opposite(position.side_to_move()), PieceType::Pawn)
-            : position.piece_on(move.to());
-        const Piece attacker = position.piece_on(move.from());
-        score += 100'000 + victim_value(victim) * 16 - victim_value(attacker);
-        score += std::clamp(static_exchange_evaluation(position, move), -4'000, 4'000) / 8;
-    }
-    if (move.has_flag(MoveFlag::Promotion)) {
-        score += 80'000 + victim_value(make_piece(position.side_to_move(), move.promotion()));
-    }
-    const bool quiet = !move.has_flag(MoveFlag::Capture) &&
-        !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
-    if (quiet && move == first_killer) {
-        score += 90'000;
-    } else if (quiet && move == second_killer) {
-        score += 89'000;
-    } else if (quiet) {
-        if (counter_move.is_valid() && move == counter_move) score += 85'000;
-        score += history[static_cast<std::size_t>(square_index(move.from()))]
-                        [static_cast<std::size_t>(square_index(move.to()))];
-    }
-    return score;
-}
-
-MoveList ordered_moves(
-    const Position& position,
-    const MoveList& list,
-    Move tt_move,
-    Move first_killer,
-    Move second_killer,
-    const std::array<std::array<int, 64>, 64>& history,
-    Move counter_move = Move{}) {
-    MoveList result = list;
-    std::array<int, MoveList::capacity> scores;
-    for (std::size_t index = 0; index < result.size(); ++index) {
-        scores[index] = move_order_score(
-            position, result[index], tt_move, first_killer, second_killer, history, counter_move);
-    }
-    for (std::size_t index = 1; index < result.size(); ++index) {
-        const Move move = result[index];
-        const int score = scores[index];
-        std::size_t insertion = index;
-        while (insertion > 0 && scores[insertion - 1] < score) {
-            result[insertion] = result[insertion - 1];
-            scores[insertion] = scores[insertion - 1];
-            --insertion;
-        }
-        result[insertion] = move;
-        scores[insertion] = score;
-    }
-    return result;
 }
 
 }  // namespace
@@ -324,8 +257,66 @@ SearchResult Searcher::search_parallel(
         for (std::size_t index = 0; index < legal_moves.size(); ++index) {
             tasks[index].move = legal_moves[index];
         }
-        std::atomic<std::size_t> next_task = 0;
-        std::atomic<int> shared_alpha{-infinity};
+        // Set root aspiration window based on the previous iteration's score
+        int root_alpha = -infinity;
+        int root_beta = infinity;
+        if (depth >= 4 && result.depth >= 3 && result.score > -search_mate_score + 1) {
+            root_alpha = std::max(-infinity, result.score - 50);
+            root_beta = std::min(infinity, result.score + 50);
+        }
+        std::atomic<int> shared_alpha{root_alpha};
+        std::atomic<std::size_t> next_task{0};
+        // Search first root move serially to establish alpha before parallel workers
+        {
+            Position child = position;
+            StateInfo state;
+            const Move root_move = tasks[0].move;
+            if (child.make_move(root_move, state)) {
+                const int root_extension = in_check(child) && depth >= 3 ? 1 : 0;
+                const int child_depth = depth - 1 + root_extension;
+                SearchLimits child_limits = limits;
+                child_limits.threads = 1;
+                child_limits.depth = child_depth;
+                child_limits.search_moves.clear();
+                child_limits.nodes = 0;
+                child_limits.shared_node_budget = shared_node_budget;
+                std::vector<std::uint64_t> child_history = prior_keys;
+                child_history.push_back(position.key());
+                Searcher child_searcher(table_, network_);
+                SearchResult child_result = child_searcher.search_window(
+                    child, child_limits, child_depth, 1, root_move, root_extension,
+                    root_alpha, root_beta, external_stop, child_history, search_start);
+                int score = -child_result.score;
+                // Re-search with full window if the result falls outside the
+                // aspiration window, or if no aspiration was set (alpha=-inf).
+                if (!child_result.stopped && (score <= root_alpha || score >= root_beta)) {
+                    child_result = child_searcher.search_window(
+                        child, child_limits, child_depth, 1, root_move, root_extension,
+                        -infinity, infinity, external_stop, child_history, search_start);
+                    score = -child_result.score;
+                }
+                TaskResult& task = tasks[0];
+                task.score = score;
+                task.nodes = child_result.nodes;
+#ifndef NDEBUG
+                task.maximum_extension_count = child_result.maximum_extension_count;
+                task.null_move_searches = child_result.null_move_searches;
+                task.null_move_pv_searches = child_result.null_move_pv_searches;
+                task.null_move_verifications = child_result.null_move_verifications;
+#endif
+                task.pv.push_back(root_move);
+                task.pv.insert(task.pv.end(), child_result.pv.begin(), child_result.pv.end());
+                task.complete = !child_result.stopped;
+                if (task.complete) {
+                    if (score > shared_alpha.load(std::memory_order_relaxed)) {
+                        shared_alpha.store(score, std::memory_order_relaxed);
+                    }
+                } else {
+                    parallel_stop.store(true, std::memory_order_relaxed);
+                }
+            }
+        }
+        next_task.store(1, std::memory_order_relaxed);
         const unsigned worker_count = std::min<unsigned>(
             static_cast<unsigned>(limits.threads),
             static_cast<unsigned>(legal_moves.size()));
@@ -491,9 +482,6 @@ SearchResult Searcher::search_window(
     const std::atomic<bool>* external_stop,
     const std::vector<std::uint64_t>& prior_keys,
     std::chrono::steady_clock::time_point start) {
-    countermoves_ = {};
-    history_ = {};
-
     Context context;
     context.limits = limits;
     context.stack[0].extension_count = 0;
@@ -698,8 +686,8 @@ int Searcher::negamax(
         constexpr int probcut_margin = 180;
         MoveList tactical_moves;
         generate_pseudo_legal(position, tactical_moves);
-        for (const Move move : ordered_moves(
-                 position, tactical_moves, tt_move, Move{}, Move{}, empty_history)) {
+        for (std::size_t i = 0; i < tactical_moves.size(); ++i) {
+            const Move move = tactical_moves[i];
             if (!move.has_flag(MoveFlag::Capture) &&
                 !move.has_flag(MoveFlag::EnPassant) &&
                 !move.has_flag(MoveFlag::Promotion)) {
@@ -749,18 +737,63 @@ int Searcher::negamax(
         : Move{};
     const Move first_killer = context.stack[static_cast<std::size_t>(ply)].killers[0];
     const Move second_killer = context.stack[static_cast<std::size_t>(ply)].killers[1];
+    // Build ordered move list via staged classification
+    std::vector<std::pair<int, Move>> ordered;
+    ordered.reserve(legal_moves.size());
+    if (tt_move.is_valid()) {
+        ordered.emplace_back(2'000'000, tt_move);
+    }
+    std::vector<std::pair<int, Move>> good_caps;
+    std::vector<std::pair<int, Move>> bad_caps;
+    std::vector<Move> strong_quiets;
+    std::vector<std::pair<int, Move>> weak_quiets;
+    good_caps.reserve(legal_moves.size());
+    bad_caps.reserve(legal_moves.size());
+    strong_quiets.reserve(4);
+    weak_quiets.reserve(legal_moves.size());
+    const Move counter_move = previous_move.is_valid()
+        ? countermoves_[square_index(previous_move.from())][square_index(previous_move.to())]
+        : Move{};
+    for (std::size_t i = 0; i < legal_moves.size(); ++i) {
+        const Move m = legal_moves[i];
+        if (m == tt_move) continue;
+        const bool capture = m.has_flag(MoveFlag::Capture) || m.has_flag(MoveFlag::EnPassant);
+        const bool promotion = m.has_flag(MoveFlag::Promotion);
+        if (capture) {
+            const Piece victim = m.has_flag(MoveFlag::EnPassant)
+                ? make_piece(opposite(position.side_to_move()), PieceType::Pawn)
+                : position.piece_on(m.to());
+            const Piece attacker = position.piece_on(m.from());
+            const int mvv_lva = victim_value(victim) * 16 - victim_value(attacker);
+            if (see_ge(position, m, 0)) {
+                good_caps.emplace_back(mvv_lva, m);
+            } else {
+                bad_caps.emplace_back(mvv_lva, m);
+            }
+        } else if (promotion) {
+            good_caps.emplace_back(
+                80'000 + victim_value(make_piece(position.side_to_move(), m.promotion())), m);
+        } else if (m == first_killer || m == second_killer || m == counter_move) {
+            strong_quiets.push_back(m);
+        } else {
+            const int hist = history_[color_index]
+                [static_cast<std::size_t>(square_index(m.from()))]
+                [static_cast<std::size_t>(square_index(m.to()))];
+            weak_quiets.emplace_back(hist, m);
+        }
+    }
+    auto desc = [](const auto& a, const auto& b) { return a.first > b.first; };
+    std::sort(good_caps.begin(), good_caps.end(), desc);
+    std::sort(bad_caps.begin(), bad_caps.end(), desc);
+    std::sort(weak_quiets.begin(), weak_quiets.end(), desc);
+    for (auto& p : good_caps) ordered.push_back(p);
+    for (Move m : strong_quiets) ordered.emplace_back(0, m);
+    for (auto& p : bad_caps) ordered.push_back(p);
+    for (auto& p : weak_quiets) ordered.push_back(p);
+
     int move_count = 0;
-    for (const Move move : ordered_moves(
-             position,
-             legal_moves,
-             tt_move,
-             first_killer,
-             second_killer,
-             history_[color_index],
-             previous_move.is_valid()
-                 ? countermoves_[square_index(previous_move.from())]
-                     [square_index(previous_move.to())]
-                 : Move{})) {
+    for (const auto& scored : ordered) {
+        const Move move = scored.second;
         const bool recaptures = previous_move.is_valid() &&
             previous_move.to() == move.to() &&
             (previous_move.has_flag(MoveFlag::Capture) ||
@@ -955,13 +988,33 @@ int Searcher::quiescence(
         alpha = std::max(alpha, stand_pat);
     }
 
-    int legal_count = 0;
-    for (const Move move : ordered_moves(
-             position, legal_moves, Move{}, Move{}, Move{}, empty_history)) {
-        if (!checked && !move.has_flag(MoveFlag::Capture) &&
-            !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion)) {
+    // Sort captures by MVV-LVA for quiescence search
+    std::vector<std::pair<int, Move>> q_ordered;
+    q_ordered.reserve(legal_moves.size());
+    for (std::size_t i = 0; i < legal_moves.size(); ++i) {
+        const Move m = legal_moves[i];
+        if (!checked && !m.has_flag(MoveFlag::Capture) &&
+            !m.has_flag(MoveFlag::EnPassant) && !m.has_flag(MoveFlag::Promotion)) {
             continue;
         }
+        int score = 0;
+        if (m.has_flag(MoveFlag::Capture) || m.has_flag(MoveFlag::EnPassant)) {
+            const Piece victim = m.has_flag(MoveFlag::EnPassant)
+                ? make_piece(opposite(position.side_to_move()), PieceType::Pawn)
+                : position.piece_on(m.to());
+            const Piece attacker = position.piece_on(m.from());
+            score = victim_value(victim) * 16 - victim_value(attacker);
+        }
+        if (m.has_flag(MoveFlag::Promotion)) {
+            score += 80'000 + victim_value(make_piece(position.side_to_move(), m.promotion()));
+        }
+        q_ordered.emplace_back(score, m);
+    }
+    std::sort(q_ordered.begin(), q_ordered.end(),
+        [](const auto& a, const auto& b) { return a.first > b.first; });
+    int legal_count = 0;
+    for (const auto& scored : q_ordered) {
+        const Move move = scored.second;
         StateInfo state;
         if (!position.make_move(move, state)) {
             continue;
@@ -1013,19 +1066,24 @@ bool Searcher::should_stop(Context& context) const {
 
 bool Searcher::consume_node(Context& context) const {
     if (context.limits.shared_node_budget) {
-        std::uint64_t remaining =
-            context.limits.shared_node_budget->load(std::memory_order_relaxed);
-        while (remaining != 0 &&
-               !context.limits.shared_node_budget->compare_exchange_weak(
-                   remaining,
-                   remaining - 1,
-                   std::memory_order_relaxed,
-                   std::memory_order_relaxed)) {
+        if (context.local_node_budget == 0) {
+            constexpr std::uint64_t chunk_size = 1024;
+            std::uint64_t old =
+                context.limits.shared_node_budget->load(std::memory_order_relaxed);
+            while (old != 0) {
+                const std::uint64_t take = old < chunk_size ? old : chunk_size;
+                if (context.limits.shared_node_budget->compare_exchange_weak(
+                        old, old - take, std::memory_order_relaxed, std::memory_order_relaxed)) {
+                    context.local_node_budget = take;
+                    break;
+                }
+            }
+            if (old == 0) {
+                context.stopped = true;
+                return false;
+            }
         }
-        if (remaining == 0) {
-            context.stopped = true;
-            return false;
-        }
+        --context.local_node_budget;
     }
     ++context.nodes;
     return true;
