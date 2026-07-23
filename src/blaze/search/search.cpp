@@ -1055,6 +1055,23 @@ int Searcher::quiescence(
             ++context.picker_stats.promotions_ep_exempted;
         }
 
+        if (!checked && m.has_flag(MoveFlag::Capture) &&
+            !m.has_flag(MoveFlag::Promotion) && !m.has_flag(MoveFlag::EnPassant) &&
+            best_score > -search_mate_score && best_score < search_mate_score) {
+            const Piece victim = position.piece_on(m.to());
+            const int victim_val = victim_value(victim);
+            if (best_score + victim_val + 200 <= alpha) {
+                StateInfo si;
+                if (position.make_move(m, si)) {
+                    const bool gives_check = in_check(position);
+                    position.unmake_move(m, si);
+                    if (!gives_check) {
+                        continue;
+                    }
+                }
+            }
+        }
+
         int score = 0;
         if (m.has_flag(MoveFlag::Capture) || m.has_flag(MoveFlag::EnPassant)) {
             const Piece victim = m.has_flag(MoveFlag::EnPassant)
