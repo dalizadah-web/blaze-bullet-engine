@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import asdict
 import json
+import math
 from pathlib import Path
 import re
 from typing import Any, Iterable
@@ -12,7 +13,7 @@ from typing import Any, Iterable
 from tools.cloud_match.shards import game_ids_for_slots, pair_slots
 from tools.cloud_match.spec import CloudMatchSpec
 from tools.experiment.match import validate_evidence_payload
-from tools.experiment.pentanomial import Pentanomial, sprt_decision, sprt_llr
+from tools.experiment.pentanomial import Pentanomial, expected_score, sprt_decision, sprt_llr
 
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -238,6 +239,18 @@ def aggregate_shards(
 
 def summary_markdown(result: dict[str, Any]) -> str:
     counts = result["counts"]
+    clean = result["clean_wdl"]
+    clean_total = clean["wins"] + clean["draws"] + clean["losses"]
+    if clean_total > 0:
+        score_pct = (clean["wins"] + clean["draws"] / 2.0) / clean_total * 100.0
+        score_frac = score_pct / 100.0
+        if 0.0 < score_frac < 1.0:
+            estimated_elo = 400.0 * math.log10(score_frac / (1.0 - score_frac))
+        else:
+            estimated_elo = float("inf") if score_frac >= 1.0 else float("-inf")
+    else:
+        score_pct = 0.0
+        estimated_elo = 0.0
     summary = (
         f"# Cloud match {result['experiment_id']}\n\n"
         f"- Expected/completed games: {result['expected_games']}/{result['completed_games']}\n"
@@ -245,8 +258,10 @@ def summary_markdown(result: dict[str, Any]) -> str:
         f"- Quarantined: {result['quarantined_games']} games ({result['quarantined_pairs']} pairs)\n"
         f"- Raw candidate W/D/L: {result['raw_wdl']['wins']}/"
         f"{result['raw_wdl']['draws']}/{result['raw_wdl']['losses']}\n"
-        f"- Clean candidate W/D/L: {result['clean_wdl']['wins']}/"
-        f"{result['clean_wdl']['draws']}/{result['clean_wdl']['losses']}\n"
+        f"- Clean candidate W/D/L: {clean['wins']}/"
+        f"{clean['draws']}/{clean['losses']}\n"
+        f"- Clean score: {score_pct:.4f}%\n"
+        f"- Estimated Elo: `{estimated_elo:+.1f}`\n"
         f"- Shards: {result['shards']}\n"
         f"- SPRT decision: **{result['decision']}**\n"
         f"- LLR: `{result['llr']:.6f}`\n"

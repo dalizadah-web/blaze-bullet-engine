@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 import tempfile
 import unittest
@@ -383,6 +384,102 @@ class AggregateShardsTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "duplicate shard index"):
             aggregate_shards([first, second], self.spec)
+
+
+class SummaryCalculationTests(unittest.TestCase):
+    """Deterministic audit of score, Elo and pentanomial calculations
+    using the three real 4000-game screening results."""
+
+    @staticmethod
+    def _make_result(wins: int, draws: int, losses: int, pent: tuple[int, int, int, int, int]) -> dict:
+        return {
+            "expected_games": wins + draws + losses,
+            "completed_games": wins + draws + losses,
+            "clean_games": wins + draws + losses,
+            "clean_pairs": (wins + draws + losses) // 2,
+            "quarantined_games": 0,
+            "quarantined_pairs": 0,
+            "raw_wdl": {"wins": wins, "draws": draws, "losses": losses},
+            "clean_wdl": {"wins": wins, "draws": draws, "losses": losses},
+            "shards": 40,
+            "decision": "continue",
+            "llr": 0.0,
+            "counts": dict(zip(
+                ("wins2", "wins1_draw1", "draws2", "losses1_draw1", "losses2"),
+                pent,
+                strict=True,
+            )),
+            "termination_counts": {
+                "clean": {"ordinary": wins + draws + losses, "adjudication": 0},
+                "candidate": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                "opponent": {"time_loss": 0, "illegal_move": 0, "disconnect": 0, "stall": 0},
+                "infrastructure_unknown": {
+                    "unterminated": 0, "malformed": 0, "unknown": 0,
+                    "contradictory": 0, "runner_failure": 0, "paired_quarantine": 0,
+                },
+            },
+            "abnormal_games": [],
+            "experiment_id": "test",
+        }
+
+    def test_qsearch_delta_calculation(self) -> None:
+        """1504/1027/1469 → 50.4375%, ~+3.0 Elo"""
+        result = self._make_result(1504, 1027, 1469, (264, 375, 735, 384, 242))
+        md = summary_markdown(result)
+        self.assertIn("50.4375%", md)
+        self.assertIn("+3.0", md)
+        # Pentanomial-derived points must match WDL-derived points
+        c = result["counts"]
+        pent_points = 2 * c["wins2"] + 1.5 * c["wins1_draw1"] + 1.0 * c["draws2"] + 0.5 * c["losses1_draw1"]
+        wdl_points = result["clean_wdl"]["wins"] + result["clean_wdl"]["draws"] / 2.0
+        self.assertAlmostEqual(pent_points, wdl_points)
+
+    def test_history_gravity_calculation(self) -> None:
+        """1392/1043/1565 → 47.8375%, ~-15.0 Elo"""
+        result = self._make_result(1392, 1043, 1565, (236, 350, 708, 417, 289))
+        md = summary_markdown(result)
+        self.assertIn("47.8375%", md)
+        self.assertIn("-15.0", md)
+        c = result["counts"]
+        pent_points = 2 * c["wins2"] + 1.5 * c["wins1_draw1"] + 1.0 * c["draws2"] + 0.5 * c["losses1_draw1"]
+        wdl_points = result["clean_wdl"]["wins"] + result["clean_wdl"]["draws"] / 2.0
+        self.assertAlmostEqual(pent_points, wdl_points)
+
+    def test_capture_history_calculation(self) -> None:
+        """1467/994/1539 → 49.1%, ~-6.3 Elo"""
+        result = self._make_result(1467, 994, 1539, (233, 334, 806, 382, 245))
+        md = summary_markdown(result)
+        self.assertIn("49.1000%", md)
+        self.assertIn("-6.3", md)
+        c = result["counts"]
+        pent_points = 2 * c["wins2"] + 1.5 * c["wins1_draw1"] + 1.0 * c["draws2"] + 0.5 * c["losses1_draw1"]
+        wdl_points = result["clean_wdl"]["wins"] + result["clean_wdl"]["draws"] / 2.0
+        self.assertAlmostEqual(pent_points, wdl_points)
+
+    def test_pentanomial_wdl_reconciliation(self) -> None:
+        """Verify pentanomial and W/D/L always reconcile across all examples."""
+        examples = [
+            (1504, 1027, 1469, (264, 375, 735, 384, 242)),
+            (1392, 1043, 1565, (236, 350, 708, 417, 289)),
+            (1467, 994, 1539, (233, 334, 806, 382, 245)),
+        ]
+        for wins, draws, losses, pent in examples:
+            result = self._make_result(wins, draws, losses, pent)
+            c = result["counts"]
+            pairs = sum(pent) // 2  # pentanomial pair count includes 2 games each
+            # Each pentanomial category maps to a pair score (2.0, 1.5, 1.0, 0.5, 0.0)
+            # Total candidate points from pentanomial across all games:
+            pent_total = 2 * c["wins2"] + 1.5 * c["wins1_draw1"] + 1.0 * c["draws2"] + 0.5 * c["losses1_draw1"]
+            wdl_total = wins + draws / 2.0
+            self.assertAlmostEqual(pent_total, wdl_total)
+
+    def test_elo_formula_round_trip(self) -> None:
+        """Verify Elo → score → Elo round-trip using expected_score."""
+        from tools.experiment.pentanomial import expected_score
+        # +3 Elo → ~50.43% → back to +3
+        score = expected_score(3.0)
+        elo_back = 400.0 * math.log10(score / (1.0 - score))
+        self.assertAlmostEqual(elo_back, 3.0, places=2)
 
 
 if __name__ == "__main__":
