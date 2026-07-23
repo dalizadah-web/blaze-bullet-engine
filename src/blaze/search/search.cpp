@@ -734,6 +734,8 @@ int Searcher::negamax(
     int best_score = -infinity;
     int legal_count = 0;
     const std::size_t color_index = static_cast<std::size_t>(position.side_to_move());
+    std::array<std::pair<Square, Square>, 64> quiet_searched{};
+    int quiet_count = 0;
     const Move previous_move = ply > 0
         ? context.stack[static_cast<std::size_t>(ply)].current_move
         : Move{};
@@ -838,6 +840,13 @@ int Searcher::negamax(
         context.keys.pop_back();
         position.unmake_move(move, state);
 
+        const bool quiet_move = !move.has_flag(MoveFlag::Capture) &&
+            !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
+        if (quiet_move) {
+            quiet_searched[static_cast<std::size_t>(quiet_count++)] = {
+                move.from(), move.to()};
+        }
+
         if (context.stopped) {
             return 0;
         }
@@ -851,18 +860,25 @@ int Searcher::negamax(
         }
         if (alpha >= beta) {
             picker.on_cutoff(move_count);
-            const bool quiet = !move.has_flag(MoveFlag::Capture) &&
-                !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
-            if (quiet) {
+            if (quiet_move) {
                 auto& killers = context.stack[static_cast<std::size_t>(ply)].killers;
                 if (move != killers[0]) {
                     killers[1] = killers[0];
                     killers[0] = move;
                 }
-                int& history = history_[color_index]
+                const int gravity = depth * depth * 16;
+                auto& history = history_[color_index]
                     [static_cast<std::size_t>(square_index(move.from()))]
                     [static_cast<std::size_t>(square_index(move.to()))];
-                history = std::min(history + depth * depth * 16, 80'000);
+                history = std::clamp(history + gravity, -16'384, 16'384);
+                for (int q = 0; q < quiet_count; ++q) {
+                    const auto [from_sq, to_sq] = quiet_searched[static_cast<std::size_t>(q)];
+                    if (from_sq == move.from() && to_sq == move.to()) continue;
+                    auto& h = history_[color_index]
+                        [static_cast<std::size_t>(square_index(from_sq))]
+                        [static_cast<std::size_t>(square_index(to_sq))];
+                    h = std::clamp(h - gravity, -16'384, 16'384);
+                }
                 if (previous_move.is_valid()) {
                     countermoves_[square_index(previous_move.from())]
                         [square_index(previous_move.to())] = move;
