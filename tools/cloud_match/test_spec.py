@@ -17,7 +17,7 @@ def valid_payload() -> dict[str, object]:
         "candidate_sha256": "",
         "baseline_sha256": "",
         "games": 400,
-        "shards": 20,
+        "shards": 40,
         "concurrency": 2,
         "time_control": "0.5+0",
         "threads": 1,
@@ -66,10 +66,10 @@ class CloudMatchSpecTests(unittest.TestCase):
             path.write_text(json.dumps(payload), encoding="utf-8")
             return CloudMatchSpec.from_json(path)
 
-    def test_accepts_a_twenty_shard_public_match(self) -> None:
+    def test_accepts_a_forty_shard_public_match(self) -> None:
         spec = self.parse(valid_payload())
         self.assertEqual(spec.games, 400)
-        self.assertEqual(spec.shards, 20)
+        self.assertEqual(spec.shards, 40)
         self.assertEqual(spec.opening_start, 1)
         self.assertEqual(len(spec.experiment_id()), 24)
 

@@ -121,7 +121,7 @@ jobs:
         with:
           name: match-spec-${{ steps.spec.outputs.experiment_id }}
           path: prepared/spec.json
-          retention-days: 30
+          retention-days: 1
           if-no-files-found: error
 
   build:
@@ -238,13 +238,13 @@ jobs:
         with:
           name: frozen-match-${{ needs.prepare.outputs.experiment_id }}
           path: frozen-match.tar.gz
-          retention-days: 30
+          retention-days: 1
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: finalized-match-spec-${{ needs.prepare.outputs.experiment_id }}
           path: bundle/spec.json
-          retention-days: 30
+          retention-days: 1
           if-no-files-found: error
 
   shards:
@@ -286,7 +286,7 @@ jobs:
         with:
           name: shard-${{ needs.prepare.outputs.experiment_id }}-${{ matrix.shard }}
           path: shard-${{ matrix.shard }}
-          retention-days: 30
+          retention-days: 1
           if-no-files-found: error
 
   aggregate:
@@ -322,5 +322,5 @@ jobs:
         with:
           name: result-${{ needs.prepare.outputs.experiment_id }}
           path: summary
-          retention-days: 90
+          retention-days: 30
           if-no-files-found: error
