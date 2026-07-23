@@ -745,7 +745,8 @@ int Searcher::negamax(
                       context.stack[static_cast<std::size_t>(ply)].killers.data(),
                       counter_move,
                       position.side_to_move(),
-                      history_[static_cast<std::size_t>(position.side_to_move())]);
+                      history_[static_cast<std::size_t>(position.side_to_move())],
+                      &capture_history_);
 
     int move_count = 0;
     while (true) {
@@ -867,6 +868,16 @@ int Searcher::negamax(
                     countermoves_[square_index(previous_move.from())]
                         [square_index(previous_move.to())] = move;
                 }
+            } else if (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant)) {
+                const Piece victim = move.has_flag(MoveFlag::EnPassant)
+                    ? make_piece(opposite(position.side_to_move()), PieceType::Pawn)
+                    : position.piece_on(move.to());
+                const Piece attacker = position.piece_on(move.from());
+                int& ch = capture_history_
+                    [static_cast<std::size_t>(type_of(victim))]
+                    [static_cast<std::size_t>(type_of(attacker))]
+                    [static_cast<std::size_t>(square_index(move.to()))];
+                ch = std::clamp(ch + depth * depth, -16'384, 16'384);
             }
             break;
         }

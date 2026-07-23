@@ -75,9 +75,10 @@ public:
                const Move killers[2],
                Move counter_move,
                Color us,
-               const std::array<std::array<int, 64>, 64>& history)
+               const std::array<std::array<int, 64>, 64>& history,
+               const std::array<std::array<std::array<int, 64>, 7>, 7>* capture_history = nullptr)
         : pos_(pos), tt_move_(tt_move), counter_move_(counter_move),
-          us_(us), history_(history) {
+          us_(us), history_(history), capture_history_(capture_history) {
         killer0_ = killers[0];
         killer1_ = killers[1];
         const std::size_t n = moves.size();
@@ -228,6 +229,7 @@ private:
     Move killer0_, killer1_;
     Color us_;
     const std::array<std::array<int, 64>, 64>& history_;
+    const std::array<std::array<std::array<int, 64>, 7>, 7>* capture_history_;
 
     Move moves_[MAX_MOVES];
     bool selected_[MAX_MOVES] = {false};
@@ -270,7 +272,15 @@ private:
             ? make_piece(opposite(us_), PieceType::Pawn)
             : pos_.piece_on(m.to());
         const Piece attacker = pos_.piece_on(m.from());
-        return victim_value(victim) * 16 - victim_value(attacker);
+        const int mvv_lva = victim_value(victim) * 16 - victim_value(attacker);
+        int ch_bonus = 0;
+        if (capture_history_ != nullptr) {
+            ch_bonus = (*capture_history_)
+                [static_cast<std::size_t>(type_of(victim))]
+                [static_cast<std::size_t>(type_of(attacker))]
+                [static_cast<std::size_t>(square_index(m.to()))];
+        }
+        return mvv_lva + ch_bonus;
     }
 
     int score_bad_capture(Move m) {
@@ -280,7 +290,15 @@ private:
             ? make_piece(opposite(us_), PieceType::Pawn)
             : pos_.piece_on(m.to());
         const Piece attacker = pos_.piece_on(m.from());
-        return victim_value(victim) * 16 - victim_value(attacker);
+        const int mvv_lva = victim_value(victim) * 16 - victim_value(attacker);
+        int ch_bonus = 0;
+        if (capture_history_ != nullptr) {
+            ch_bonus = (*capture_history_)
+                [static_cast<std::size_t>(type_of(victim))]
+                [static_cast<std::size_t>(type_of(attacker))]
+                [static_cast<std::size_t>(square_index(m.to()))];
+        }
+        return mvv_lva + ch_bonus;
     }
 
     int score_quiet(Move m) {
