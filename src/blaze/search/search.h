@@ -4,6 +4,7 @@
 #include "blaze/core/position.h"
 #include "blaze/eval/classical.h"
 #include "blaze/eval/network.h"
+#include "blaze/search/move_picker.h"
 #include "blaze/search/pv_line.h"
 #include "blaze/search/stack.h"
 #include "blaze/search/time_manager.h"
@@ -51,6 +52,8 @@ struct SearchResult {
 #endif
     std::vector<Move> pv;
     bool stopped = false;
+    // Instrumentation
+    MovePicker::Stats picker_stats;
 };
 
 class Searcher {
@@ -97,6 +100,7 @@ private:
         std::vector<std::uint64_t> keys;
         std::vector<Move> root_moves;
         std::array<SearchStackEntry, 132> stack{};
+        MovePicker::Stats picker_stats;
     };
 
     TranspositionTable& table_;

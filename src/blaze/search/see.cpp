@@ -98,8 +98,8 @@ int exchange(Position& position, Square target, Color side) {
 }  // namespace
 
 bool see_ge(const Position& position, Move move, int threshold) {
-    if (threshold <= 0) return true;
     if (!move.is_valid()) return false;
+    if (threshold < 0) return true;
     if (!move.has_flag(MoveFlag::Capture) && !move.has_flag(MoveFlag::EnPassant)) {
         if (move.has_flag(MoveFlag::Promotion)) {
             const int promo_gain =

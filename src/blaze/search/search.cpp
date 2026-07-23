@@ -163,6 +163,7 @@ SearchResult Searcher::search(
     result.null_move_verifications = context.null_move_verifications;
 #endif
     result.stopped = context.stopped;
+    result.picker_stats = context.picker_stats;
     return result;
 }
 
@@ -517,6 +518,7 @@ SearchResult Searcher::search_window(
     result.null_move_verifications = context.null_move_verifications;
 #endif
     result.stopped = context.stopped;
+    result.picker_stats = context.picker_stats;
     return result;
 }
 
@@ -735,65 +737,21 @@ int Searcher::negamax(
     const Move previous_move = ply > 0
         ? context.stack[static_cast<std::size_t>(ply)].current_move
         : Move{};
-    const Move first_killer = context.stack[static_cast<std::size_t>(ply)].killers[0];
-    const Move second_killer = context.stack[static_cast<std::size_t>(ply)].killers[1];
-    // Build ordered move list via staged classification
-    std::vector<std::pair<int, Move>> ordered;
-    ordered.reserve(legal_moves.size());
-    if (tt_move.is_valid()) {
-        ordered.emplace_back(2'000'000, tt_move);
-    }
-    std::vector<std::pair<int, Move>> good_caps;
-    std::vector<std::pair<int, Move>> bad_caps;
-    std::vector<Move> strong_quiets;
-    std::vector<std::pair<int, Move>> weak_quiets;
-    good_caps.reserve(legal_moves.size());
-    bad_caps.reserve(legal_moves.size());
-    strong_quiets.reserve(4);
-    weak_quiets.reserve(legal_moves.size());
     const Move counter_move = previous_move.is_valid()
         ? countermoves_[square_index(previous_move.from())][square_index(previous_move.to())]
         : Move{};
-    for (std::size_t i = 0; i < legal_moves.size(); ++i) {
-        const Move m = legal_moves[i];
-        if (m == tt_move) continue;
-        const bool capture = m.has_flag(MoveFlag::Capture) || m.has_flag(MoveFlag::EnPassant);
-        const bool promotion = m.has_flag(MoveFlag::Promotion);
-        if (capture) {
-            const Piece victim = m.has_flag(MoveFlag::EnPassant)
-                ? make_piece(opposite(position.side_to_move()), PieceType::Pawn)
-                : position.piece_on(m.to());
-            const Piece attacker = position.piece_on(m.from());
-            const int mvv_lva = victim_value(victim) * 16 - victim_value(attacker);
-            if (see_ge(position, m, 0)) {
-                good_caps.emplace_back(mvv_lva, m);
-            } else {
-                bad_caps.emplace_back(mvv_lva, m);
-            }
-        } else if (promotion) {
-            good_caps.emplace_back(
-                80'000 + victim_value(make_piece(position.side_to_move(), m.promotion())), m);
-        } else if (m == first_killer || m == second_killer || m == counter_move) {
-            strong_quiets.push_back(m);
-        } else {
-            const int hist = history_[color_index]
-                [static_cast<std::size_t>(square_index(m.from()))]
-                [static_cast<std::size_t>(square_index(m.to()))];
-            weak_quiets.emplace_back(hist, m);
-        }
-    }
-    auto desc = [](const auto& a, const auto& b) { return a.first > b.first; };
-    std::sort(good_caps.begin(), good_caps.end(), desc);
-    std::sort(bad_caps.begin(), bad_caps.end(), desc);
-    std::sort(weak_quiets.begin(), weak_quiets.end(), desc);
-    for (auto& p : good_caps) ordered.push_back(p);
-    for (Move m : strong_quiets) ordered.emplace_back(0, m);
-    for (auto& p : bad_caps) ordered.push_back(p);
-    for (auto& p : weak_quiets) ordered.push_back(p);
+
+    MovePicker picker(position, legal_moves, tt_move,
+                      context.stack[static_cast<std::size_t>(ply)].killers.data(),
+                      counter_move,
+                      position.side_to_move(),
+                      history_[static_cast<std::size_t>(position.side_to_move())]);
 
     int move_count = 0;
-    for (const auto& scored : ordered) {
-        const Move move = scored.second;
+    while (true) {
+        const Move move = picker.next();
+        if (!move.is_valid()) break;
+        ++move_count;
         const bool recaptures = previous_move.is_valid() &&
             previous_move.to() == move.to() &&
             (previous_move.has_flag(MoveFlag::Capture) ||
@@ -833,7 +791,7 @@ int Searcher::negamax(
         const int full_depth = depth - 1 + extension;
         int score = 0;
         context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
-        if (move_count == 0) {
+        if (move_count == 1) {
             if constexpr (pv_node) {
                 score = -negamax<NodeType::PV>(
                     position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
@@ -877,7 +835,6 @@ int Searcher::negamax(
                 }
             }
         }
-        ++move_count;
         context.keys.pop_back();
         position.unmake_move(move, state);
 
@@ -893,6 +850,7 @@ int Searcher::negamax(
             pv.prepend(move, child_pv);
         }
         if (alpha >= beta) {
+            picker.on_cutoff(move_count);
             const bool quiet = !move.has_flag(MoveFlag::Capture) &&
                 !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
             if (quiet) {
@@ -913,6 +871,8 @@ int Searcher::negamax(
             break;
         }
     }
+
+    context.picker_stats.accumulate(picker.collect_stats());
 
     if (legal_count == 0) {
         return checked ? -search_mate_score + ply : 0;
@@ -988,9 +948,9 @@ int Searcher::quiescence(
         alpha = std::max(alpha, stand_pat);
     }
 
-    // Sort captures by MVV-LVA for quiescence search
-    std::vector<std::pair<int, Move>> q_ordered;
-    q_ordered.reserve(legal_moves.size());
+    // Sort captures by MVV-LVA for quiescence search (fixed-capacity buffer)
+    std::array<std::pair<int, Move>, MoveList::capacity> q_buffer;
+    int q_count = 0;
     for (std::size_t i = 0; i < legal_moves.size(); ++i) {
         const Move m = legal_moves[i];
         if (!checked && !m.has_flag(MoveFlag::Capture) &&
@@ -1008,13 +968,13 @@ int Searcher::quiescence(
         if (m.has_flag(MoveFlag::Promotion)) {
             score += 80'000 + victim_value(make_piece(position.side_to_move(), m.promotion()));
         }
-        q_ordered.emplace_back(score, m);
+        q_buffer[static_cast<std::size_t>(q_count++)] = {score, m};
     }
-    std::sort(q_ordered.begin(), q_ordered.end(),
+    std::sort(q_buffer.begin(), q_buffer.begin() + q_count,
         [](const auto& a, const auto& b) { return a.first > b.first; });
     int legal_count = 0;
-    for (const auto& scored : q_ordered) {
-        const Move move = scored.second;
+    for (int i = 0; i < q_count; ++i) {
+        const Move move = q_buffer[static_cast<std::size_t>(i)].second;
         StateInfo state;
         if (!position.make_move(move, state)) {
             continue;
