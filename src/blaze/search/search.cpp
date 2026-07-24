@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <bit>
+#include <cmath>
 #include <limits>
 #include <thread>
 #include <utility>
@@ -16,6 +17,30 @@ namespace blaze {
 namespace {
 
 constexpr int infinity = search_mate_score + 1;
+
+// Precomputed LMR reduction table indexed by [depth][move_count].
+// reduction = int(log(depth) * log(move_count) * 0.7 + 0.5),
+// clamped to [0, min(3, depth - 2)].
+constexpr int max_lmr_depth = 128;
+constexpr int max_lmr_moves = 64;
+constexpr auto make_lmr_table() {
+    std::array<std::array<int, max_lmr_moves + 1>, max_lmr_depth + 1> table{};
+    for (int d = 0; d <= max_lmr_depth; ++d) {
+        for (int mc = 0; mc <= max_lmr_moves; ++mc) {
+            if (d < 3 || mc < 3) {
+                table[d][mc] = 0;
+            } else {
+                const double log_d = std::log(static_cast<double>(d));
+                const double log_mc = std::log(static_cast<double>(mc));
+                int r = static_cast<int>(log_d * log_mc * 0.7 + 0.5);
+                r = std::clamp(r, 0, std::min(3, d - 2));
+                table[d][mc] = r;
+            }
+        }
+    }
+    return table;
+}
+constexpr auto lmr_table = make_lmr_table();
 constexpr int maximum_ply = 128;
 constexpr int maximum_extensions = 2;
 
@@ -804,11 +829,7 @@ int Searcher::negamax(
                 !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
             int reduction = 0;
             if (depth >= 3 && move_count >= 3 && quiet && !checked && !gives_check) {
-                reduction = 1;
-                if (depth >= 5 && move_count >= 6) {
-                    ++reduction;
-                }
-                if (depth >= 8 && move_count >= 12) ++reduction;
+                reduction = lmr_table[std::min(depth, max_lmr_depth)][std::min(move_count, max_lmr_moves)];
             }
             score = -negamax<NodeType::NonPV>(
                 position,
