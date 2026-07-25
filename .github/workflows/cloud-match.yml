@@ -272,11 +272,11 @@ jobs:
             binary="bundle/$name"
             if [[ -n "$STOCKFISH_ELO" && "$name" == "baseline" ]]; then
               echo "Smoke-testing $name (Stockfish UCI_Elo=$STOCKFISH_ELO) …"
-              output=$(echo -e "uci\nsetoption name UCI_Elo value $STOCKFISH_ELO\nisready\nucinewgame\nposition startpos\ngo movetime 500\nquit" | timeout 15 "$binary" 2>/dev/null || true)
+              output=$(cd bundle && echo -e "uci\nsetoption name UCI_Elo value $STOCKFISH_ELO\nisready\nucinewgame\nposition startpos\ngo movetime 500\nquit" | timeout 15 "./$name" 2>/dev/null || true)
             else
               uci_file="$(jq -r ".${name}_initstr" "$spec" | grep -oP 'EvalFile=\K\S+')"
               echo "Smoke-testing $name ($uci_file) …"
-              output=$(echo -e "uci\nsetoption name EvalFile value $uci_file\nsetoption name UseNNUE value true\nisready\nucinewgame\nposition startpos\ngo movetime 500\nquit" | timeout 15 "$binary" 2>/dev/null || true)
+              output=$(cd bundle && echo -e "uci\nsetoption name EvalFile value $uci_file\nsetoption name UseNNUE value true\nisready\nucinewgame\nposition startpos\ngo movetime 500\nquit" | timeout 15 "./$name" 2>/dev/null || true)
             fi
             if echo "$output" | grep -q 'bestmove 0000'; then
               echo "ERROR: $name returned bestmove 0000 (NNUE load failed)" >&2
