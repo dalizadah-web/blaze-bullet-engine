@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "name": "blaze-vs-stockfish18-ltc",
+  "games": 20000,
+  "concurrency": 4,
+  "time_control": "60+0.6",
+  "threads": 1,
+  "hash_mb": 64,
+  "repeat": true,
+  "opening_format": "epd",
+  "openings": "testdata/openings/smoke-v1.epd",
+  "opening_sha256": "2c3ba57f3306350614f12c07ed55de3a8c4598ff56d16a2a6213acc04eff06f0",
+  "opponent_sha256": "c86215fa1977d53b82ed854540a4c7b025be4cd042276c85ba3de53fb9118911",
+  "time_margin_ms": 150,
+  "max_moves": 200,
+  "opening_order": "sequential",
+  "opening_plies": 0,
+  "sprt": {
+    "elo0": 0.0,
+    "elo1": 5.0,
+    "alpha": 0.05,
+    "beta": 0.05
+  }
+}
