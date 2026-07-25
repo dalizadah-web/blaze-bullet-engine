@@ -23,7 +23,7 @@ std::optional<NetworkEvaluator> NetworkEvaluator::create(
 
 NetworkEvaluator::NetworkEvaluator(NetworkEvaluator&& other) noexcept = default;
 NetworkEvaluator& NetworkEvaluator::operator=(NetworkEvaluator&& other) noexcept = default;
-NetworkEvaluator::~NetworkEvaluator() { sf_nnue_destroy(); }
+NetworkEvaluator::~NetworkEvaluator() { if (impl_) sf_nnue_destroy(); }
 
 int NetworkEvaluator::evaluate(const Position& position) const {
     const std::string fen = position.to_fen();
