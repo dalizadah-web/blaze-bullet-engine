@@ -186,11 +186,15 @@ void apply_delta(
     }
 }
 
-int evaluate_raw_accumulator(const Accumulator& accumulator, const DirectWeights& weights, const Position& position) {
+NnueDebugSnapshot make_snapshot(const Accumulator& accumulator, const DirectWeights& weights, const Position& position) {
     const std::size_t us = static_cast<std::size_t>(position.side_to_move());
     const std::size_t them = static_cast<std::size_t>(opposite(position.side_to_move()));
     const std::size_t bucket = (std::popcount(position.occupied()) - 1) / 4;
-    std::array<Stockfish::Eval::NNUE::TransformedFeatureType, kDimensions> transformed{};
+    NnueDebugSnapshot snapshot;
+    snapshot.halfka = accumulator.pieces;
+    snapshot.threats = accumulator.threats;
+    snapshot.halfka_psqt = accumulator.piece_psqt;
+    snapshot.threat_psqt = accumulator.threat_psqt;
     const std::array<std::size_t, 2> perspectives{us, them};
     for (std::size_t p = 0; p < 2; ++p) {
         const std::size_t offset = p * (kDimensions / 2);
@@ -201,21 +205,22 @@ int evaluate_raw_accumulator(const Accumulator& accumulator, const DirectWeights
             const int second = std::clamp<int>(
                 accumulator.pieces[side][j + kDimensions / 2] +
                     accumulator.threats[side][j + kDimensions / 2], 0, 255);
-            transformed[offset + j] = static_cast<Stockfish::Eval::NNUE::TransformedFeatureType>(
+            snapshot.transformed[offset + j] = static_cast<Stockfish::Eval::NNUE::TransformedFeatureType>(
                 (first * second) / 512);
         }
     }
-    const std::int32_t psqt =
+    snapshot.psqt_output =
         (accumulator.piece_psqt[us][bucket] - accumulator.piece_psqt[them][bucket] +
          accumulator.threat_psqt[us][bucket] - accumulator.threat_psqt[them][bucket]) / 2;
-    const std::int32_t positional = weights.network.architecture(bucket).propagate(transformed.data());
+    snapshot.positional_output = weights.network.architecture(bucket).propagate(snapshot.transformed.data());
     // The legacy bridge exposed the two Network::evaluate() components after
     // their internal OutputScale division, then divided their sum once more.
     // Keep that public score contract while the bridge remains the oracle.
     // Match Network::evaluate(): each component is converted from network
     // units independently before its wrapper combines the two values.
-    return static_cast<int>(psqt / Stockfish::Eval::NNUE::OutputScale) +
-           static_cast<int>(positional / Stockfish::Eval::NNUE::OutputScale);
+    snapshot.raw_output = static_cast<int>(snapshot.psqt_output / Stockfish::Eval::NNUE::OutputScale) +
+                          static_cast<int>(snapshot.positional_output / Stockfish::Eval::NNUE::OutputScale);
+    return snapshot;
 }
 
 }  // namespace
@@ -279,7 +284,11 @@ int sf_nnue_public_score(int raw_network_output) {
 }
 
 int NnueThreadState::raw_evaluate(const Position& position) const {
-    return evaluate_raw_accumulator(impl_->stack[impl_->ply], *impl_->weights, position);
+    return debug_snapshot(position).raw_output;
+}
+
+NnueDebugSnapshot NnueThreadState::debug_snapshot(const Position& position) const {
+    return make_snapshot(impl_->stack[impl_->ply], *impl_->weights, position);
 }
 
 int NnueThreadState::evaluate(const Position& position) const {
@@ -294,6 +303,12 @@ int NetworkEvaluator::raw_evaluate(const Position& position) const {
     auto state = make_thread_state();
     state.reset(position);
     return state.raw_evaluate(position);
+}
+
+NnueDebugSnapshot NetworkEvaluator::debug_snapshot(const Position& position) const {
+    auto state = make_thread_state();
+    state.reset(position);
+    return state.debug_snapshot(position);
 }
 
 }  // namespace blaze

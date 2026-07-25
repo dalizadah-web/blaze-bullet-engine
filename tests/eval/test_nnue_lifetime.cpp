@@ -2,6 +2,7 @@
 #include "blaze/eval/stockfish_bridge.h"
 #include "blaze/core/position.h"
 #include "blaze/core/attacks.h"
+#include "blaze/core/movegen.h"
 
 #include "test_support.h"
 
@@ -9,6 +10,8 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <random>
+#include <sstream>
 #include <vector>
 
 namespace blaze {
@@ -218,6 +221,47 @@ TEST_CASE(nnue_create_evaluate_destroy_cycle) {
     }
 }
 
+void require_snapshot_equal(
+    const NnueDebugSnapshot& expected,
+    const NnueDebugSnapshot& actual,
+    const Position& position,
+    const std::vector<Move>& moves,
+    int ply,
+    const char* component) {
+    const auto fail = [&](std::string_view detail, int index, auto wanted, auto got) {
+        std::ostringstream message;
+        message << "NNUE oracle mismatch fen=" << position.to_fen() << " ply=" << ply
+                << " component=" << component << ':' << detail << " index=" << index
+                << " expected=" << wanted << " actual=" << got << " moves=";
+        for (const Move move : moves) message << move_to_uci(move) << ' ';
+        throw test::Failure(message.str());
+    };
+    for (int side = 0; side < 2; ++side) {
+        for (int i = 0; i < 1024; ++i) {
+            if (expected.halfka[side][i] != actual.halfka[side][i])
+                fail("halfka", side * 1024 + i, expected.halfka[side][i], actual.halfka[side][i]);
+            if (expected.threats[side][i] != actual.threats[side][i])
+                fail("threat", side * 1024 + i, expected.threats[side][i], actual.threats[side][i]);
+        }
+        for (int i = 0; i < 8; ++i) {
+            if (expected.halfka_psqt[side][i] != actual.halfka_psqt[side][i])
+                fail("halfka_psqt", side * 8 + i, expected.halfka_psqt[side][i], actual.halfka_psqt[side][i]);
+            if (expected.threat_psqt[side][i] != actual.threat_psqt[side][i])
+                fail("threat_psqt", side * 8 + i, expected.threat_psqt[side][i], actual.threat_psqt[side][i]);
+        }
+    }
+    for (int i = 0; i < 1024; ++i) {
+        if (expected.transformed[i] != actual.transformed[i])
+            fail("transformed", i, expected.transformed[i], actual.transformed[i]);
+    }
+    if (expected.psqt_output != actual.psqt_output)
+        fail("psqt_output", 0, expected.psqt_output, actual.psqt_output);
+    if (expected.positional_output != actual.positional_output)
+        fail("positional_output", 0, expected.positional_output, actual.positional_output);
+    if (expected.raw_output != actual.raw_output)
+        fail("raw_output", 0, expected.raw_output, actual.raw_output);
+}
+
 TEST_CASE(nnue_thread_state_matches_a_fresh_direct_refresh_after_a_move) {
     std::string error;
     auto evaluator = NetworkEvaluator::create(kNetworkPath, error);
@@ -279,6 +323,57 @@ TEST_CASE(direct_big_nnue_matches_the_legacy_bridge_oracle) {
         CHECK_EQ(fresh_public, sf_nnue_public_score(legacy_raw));
         CHECK_EQ(legacy_public, sf_nnue_public_score(legacy_raw));
         CHECK_EQ(incremental_public, sf_nnue_public_score(legacy_raw));
+    }
+    sf_nnue_destroy();
+}
+
+TEST_CASE(direct_big_nnue_randomized_incremental_oracle) {
+    Attacks::initialize();
+    std::string error;
+    auto evaluator = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(evaluator.has_value());
+    CHECK(sf_nnue_init(kNetworkPath, error));
+    std::mt19937 random{0xB1A2E123u};
+
+    for (int sequence = 0; sequence < 64; ++sequence) {
+        Position position = startpos();
+        auto incremental = evaluator->make_thread_state();
+        incremental.reset(position);
+        std::vector<Move> moves;
+        std::vector<StateInfo> states;
+        for (int ply = 0; ply < 128; ++ply) {
+            const NnueDebugSnapshot fresh = evaluator->debug_snapshot(position);
+            const NnueDebugSnapshot current = incremental.debug_snapshot(position);
+            require_snapshot_equal(fresh, current, position, moves, ply, "incremental");
+            const int legacy_raw = sf_nnue_evaluate_raw(position.to_fen());
+            if (fresh.raw_output != legacy_raw) {
+                std::ostringstream message;
+                message << "NNUE oracle mismatch fen=" << position.to_fen() << " ply=" << ply
+                        << " component=legacy_raw expected=" << legacy_raw
+                        << " actual=" << fresh.raw_output;
+                throw test::Failure(message.str());
+            }
+            Position copied = position;
+            const NnueDebugSnapshot copied_snapshot = evaluator->debug_snapshot(copied);
+            require_snapshot_equal(fresh, copied_snapshot, position, moves, ply, "position_copy");
+
+            MoveList legal;
+            generate_legal(position, legal);
+            if (legal.empty()) break;
+            const Move move = legal[static_cast<std::size_t>(random()) % legal.size()];
+            StateInfo state;
+            CHECK(position.make_move(move, state, true));
+            incremental.push(position, state);
+            moves.push_back(move);
+            states.push_back(state);
+        }
+        for (std::size_t index = moves.size(); index > 0; --index) {
+            incremental.pop();
+            position.unmake_move(moves[index - 1], states[index - 1]);
+            const NnueDebugSnapshot fresh = evaluator->debug_snapshot(position);
+            require_snapshot_equal(fresh, incremental.debug_snapshot(position), position, moves,
+                                   static_cast<int>(index - 1), "unmake");
+        }
     }
     sf_nnue_destroy();
 }
