@@ -176,6 +176,13 @@ jobs:
             RELEASE_FLAGS='-std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wno-empty-body -Wno-range-loop-construct -Isrc'
           cp candidate-src/build/blaze/blaze.exe bundle/candidate
           chmod +x bundle/candidate
+          # Fetch candidate's NNUE network
+          candidate_evalfile="$(jq -r '.candidate_initstr' prepared/spec.json | grep -oP 'EvalFile=\K\S+')"
+          if [ -n "$candidate_evalfile" ]; then
+            echo "Fetching candidate NNUE: $candidate_evalfile …"
+            curl --fail --location --retry 3 -o "bundle/$candidate_evalfile" \
+              "https://tests.stockfishchess.org/api/nn/$candidate_evalfile"
+          fi
           if [ -n "$STOCKFISH_ELO" ]; then
             curl --fail --location --retry 3 \
               -o stockfish.tar \
