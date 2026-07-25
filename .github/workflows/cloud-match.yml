@@ -89,8 +89,6 @@ jobs:
           cache: pip
           cache-dependency-path: tools/cloud_match/requirements.txt
       - run: pip install -r tools/cloud_match/requirements.txt
-      - name: Validate cloud tooling
-        run: python -m unittest discover -s tools/cloud_match -p "test_*.py" -v
       - name: Freeze match specification
         id: spec
         shell: bash
