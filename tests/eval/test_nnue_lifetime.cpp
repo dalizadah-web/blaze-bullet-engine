@@ -7,6 +7,7 @@
 #include "test_support.h"
 
 #include <optional>
+#include <initializer_list>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -228,9 +229,23 @@ void require_snapshot_equal(
     const std::vector<Move>& moves,
     int ply,
     const char* component) {
-    const auto fail = [&](std::string_view detail, int index, auto wanted, auto got) {
+    const auto move_type = [&]() -> const char* {
+        if (moves.empty()) return "root";
+        const Move move = moves.back();
+        if (move.has_flag(MoveFlag::CastleKing)) return "kingside_castle";
+        if (move.has_flag(MoveFlag::CastleQueen)) return "queenside_castle";
+        if (move.has_flag(MoveFlag::EnPassant)) return "en_passant";
+        if (move.has_flag(MoveFlag::Promotion) && move.has_flag(MoveFlag::Capture))
+            return "capture_promotion";
+        if (move.has_flag(MoveFlag::Promotion)) return "quiet_promotion";
+        if (move.has_flag(MoveFlag::Capture)) return "capture";
+        if (move.has_flag(MoveFlag::DoublePush)) return "double_push";
+        return "normal";
+    };
+    const auto fail = [&](std::string_view detail, int perspective, int index, auto wanted, auto got) {
         std::ostringstream message;
         message << "NNUE oracle mismatch fen=" << position.to_fen() << " ply=" << ply
+                << " move_type=" << move_type() << " perspective=" << perspective
                 << " component=" << component << ':' << detail << " index=" << index
                 << " expected=" << wanted << " actual=" << got << " moves=";
         for (const Move move : moves) message << move_to_uci(move) << ' ';
@@ -239,27 +254,30 @@ void require_snapshot_equal(
     for (int side = 0; side < 2; ++side) {
         for (int i = 0; i < 1024; ++i) {
             if (expected.halfka[side][i] != actual.halfka[side][i])
-                fail("halfka", side * 1024 + i, expected.halfka[side][i], actual.halfka[side][i]);
+                fail("halfka", side, i, expected.halfka[side][i], actual.halfka[side][i]);
             if (expected.threats[side][i] != actual.threats[side][i])
-                fail("threat", side * 1024 + i, expected.threats[side][i], actual.threats[side][i]);
+                fail("threat", side, i, expected.threats[side][i], actual.threats[side][i]);
         }
         for (int i = 0; i < 8; ++i) {
             if (expected.halfka_psqt[side][i] != actual.halfka_psqt[side][i])
-                fail("halfka_psqt", side * 8 + i, expected.halfka_psqt[side][i], actual.halfka_psqt[side][i]);
+                fail("halfka_psqt", side, i, expected.halfka_psqt[side][i], actual.halfka_psqt[side][i]);
             if (expected.threat_psqt[side][i] != actual.threat_psqt[side][i])
-                fail("threat_psqt", side * 8 + i, expected.threat_psqt[side][i], actual.threat_psqt[side][i]);
+                fail("threat_psqt", side, i, expected.threat_psqt[side][i], actual.threat_psqt[side][i]);
         }
     }
     for (int i = 0; i < 1024; ++i) {
         if (expected.transformed[i] != actual.transformed[i])
-            fail("transformed", i, expected.transformed[i], actual.transformed[i]);
+            fail("transformed",
+                 static_cast<int>(i < 512 ? position.side_to_move()
+                                          : opposite(position.side_to_move())),
+                 i, expected.transformed[i], actual.transformed[i]);
     }
     if (expected.psqt_output != actual.psqt_output)
-        fail("psqt_output", 0, expected.psqt_output, actual.psqt_output);
+        fail("psqt_output", -1, 0, expected.psqt_output, actual.psqt_output);
     if (expected.positional_output != actual.positional_output)
-        fail("positional_output", 0, expected.positional_output, actual.positional_output);
+        fail("positional_output", -1, 0, expected.positional_output, actual.positional_output);
     if (expected.raw_output != actual.raw_output)
-        fail("raw_output", 0, expected.raw_output, actual.raw_output);
+        fail("raw_output", -1, 0, expected.raw_output, actual.raw_output);
 }
 
 TEST_CASE(nnue_thread_state_matches_a_fresh_direct_refresh_after_a_move) {
@@ -345,14 +363,12 @@ TEST_CASE(direct_big_nnue_randomized_incremental_oracle) {
             const NnueDebugSnapshot fresh = evaluator->debug_snapshot(position);
             const NnueDebugSnapshot current = incremental.debug_snapshot(position);
             require_snapshot_equal(fresh, current, position, moves, ply, "incremental");
-            const int legacy_raw = sf_nnue_evaluate_raw(position.to_fen());
-            if (fresh.raw_output != legacy_raw) {
-                std::ostringstream message;
-                message << "NNUE oracle mismatch fen=" << position.to_fen() << " ply=" << ply
-                        << " component=legacy_raw expected=" << legacy_raw
-                        << " actual=" << fresh.raw_output;
-                throw test::Failure(message.str());
-            }
+            const NnueDebugSnapshot legacy = sf_nnue_debug_snapshot(position.to_fen());
+            require_snapshot_equal(legacy, fresh, position, moves, ply, "legacy");
+            CHECK_EQ(fresh.raw_output, sf_nnue_evaluate_raw(position.to_fen()));
+            CHECK_EQ(evaluator->evaluate(position), sf_nnue_public_score(fresh.raw_output));
+            CHECK_EQ(incremental.evaluate(position), sf_nnue_public_score(fresh.raw_output));
+            CHECK_EQ(sf_nnue_evaluate(position.to_fen()), sf_nnue_public_score(fresh.raw_output));
             Position copied = position;
             const NnueDebugSnapshot copied_snapshot = evaluator->debug_snapshot(copied);
             require_snapshot_equal(fresh, copied_snapshot, position, moves, ply, "position_copy");
@@ -370,10 +386,115 @@ TEST_CASE(direct_big_nnue_randomized_incremental_oracle) {
         for (std::size_t index = moves.size(); index > 0; --index) {
             incremental.pop();
             position.unmake_move(moves[index - 1], states[index - 1]);
+            moves.pop_back();
+            states.pop_back();
             const NnueDebugSnapshot fresh = evaluator->debug_snapshot(position);
             require_snapshot_equal(fresh, incremental.debug_snapshot(position), position, moves,
                                    static_cast<int>(index - 1), "unmake");
+            require_snapshot_equal(sf_nnue_debug_snapshot(position.to_fen()), fresh, position,
+                                   moves, static_cast<int>(index - 1), "legacy_unmake");
+            CHECK_EQ(incremental.evaluate(position), sf_nnue_public_score(fresh.raw_output));
         }
+    }
+    sf_nnue_destroy();
+}
+
+TEST_CASE(direct_big_nnue_special_move_oracle) {
+    Attacks::initialize();
+    std::string error;
+    auto evaluator = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(evaluator.has_value());
+    CHECK(sf_nnue_init(kNetworkPath, error));
+    const auto run = [&](std::string_view fen, std::initializer_list<Move> moves) {
+      for (int repetition = 0; repetition < 3; ++repetition) {
+        const auto parsed = Position::from_fen(fen);
+        CHECK(parsed.has_value());
+        Position position = *parsed;
+        auto incremental = evaluator->make_thread_state();
+        incremental.reset(position);
+        std::vector<Move> history;
+        std::vector<StateInfo> states;
+        const auto verify = [&](const char* phase) {
+            const auto fresh = evaluator->debug_snapshot(position);
+            require_snapshot_equal(fresh, incremental.debug_snapshot(position), position, history,
+                                   static_cast<int>(history.size()), phase);
+            require_snapshot_equal(
+                sf_nnue_debug_snapshot(position.to_fen()), fresh, position, history,
+                static_cast<int>(history.size()), "legacy");
+            CHECK_EQ(fresh.raw_output, sf_nnue_evaluate_raw(position.to_fen()));
+            CHECK_EQ(evaluator->evaluate(position), sf_nnue_public_score(fresh.raw_output));
+            CHECK_EQ(incremental.evaluate(position), sf_nnue_public_score(fresh.raw_output));
+            CHECK_EQ(sf_nnue_evaluate(position.to_fen()), sf_nnue_public_score(fresh.raw_output));
+            Position copied = position;
+            require_snapshot_equal(fresh, evaluator->debug_snapshot(copied), position, history,
+                                   static_cast<int>(history.size()), "fixture_copy");
+        };
+        verify("fixture_before");
+        for (const Move move : moves) {
+            CHECK(position.is_legal(move));
+            StateInfo state;
+            CHECK(position.make_move(move, state, true));
+            incremental.push(position, state);
+            history.push_back(move);
+            states.push_back(state);
+            verify("fixture_after_move");
+        }
+        for (std::size_t i = history.size(); i > 0; --i) {
+            incremental.pop();
+            position.unmake_move(history[i - 1], states[i - 1]);
+            history.pop_back();
+            states.pop_back();
+            verify("fixture_unmake");
+        }
+      }
+    };
+
+    // Castling on both wings and for both colors.
+    run("4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1", {{Square::E1, Square::G1, MoveFlag::CastleKing}});
+    run("4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1", {{Square::E1, Square::C1, MoveFlag::CastleQueen}});
+    run("r3k2r/8/8/8/8/8/8/4K3 b kq - 0 1", {{Square::E8, Square::G8, MoveFlag::CastleKing}});
+    run("r3k2r/8/8/8/8/8/8/4K3 b kq - 0 1", {{Square::E8, Square::C8, MoveFlag::CastleQueen}});
+
+    // En passant with ordinary, rook-ray-opening, and bishop-ray-opening threat changes.
+    run("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1", {{Square::E5, Square::D6, MoveFlag::Capture | MoveFlag::EnPassant}});
+    run("4k3/8/8/r2pP2B/8/8/8/7K w - d6 0 1", {{Square::E5, Square::D6, MoveFlag::Capture | MoveFlag::EnPassant}});
+    run("4k2b/8/8/3pP3/3R4/8/8/4K3 w - d6 0 1", {{Square::E5, Square::D6, MoveFlag::Capture | MoveFlag::EnPassant}});
+
+    // Quiet/capture promotions, including every underpromotion.
+    for (const PieceType p : {PieceType::Queen, PieceType::Rook, PieceType::Bishop, PieceType::Knight}) {
+        run("4k3/P7/8/8/8/8/8/4K3 w - - 0 1", {{Square::A7, Square::A8, MoveFlag::Promotion, p}});
+        run("1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1", {{Square::A7, Square::B8, MoveFlag::Capture | MoveFlag::Promotion, p}});
+    }
+
+    // Same KingBuckets entry (e2/d2), then a different entry (e2/e3).
+    run("4k3/8/8/8/8/8/4K3/8 w - - 0 1", {{Square::E2, Square::D2}});
+    run("4k3/8/8/8/8/8/4K3/8 w - - 0 1", {{Square::E2, Square::E3}});
+
+    // Discovered attacks, pins, double check, and simultaneously blocked/unblocked rays.
+    run("7k/q7/8/8/8/8/B7/R6K w - - 0 1", {{Square::A2, Square::B3}});
+    run("k3r3/8/8/8/8/8/4P3/4K3 w - - 0 1", {{Square::E2, Square::E3}});
+    run("4k3/8/8/8/8/8/4B3/K3R3 w - - 0 1", {{Square::E2, Square::B5}});
+    run("1r5k/4q3/8/8/8/4B3/8/1N2R1K1 w - - 0 1", {{Square::E3, Square::B6}});
+
+    // Null moves consume and restore an accumulator stack slot without feature changes.
+    for (int repetition = 0; repetition < 3; ++repetition) {
+        Position null_position = *Position::from_fen("4k3/8/8/8/4P3/8/8/4K3 w - - 0 1");
+        auto null_state = evaluator->make_thread_state();
+        null_state.reset(null_position);
+        const auto before = evaluator->debug_snapshot(null_position);
+        StateInfo state;
+        null_position.make_null(state, true);
+        null_state.push(null_position, state);
+        std::vector<Move> null_history;
+        require_snapshot_equal(sf_nnue_debug_snapshot(null_position.to_fen()),
+                               null_state.debug_snapshot(null_position), null_position,
+                               null_history, 1, "null_push");
+        CHECK_EQ(null_state.evaluate(null_position),
+                 sf_nnue_public_score(sf_nnue_evaluate_raw(null_position.to_fen())));
+        null_state.pop();
+        null_position.unmake_null(state);
+        require_snapshot_equal(before, null_state.debug_snapshot(null_position), null_position,
+                               null_history, 0, "null_pop");
     }
     sf_nnue_destroy();
 }
