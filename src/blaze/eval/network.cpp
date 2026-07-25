@@ -8,22 +8,46 @@
 
 namespace blaze {
 
+namespace {
+
+bool evaluator_alive = false;
+
+}
+
 struct NetworkEvaluator::Impl {};
 
 std::optional<NetworkEvaluator> NetworkEvaluator::create(
     std::string_view path, std::string& error) {
     error.clear();
+    if (evaluator_alive) {
+        error = "a NetworkEvaluator is already alive; only one may exist at a time";
+        return std::nullopt;
+    }
     if (!sf_nnue_init(path, error)) {
         return std::nullopt;
     }
+    auto impl = std::make_unique<Impl>();
     NetworkEvaluator evaluator;
-    evaluator.impl_ = std::make_unique<Impl>();
+    evaluator.impl_ = std::move(impl);
+    evaluator_alive = true;
     return evaluator;
 }
 
 NetworkEvaluator::NetworkEvaluator(NetworkEvaluator&& other) noexcept = default;
-NetworkEvaluator& NetworkEvaluator::operator=(NetworkEvaluator&& other) noexcept = default;
-NetworkEvaluator::~NetworkEvaluator() { if (impl_) sf_nnue_destroy(); }
+NetworkEvaluator& NetworkEvaluator::operator=(NetworkEvaluator&& other) noexcept {
+    if (this != &other) {
+        if (impl_) sf_nnue_destroy();
+        impl_ = std::move(other.impl_);
+    }
+    return *this;
+}
+NetworkEvaluator::~NetworkEvaluator() {
+    if (impl_) {
+        impl_.reset();
+        sf_nnue_destroy();
+        evaluator_alive = false;
+    }
+}
 
 int NetworkEvaluator::evaluate(const Position& position) const {
     const std::string fen = position.to_fen();

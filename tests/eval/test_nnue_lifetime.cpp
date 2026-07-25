@@ -67,24 +67,22 @@ TEST_CASE(nnue_move_construction) {
 }
 
 //----------------------------------------------------------------------
-// 4.  Move assignment — old target is destroyed, source becomes empty.
+// 4.  Move assignment — source's state survives, moved-from target
+//     is inert, and the assigned object evaluates correctly.
 //----------------------------------------------------------------------
 TEST_CASE(nnue_move_assignment) {
     Attacks::initialize();
     std::string error;
-    auto a = NetworkEvaluator::create(kNetworkPath, error);
-    CHECK(a.has_value());
+    auto opt = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(opt.has_value());
 
-    // Create a dummy evaluator to be the move-assignment target
-    std::string error2;
-    std::optional<NetworkEvaluator> b =
-        NetworkEvaluator::create(kNetworkPath, error2);
-    CHECK(b.has_value());
+    NetworkEvaluator a = std::move(*opt);
+    opt.reset();
 
-    // Move-assign b ← a
-    *b = std::move(*a);
-
-    CHECK(b->evaluate(startpos()) != 0);
+    NetworkEvaluator b = std::move(a);  // b owns state, a is moved-from
+    a   = std::move(b);                // move-assign valid b into moved-from a
+    CHECK(a.evaluate(startpos()) != 0);
+    // b is moved-from — destructor no-ops
 }
 
 //----------------------------------------------------------------------
@@ -137,58 +135,36 @@ TEST_CASE(nnue_failed_creation_cleanup) {
 }
 
 //----------------------------------------------------------------------
-// 8.  Two simultaneously live evaluators.
-//
-//     The current Stockfish bridge holds a single process-global
-//     g_state pointer.  Creating a second evaluator overwrites the
-//     pointer, leaking the first network.  Destroying either
-//     evaluator deletes g_state, making the other evaluator return 0.
-//     This is a documented limitation — the bridge must be redesigned
-//     for multi-evaluator support.
+// 8.  Single-evaluator contract — only one evaluator may exist at a
+//     time.  A second create() is rejected with a clear error.
 //----------------------------------------------------------------------
-TEST_CASE(nnue_two_simultaneous_evaluators_shared_global) {
+TEST_CASE(nnue_second_create_is_rejected) {
     Attacks::initialize();
-    std::string error_a, error_b;
+    std::string error_a;
     auto a = NetworkEvaluator::create(kNetworkPath, error_a);
-    auto b = NetworkEvaluator::create(kNetworkPath, error_b);
     CHECK(a.has_value());
-    CHECK(b.has_value());
 
-    // Both must produce non-zero scores before any destruction.
+    std::string error_b;
+    auto b = NetworkEvaluator::create(kNetworkPath, error_b);
+    CHECK(!b.has_value());
+    CHECK(!error_b.empty());
+    CHECK(error_b.find("already alive") != std::string::npos);
+}
+
+//----------------------------------------------------------------------
+// 9.  Create-then-destroy followed by a fresh create works.
+//----------------------------------------------------------------------
+TEST_CASE(nnue_create_destroy_create) {
+    Attacks::initialize();
+    std::string error;
+    auto a = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(a.has_value());
     CHECK(a->evaluate(startpos()) != 0);
-
-    // The second create() overwrites the global g_state pointer, so
-    // object a's reference to the OLD g_state is now dangling.
-    // Evaluating via a may crash or return 0.
-    //
-    // This test documents the current limitation.  No assertion is
-    // made about a-to-*a after *b is live.
-    // (empty — known limitation)
-}
-
-//----------------------------------------------------------------------
-// 9.  Destruction in both possible orders does not crash.
-//----------------------------------------------------------------------
-TEST_CASE(nnue_destruction_order_a_then_b) {
-    Attacks::initialize();
-    std::string error_a, error_b;
-    auto a = NetworkEvaluator::create(kNetworkPath, error_a);
-    auto b = NetworkEvaluator::create(kNetworkPath, error_b);
-    CHECK(a.has_value());
-    CHECK(b.has_value());
     a.reset();
-    b.reset();
-}
 
-TEST_CASE(nnue_destruction_order_b_then_a) {
-    Attacks::initialize();
-    std::string error_a, error_b;
-    auto a = NetworkEvaluator::create(kNetworkPath, error_a);
-    auto b = NetworkEvaluator::create(kNetworkPath, error_b);
-    CHECK(a.has_value());
+    auto b = NetworkEvaluator::create(kNetworkPath, error);
     CHECK(b.has_value());
-    b.reset();
-    a.reset();
+    CHECK(b->evaluate(startpos()) != 0);
 }
 
 //----------------------------------------------------------------------
