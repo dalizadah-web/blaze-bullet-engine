@@ -4,9 +4,12 @@ param(
     [string]$WorkflowRef = "codex/bullet-beast",
     [string]$CandidateRef = "codex/bullet-beast",
     [string]$BaselineRef = "4d25363fef79ff2025670e248ed07b3d81747d3a",
-    [ValidateRange(2, 1000000)][int]$CloudGames = 400,
-    [ValidateRange(2, 1000000)][int]$LocalGames = 400,
+    [ValidateRange(2, 1000000)][int]$CloudGames = 1000,
+    [ValidateRange(2, 1000000)][int]$LocalGames = 500,
     [ValidateRange(1, 20)][int]$CloudShards = 20,
+    [ValidateRange(1, 1000000)][int]$CloudOpeningStart = 1,
+    [ValidateRange(1, 1000000)][int]$CloudOpeningRepeats = 1,
+    [ValidateRange(1, 1000000)][int]$LocalOpeningStart = 1,
     [ValidateRange(1, 64)][int]$LocalConcurrency = 8,
     [string]$TimeControl = "0.5+0",
     [ValidateRange(1, 2)][int]$Threads = 1,
@@ -17,6 +20,13 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$message = @"
+Hybrid local+cloud lanes are quarantined: the current opening-suite identity
+requires a single complete cloud lane and the old split would overlap suite
+positions. Run tools/cloud_match.ps1 -Action Run -CloudOnly instead.
+"@
+throw $message.Trim()
+
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 if (-not $Output) { $Output = "artifacts/hybrid/$stamp" }
@@ -54,7 +64,8 @@ New-Item -ItemType Directory -Force -Path $OutputRoot, $BuildRoot | Out-Null
 Write-Host "Dispatching cloud lane: up to $($CloudShards * 2) simultaneous games."
 & (Join-Path $PSScriptRoot "cloud_match.ps1") -Action Run -Repo $Repo `
     -WorkflowRef $WorkflowRef -CandidateRef $CandidateRef -BaselineRef $BaselineRef `
-    -Games $CloudGames -Shards $CloudShards -TimeControl $TimeControl `
+    -Games $CloudGames -Shards $CloudShards -OpeningStart $CloudOpeningStart -TimeControl $TimeControl `
+    -OpeningRepeats $CloudOpeningRepeats `
     -Threads $Threads -HashMb $HashMb -Elo0 $Elo0 -Elo1 $Elo1 -CloudOnly
 if ($LASTEXITCODE -ne 0) { throw "Cloud lane dispatch failed." }
 
@@ -93,6 +104,7 @@ try {
         --candidate-ref $CandidateRef --baseline-ref $BaselineRef `
         --candidate $candidateBin --baseline $baselineBin --runner $frozenRunner `
         --output (Join-Path $OutputRoot "local") --games $LocalGames `
+        --opening-start $LocalOpeningStart `
         --concurrency $LocalConcurrency --time-control $TimeControl `
         --threads $Threads --hash-mb $HashMb --elo0 $Elo0 --elo1 $Elo1 `
         --source-commit $candidateCommit

@@ -15,19 +15,26 @@ class PrepareSpecTests(unittest.TestCase):
             base.write_text(
                 json.dumps(
                     {
-                        "schema_version": 1,
-                        "name": "base",
-                        "candidate_ref": "old",
-                        "baseline_ref": "old-base",
-                        "games": 8,
-                        "shards": 2,
-                        "concurrency": 2,
-                        "time_control": "1+0",
-                        "threads": 1,
-                        "hash_mb": 16,
-                        "openings": "book.epd",
-                        "opening_sha256": "a" * 64,
-                        "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
+                    "schema_version": 2,
+                    "name": "base",
+                    "candidate_ref": "old",
+                    "baseline_ref": "old-base",
+                    "candidate_commit": "c" * 40,
+                    "baseline_commit": "b" * 40,
+                    "candidate_sha256": "",
+                    "baseline_sha256": "",
+                    "games": 12,
+                    "shards": 2,
+                    "concurrency": 2,
+                    "time_control": "1+0",
+                    "threads": 1,
+                    "hash_mb": 16,
+                    "openings": "book.epd",
+                    "opening_sha256": "a" * 64,
+                    "opening_start": 251,
+                    "opening_suite_positions": 6,
+                    "opening_repeats": 1,
+                    "sprt": {"elo0": 0, "elo1": 5, "alpha": 0.05, "beta": 0.05},
                     }
                 ),
                 encoding="utf-8",
@@ -43,6 +50,7 @@ class PrepareSpecTests(unittest.TestCase):
                 time_control="0.5+0.01",
                 threads=1,
                 hash_mb=32,
+                opening_start=101,
             )
 
             payload = json.loads(output.read_text(encoding="utf-8"))
@@ -50,6 +58,7 @@ class PrepareSpecTests(unittest.TestCase):
             self.assertEqual(payload["candidate_ref"], "feature")
             self.assertEqual(payload["games"], 12)
             self.assertEqual(payload["time_control"], "0.5+0.01")
+            self.assertEqual(payload["opening_start"], 101)
 
 
 if __name__ == "__main__":

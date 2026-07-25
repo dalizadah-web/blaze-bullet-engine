@@ -3,20 +3,58 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 import json
 from pathlib import Path
 import platform
 from typing import Any
 
-from tools.cloud_match.shards import pair_indexes
+from tools.cloud_match.shards import game_ids_for_slots, pair_slots
 from tools.cloud_match.spec import CloudMatchSpec
 from tools.experiment.manifest import ArtifactIdentity, sha256_file
-from tools.experiment.match import MatchSpec, SprtSpec, run_match
+from tools.experiment.match import MatchEvidence, MatchSpec, SprtSpec, run_match
+
+
+def _globalize_evidence(
+    evidence: MatchEvidence, game_ids: list[str]
+) -> dict[str, Any]:
+    if len(game_ids) != evidence.expected_games:
+        raise ValueError("game ID count does not match evidence")
+    payload = {"schema_version": 3, **evidence.to_dict()}
+    records: list[dict[str, object]] = []
+    seen_slots: set[int] = set()
+    for raw_record in evidence.abnormal_games:
+        record = dict(raw_record)
+        record.pop("game_index", None)
+        try:
+            round_number = int(str(record.get("round", "")))
+        except ValueError:
+            raise ValueError("abnormal game has an invalid round identity") from None
+        candidate_color = record.get("candidate_color")
+        game_index = (round_number - 1) * 2 + (
+            0 if candidate_color == "white" else 1 if candidate_color == "black" else -1
+        )
+        if (
+            round_number <= 0
+            or candidate_color not in ("white", "black")
+            or not 0 <= game_index < len(game_ids)
+        ):
+            raise ValueError("abnormal game identity is outside shard assignment")
+        if game_index in seen_slots:
+            raise ValueError("duplicate abnormal game round/color identity")
+        seen_slots.add(game_index)
+        record["game_id"] = game_ids[game_index]
+        records.append(record)
+    payload["abnormal_games"] = records
+    return payload
 
 
 def write_shard_openings(
-    source: Path | str, indexes: list[int], destination: Path | str
+    source: Path | str,
+    indexes: list[int],
+    destination: Path | str,
+    *,
+    opening_start: int = 1,
+    allow_duplicates: bool = False,
 ) -> list[str]:
     lines = [
         line.strip()
@@ -25,7 +63,14 @@ def write_shard_openings(
     ]
     if not lines:
         raise ValueError(f"opening source contains no opening positions: {source}")
-    selected = [lines[index % len(lines)] for index in indexes]
+    if opening_start <= 0:
+        raise ValueError("opening_start must be a positive one-based index")
+    source_indexes = [opening_start - 1 + index for index in indexes]
+    if not allow_duplicates and len(set(source_indexes)) != len(source_indexes):
+        raise ValueError("duplicate opening source index")
+    if any(index < 0 or index >= len(lines) for index in source_indexes):
+        raise ValueError("opening source index is outside opening source; wraparound is forbidden")
+    selected = [lines[index] for index in source_indexes]
     target = Path(destination)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("".join(line + "\n" for line in selected), encoding="utf-8")
@@ -53,9 +98,19 @@ def run_worker(
 ) -> dict[str, Any]:
     config_path = Path(spec_path).resolve()
     spec = CloudMatchSpec.from_json(config_path)
-    assigned_pairs = pair_indexes(spec.games, shard_index, spec.shards)
-    if not assigned_pairs:
+    spec.validate_frozen()
+    assigned_slots = pair_slots(
+        spec.opening_suite_positions,
+        spec.opening_repeats,
+        shard_index,
+        spec.shards,
+    )
+    if not assigned_slots:
         raise ValueError(f"shard {shard_index} has no assigned pairs")
+    assigned_pairs = [
+        cycle * spec.opening_suite_positions + slot
+        for cycle, slot in assigned_slots
+    ]
 
     output_path = Path(output).resolve()
     if output_path.exists() and any(output_path.iterdir()):
@@ -66,15 +121,25 @@ def run_worker(
     if sha256_file(source_openings) != spec.opening_sha256:
         raise ValueError("source opening SHA-256 mismatch")
     shard_openings = output_path / "shard-openings.epd"
-    write_shard_openings(source_openings, assigned_pairs, shard_openings)
+    write_shard_openings(
+        source_openings,
+        [slot for _, slot in assigned_slots],
+        shard_openings,
+        opening_start=spec.opening_start,
+        allow_duplicates=spec.opening_repeats > 1,
+    )
 
     candidate_identity = ArtifactIdentity.from_path(candidate)
     baseline_identity = ArtifactIdentity.from_path(baseline)
     runner_identity = ArtifactIdentity.from_path(runner)
+    if candidate_identity.sha256 != spec.candidate_sha256:
+        raise ValueError("candidate binary SHA-256 does not match frozen spec")
+    if baseline_identity.sha256 != spec.baseline_sha256:
+        raise ValueError("baseline binary SHA-256 does not match frozen spec")
     match_spec = MatchSpec(
-        schema_version=1,
+        schema_version=2,
         name=f"{spec.name}-shard-{shard_index:02d}",
-        games=len(assigned_pairs) * 2,
+        games=len(assigned_slots) * 2,
         concurrency=spec.concurrency,
         time_control=spec.time_control,
         threads=spec.threads,
@@ -83,6 +148,8 @@ def run_worker(
         opening_format="epd",
         openings=str(shard_openings),
         opening_sha256=sha256_file(shard_openings),
+        candidate_initstr=spec.candidate_initstr,
+        opponent_initstr=spec.baseline_initstr,
         opponent_sha256=baseline_identity.sha256,
         sprt=SprtSpec(
             elo0=spec.sprt.elo0,
@@ -90,6 +157,7 @@ def run_worker(
             alpha=spec.sprt.alpha,
             beta=spec.sprt.beta,
         ),
+        opening_start=1,
     )
     match_output = output_path / "match"
     result = run_match(
@@ -104,27 +172,31 @@ def run_worker(
     )
 
     experiment_id = spec.experiment_id()
-    game_ids = [
-        game_id
-        for pair in assigned_pairs
-        for game_id in (
-            f"{experiment_id}-p{pair:06d}-w",
-            f"{experiment_id}-p{pair:06d}-b",
-        )
-    ]
+    game_ids = game_ids_for_slots(
+        experiment_id,
+        assigned_slots,
+        include_cycle=spec.opening_repeats > 1,
+    )
     payload: dict[str, Any] = {
-        "schema_version": 1,
+        **_globalize_evidence(result.evidence, game_ids),
         "experiment_id": experiment_id,
         "shard_index": shard_index,
         "shard_count": spec.shards,
+        "candidate_commit": spec.candidate_commit,
+        "baseline_commit": spec.baseline_commit,
         "candidate_sha256": candidate_identity.sha256,
         "baseline_sha256": baseline_identity.sha256,
         "openings_sha256": spec.opening_sha256,
         "runner_sha256": runner_identity.sha256,
-        "expected_games": len(assigned_pairs) * 2,
         "pair_indexes": assigned_pairs,
+        "pair_slots": [
+            {"cycle": cycle, "slot": slot} for cycle, slot in assigned_slots
+        ],
+        "opening_repeats": spec.opening_repeats,
+        "source_opening_indexes": [
+            spec.opening_start + slot for _, slot in assigned_slots
+        ],
         "game_ids": game_ids,
-        "counts": asdict(result.counts),
         "pgn": "match/games.pgn",
         "environment": {
             "machine": platform.machine(),

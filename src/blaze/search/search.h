@@ -4,6 +4,7 @@
 #include "blaze/core/position.h"
 #include "blaze/eval/classical.h"
 #include "blaze/eval/network.h"
+#include "blaze/search/move_picker.h"
 #include "blaze/search/pv_line.h"
 #include "blaze/search/stack.h"
 #include "blaze/search/time_manager.h"
@@ -29,6 +30,11 @@ struct SearchLimits {
     SearchRegime regime = SearchRegime::Standard;
     int recommended_threads = 1;
     std::shared_ptr<std::atomic<std::uint64_t>> shared_node_budget{};
+#ifndef NDEBUG
+    int maximum_ply = 128;
+    bool enable_probcut = true;
+    bool enable_null_move = true;
+#endif
 };
 
 struct SearchResult {
@@ -36,8 +42,18 @@ struct SearchResult {
     int score = 0;
     int depth = 0;
     std::uint64_t nodes = 0;
+#ifndef NDEBUG
+    int maximum_extension_count = 0;
+    int effective_maximum_ply = 128;
+    std::uint64_t probcut_legal_checks = 0;
+    std::uint64_t null_move_searches = 0;
+    std::uint64_t null_move_pv_searches = 0;
+    std::uint64_t null_move_verifications = 0;
+#endif
     std::vector<Move> pv;
     bool stopped = false;
+    // Instrumentation
+    MovePicker::Stats picker_stats;
 };
 
 class Searcher {
@@ -50,8 +66,17 @@ public:
         const SearchLimits& limits,
         const std::atomic<bool>* external_stop = nullptr,
         const std::vector<std::uint64_t>& prior_keys = {});
+#ifndef NDEBUG
+    [[nodiscard]] SearchResult debug_search_window(
+        Position position,
+        int depth,
+        int alpha,
+        int beta);
+#endif
 
 private:
+    enum class NodeType : std::uint8_t { Root, PV, NonPV };
+
     struct EvalCacheEntry {
         std::uint64_t key = 0;
         int score = 0;
@@ -63,10 +88,19 @@ private:
         const std::atomic<bool>* external_stop = nullptr;
         std::chrono::steady_clock::time_point start;
         std::uint64_t nodes = 0;
+#ifndef NDEBUG
+        int maximum_extension_count = 0;
+        std::uint64_t probcut_legal_checks = 0;
+        std::uint64_t null_move_searches = 0;
+        std::uint64_t null_move_pv_searches = 0;
+        std::uint64_t null_move_verifications = 0;
+#endif
         bool stopped = false;
+        std::uint64_t local_node_budget = 0;
         std::vector<std::uint64_t> keys;
         std::vector<Move> root_moves;
         std::array<SearchStackEntry, 132> stack{};
+        MovePicker::Stats picker_stats;
     };
 
     TranspositionTable& table_;
@@ -85,12 +119,16 @@ private:
         Position position,
         const SearchLimits& limits,
         int depth,
+        int ply,
+        Move previous_move,
+        int extension_count,
         int alpha,
         int beta,
         const std::atomic<bool>* external_stop,
         const std::vector<std::uint64_t>& prior_keys,
         std::chrono::steady_clock::time_point start);
 
+    template<NodeType node_type>
     [[nodiscard]] int negamax(
         Position& position,
         int depth,
@@ -110,6 +148,7 @@ private:
     [[nodiscard]] bool should_stop(Context& context) const;
     [[nodiscard]] bool consume_node(Context& context) const;
     [[nodiscard]] int evaluate_position(const Position& position) const;
+    [[nodiscard]] int maximum_ply_score(Position& position, int ply) const;
     [[nodiscard]] static bool is_repetition(const Context& context, std::uint64_t key);
 };
 

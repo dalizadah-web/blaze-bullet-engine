@@ -39,5 +39,24 @@ TEST_CASE(see_accounts_for_en_passant_and_promotion) {
     CHECK(static_exchange_evaluation(promotion, find_move(promotion, "a7b8q")) > 0);
 }
 
+TEST_CASE(see_accounts_for_promoting_recaptures) {
+    Position root = position("1R2k3/Pr6/8/8/8/8/8/4K3 b - - 0 1");
+    const Move capture = find_move(root, "b7b8");
+    CHECK(capture.is_valid());
+    CHECK_EQ(static_exchange_evaluation(root, capture), -800);
+}
+
+TEST_CASE(see_excludes_pinned_recaptures) {
+    Position root = position("4k3/4n3/8/5p2/4B3/8/8/4R1K1 w - - 0 1");
+    const Move capture = find_move(root, "e4f5");
+    CHECK(capture.is_valid());
+    CHECK(static_exchange_evaluation(root, capture) >= 100);
+}
+
+TEST_CASE(see_handles_en_passant_discovered_lines) {
+    Position root = position("4r1k1/8/8/3pP3/8/8/8/4K3 w - d6 0 1");
+    CHECK(!find_move(root, "e5d6").is_valid());
+}
+
 }  // namespace
 }  // namespace blaze

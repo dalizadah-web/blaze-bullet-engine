@@ -7,16 +7,17 @@
 #include <algorithm>
 #include <array>
 #include <bit>
+#include <limits>
+#include <thread>
 #include <utility>
 #include <vector>
-#include <thread>
 
 namespace blaze {
 namespace {
 
 constexpr int infinity = search_mate_score + 1;
 constexpr int maximum_ply = 128;
-const std::array<std::array<int, 64>, 64> empty_history{};
+constexpr int maximum_extensions = 2;
 
 bool has_non_pawn_material(const Position& position, Color color) {
     return (position.pieces(color, PieceType::Knight) |
@@ -53,72 +54,6 @@ bool has_any_legal_move(Position& position, const MoveList& candidates) {
 int victim_value(Piece piece) {
     constexpr std::array<int, 7> values = {0, 100, 320, 335, 500, 900, 20000};
     return values[static_cast<std::size_t>(type_of(piece))];
-}
-
-int move_order_score(
-    const Position& position,
-    Move move,
-    Move tt_move,
-    Move first_killer,
-    Move second_killer,
-    const std::array<std::array<int, 64>, 64>& history,
-    Move counter_move) {
-    if (tt_move.is_valid() && move == tt_move) {
-        return 1'000'000;
-    }
-    int score = 0;
-    if (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant)) {
-        const Piece victim = move.has_flag(MoveFlag::EnPassant)
-            ? make_piece(opposite(position.side_to_move()), PieceType::Pawn)
-            : position.piece_on(move.to());
-        const Piece attacker = position.piece_on(move.from());
-        score += 100'000 + victim_value(victim) * 16 - victim_value(attacker);
-        score += std::clamp(static_exchange_evaluation(position, move), -4'000, 4'000) / 8;
-    }
-    if (move.has_flag(MoveFlag::Promotion)) {
-        score += 80'000 + victim_value(make_piece(position.side_to_move(), move.promotion()));
-    }
-    const bool quiet = !move.has_flag(MoveFlag::Capture) &&
-        !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
-    if (quiet && move == first_killer) {
-        score += 90'000;
-    } else if (quiet && move == second_killer) {
-        score += 89'000;
-    } else if (quiet) {
-        if (counter_move.is_valid() && move == counter_move) score += 85'000;
-        score += history[static_cast<std::size_t>(square_index(move.from()))]
-                        [static_cast<std::size_t>(square_index(move.to()))];
-    }
-    return score;
-}
-
-MoveList ordered_moves(
-    const Position& position,
-    const MoveList& list,
-    Move tt_move,
-    Move first_killer,
-    Move second_killer,
-    const std::array<std::array<int, 64>, 64>& history,
-    Move counter_move = Move{}) {
-    MoveList result = list;
-    std::array<int, MoveList::capacity> scores;
-    for (std::size_t index = 0; index < result.size(); ++index) {
-        scores[index] = move_order_score(
-            position, result[index], tt_move, first_killer, second_killer, history, counter_move);
-    }
-    for (std::size_t index = 1; index < result.size(); ++index) {
-        const Move move = result[index];
-        const int score = scores[index];
-        std::size_t insertion = index;
-        while (insertion > 0 && scores[insertion - 1] < score) {
-            result[insertion] = result[insertion - 1];
-            scores[insertion] = scores[insertion - 1];
-            --insertion;
-        }
-        result[insertion] = move;
-        scores[insertion] = score;
-    }
-    return result;
 }
 
 }  // namespace
@@ -166,6 +101,13 @@ SearchResult Searcher::search(
 
     Context context;
     context.limits = limits;
+    context.stack[0].extension_count = 0;
+#ifndef NDEBUG
+    context.limits.maximum_ply = std::clamp(
+        context.limits.maximum_ply,
+        1,
+        maximum_ply);
+#endif
     context.external_stop = external_stop;
     context.start = std::chrono::steady_clock::now();
     context.keys = prior_keys;
@@ -187,10 +129,11 @@ SearchResult Searcher::search(
             alpha = std::max(-infinity, result.score - 50);
             beta = std::min(infinity, result.score + 50);
         }
-        int score = negamax(position, depth, alpha, beta, 0, context, pv);
+        int score = negamax<NodeType::Root>(position, depth, alpha, beta, 0, context, pv);
         if (!context.stopped && (score <= alpha || score >= beta)) {
             pv.clear();
-            score = negamax(position, depth, -infinity, infinity, 0, context, pv);
+            score = negamax<NodeType::Root>(
+                position, depth, -infinity, infinity, 0, context, pv);
         }
         if (context.stopped) {
             break;
@@ -211,9 +154,40 @@ SearchResult Searcher::search(
     }
 
     result.nodes = context.nodes;
+#ifndef NDEBUG
+    result.maximum_extension_count = context.maximum_extension_count;
+    result.effective_maximum_ply = context.limits.maximum_ply;
+    result.probcut_legal_checks = context.probcut_legal_checks;
+    result.null_move_searches = context.null_move_searches;
+    result.null_move_pv_searches = context.null_move_pv_searches;
+    result.null_move_verifications = context.null_move_verifications;
+#endif
     result.stopped = context.stopped;
+    result.picker_stats = context.picker_stats;
     return result;
 }
+
+#ifndef NDEBUG
+SearchResult Searcher::debug_search_window(
+    Position position,
+    int depth,
+    int alpha,
+    int beta) {
+    SearchLimits limits{.depth = depth};
+    return search_window(
+        std::move(position),
+        limits,
+        depth,
+        0,
+        Move{},
+        0,
+        alpha,
+        beta,
+        nullptr,
+        {},
+        std::chrono::steady_clock::now());
+}
+#endif
 
 SearchResult Searcher::search_parallel(
     Position position,
@@ -238,6 +212,9 @@ SearchResult Searcher::search_parallel(
     }
 
     SearchResult result;
+#ifndef NDEBUG
+    result.effective_maximum_ply = std::clamp(limits.maximum_ply, 1, maximum_ply);
+#endif
     if (legal_moves.empty()) {
         result.score = in_check(position) ? -search_mate_score : 0;
         return result;
@@ -258,25 +235,22 @@ SearchResult Searcher::search_parallel(
         ? std::make_shared<std::atomic<std::uint64_t>>(limits.nodes)
         : std::shared_ptr<std::atomic<std::uint64_t>>{};
     std::atomic<bool> parallel_stop = false;
+    table_.new_search();
     for (int depth = 1; depth <= maximum_depth; ++depth) {
         if (external_stop != nullptr && external_stop->load(std::memory_order_relaxed)) {
             result.stopped = true;
             break;
         }
-        if (depth == 1) {
-            result.depth = 1;
-            result.score = evaluate_position(position);
-            if (limits.target_time.count() > 0 &&
-                std::chrono::steady_clock::now() - search_start >= limits.target_time) {
-                break;
-            }
-            continue;
-        }
-
         struct TaskResult {
             Move move;
             int score = -infinity;
             std::uint64_t nodes = 0;
+#ifndef NDEBUG
+            int maximum_extension_count = 0;
+            std::uint64_t null_move_searches = 0;
+            std::uint64_t null_move_pv_searches = 0;
+            std::uint64_t null_move_verifications = 0;
+#endif
             std::vector<Move> pv;
             bool complete = false;
         };
@@ -284,9 +258,66 @@ SearchResult Searcher::search_parallel(
         for (std::size_t index = 0; index < legal_moves.size(); ++index) {
             tasks[index].move = legal_moves[index];
         }
-        std::atomic<std::size_t> next_task = 0;
-        std::atomic<int> shared_alpha{-infinity};
-        table_.new_search();
+        // Set root aspiration window based on the previous iteration's score
+        int root_alpha = -infinity;
+        int root_beta = infinity;
+        if (depth >= 4 && result.depth >= 3 && result.score > -search_mate_score + 1) {
+            root_alpha = std::max(-infinity, result.score - 50);
+            root_beta = std::min(infinity, result.score + 50);
+        }
+        std::atomic<int> shared_alpha{root_alpha};
+        std::atomic<std::size_t> next_task{0};
+        // Search first root move serially to establish alpha before parallel workers
+        {
+            Position child = position;
+            StateInfo state;
+            const Move root_move = tasks[0].move;
+            if (child.make_move(root_move, state)) {
+                const int root_extension = in_check(child) && depth >= 3 ? 1 : 0;
+                const int child_depth = depth - 1 + root_extension;
+                SearchLimits child_limits = limits;
+                child_limits.threads = 1;
+                child_limits.depth = child_depth;
+                child_limits.search_moves.clear();
+                child_limits.nodes = 0;
+                child_limits.shared_node_budget = shared_node_budget;
+                std::vector<std::uint64_t> child_history = prior_keys;
+                child_history.push_back(position.key());
+                Searcher child_searcher(table_, network_);
+                SearchResult child_result = child_searcher.search_window(
+                    child, child_limits, child_depth, 1, root_move, root_extension,
+                    root_alpha, root_beta, external_stop, child_history, search_start);
+                int score = -child_result.score;
+                // Re-search with full window if the result falls outside the
+                // aspiration window, or if no aspiration was set (alpha=-inf).
+                if (!child_result.stopped && (score <= root_alpha || score >= root_beta)) {
+                    child_result = child_searcher.search_window(
+                        child, child_limits, child_depth, 1, root_move, root_extension,
+                        -infinity, infinity, external_stop, child_history, search_start);
+                    score = -child_result.score;
+                }
+                TaskResult& task = tasks[0];
+                task.score = score;
+                task.nodes = child_result.nodes;
+#ifndef NDEBUG
+                task.maximum_extension_count = child_result.maximum_extension_count;
+                task.null_move_searches = child_result.null_move_searches;
+                task.null_move_pv_searches = child_result.null_move_pv_searches;
+                task.null_move_verifications = child_result.null_move_verifications;
+#endif
+                task.pv.push_back(root_move);
+                task.pv.insert(task.pv.end(), child_result.pv.begin(), child_result.pv.end());
+                task.complete = !child_result.stopped;
+                if (task.complete) {
+                    if (score > shared_alpha.load(std::memory_order_relaxed)) {
+                        shared_alpha.store(score, std::memory_order_relaxed);
+                    }
+                } else {
+                    parallel_stop.store(true, std::memory_order_relaxed);
+                }
+            }
+        }
+        next_task.store(1, std::memory_order_relaxed);
         const unsigned worker_count = std::min<unsigned>(
             static_cast<unsigned>(limits.threads),
             static_cast<unsigned>(legal_moves.size()));
@@ -309,9 +340,12 @@ SearchResult Searcher::search_parallel(
                     if (!child.make_move(root_move, state)) {
                         continue;
                     }
+                    const int root_extension =
+                        in_check(child) && depth >= 3 && index < 4 ? 1 : 0;
+                    const int child_depth = depth - 1 + root_extension;
                     SearchLimits child_limits = limits;
                     child_limits.threads = 1;
-                    child_limits.depth = depth - 1;
+                    child_limits.depth = child_depth;
                     child_limits.search_moves.clear();
                     child_limits.nodes = 0;
                     child_limits.shared_node_budget = shared_node_budget;
@@ -328,29 +362,56 @@ SearchResult Searcher::search_parallel(
                     SearchResult child_result = child_searcher.search_window(
                         child,
                         child_limits,
-                        depth - 1,
+                        child_depth,
+                        1,
+                        root_move,
+                        root_extension,
                         child_alpha,
                         child_beta,
                         external_stop,
                         child_history,
                         search_start);
+#ifndef NDEBUG
+                    int maximum_extension_count = child_result.maximum_extension_count;
+                    std::uint64_t null_move_searches = child_result.null_move_searches;
+                    std::uint64_t null_move_pv_searches = child_result.null_move_pv_searches;
+                    std::uint64_t null_move_verifications =
+                        child_result.null_move_verifications;
+#endif
                     int score = -child_result.score;
                     if (!child_result.stopped && score > observed_alpha &&
                         observed_alpha != -infinity) {
                         child_result = child_searcher.search_window(
                             child,
                             child_limits,
-                            depth - 1,
+                            child_depth,
+                            1,
+                            root_move,
+                            root_extension,
                             -infinity,
                             infinity,
                             external_stop,
                             child_history,
                             search_start);
+#ifndef NDEBUG
+                        maximum_extension_count = std::max(
+                            maximum_extension_count,
+                            child_result.maximum_extension_count);
+                        null_move_searches += child_result.null_move_searches;
+                        null_move_pv_searches += child_result.null_move_pv_searches;
+                        null_move_verifications += child_result.null_move_verifications;
+#endif
                         score = -child_result.score;
                     }
                     TaskResult& task = tasks[index];
                     task.score = -child_result.score;
                     task.nodes = child_result.nodes;
+#ifndef NDEBUG
+                    task.maximum_extension_count = maximum_extension_count;
+                    task.null_move_searches = null_move_searches;
+                    task.null_move_pv_searches = null_move_pv_searches;
+                    task.null_move_verifications = null_move_verifications;
+#endif
                     task.pv.push_back(root_move);
                     task.pv.insert(task.pv.end(), child_result.pv.begin(), child_result.pv.end());
                     task.complete = !child_result.stopped;
@@ -378,6 +439,14 @@ SearchResult Searcher::search_parallel(
         std::uint64_t searched_nodes = 0;
         for (const TaskResult& task : tasks) {
             searched_nodes += task.nodes;
+#ifndef NDEBUG
+            result.maximum_extension_count = std::max(
+                result.maximum_extension_count,
+                task.maximum_extension_count);
+            result.null_move_searches += task.null_move_searches;
+            result.null_move_pv_searches += task.null_move_pv_searches;
+            result.null_move_verifications += task.null_move_verifications;
+#endif
             if (task.complete && (best == nullptr || task.score > best->score)) {
                 best = &task;
             }
@@ -406,16 +475,26 @@ SearchResult Searcher::search_window(
     Position position,
     const SearchLimits& limits,
     int depth,
+    int ply,
+    Move previous_move,
+    int extension_count,
     int alpha,
     int beta,
     const std::atomic<bool>* external_stop,
     const std::vector<std::uint64_t>& prior_keys,
     std::chrono::steady_clock::time_point start) {
-    countermoves_ = {};
-    history_ = {};
-
     Context context;
     context.limits = limits;
+    context.stack[0].extension_count = 0;
+#ifndef NDEBUG
+    context.limits.maximum_ply = std::clamp(
+        context.limits.maximum_ply,
+        1,
+        maximum_ply);
+    context.maximum_extension_count = extension_count;
+#endif
+    context.stack[static_cast<std::size_t>(ply)].current_move = previous_move;
+    context.stack[static_cast<std::size_t>(ply)].extension_count = extension_count;
     context.external_stop = external_stop;
     context.start = start;
     context.keys = prior_keys;
@@ -423,7 +502,7 @@ SearchResult Searcher::search_window(
 
     SearchResult result;
     PvLine pv;
-    const int score = negamax(position, depth, alpha, beta, 0, context, pv);
+    const int score = negamax<NodeType::Root>(position, depth, alpha, beta, ply, context, pv);
     if (!context.stopped) {
         result.score = score;
         result.depth = depth;
@@ -431,10 +510,19 @@ SearchResult Searcher::search_window(
         if (!result.pv.empty()) result.best_move = result.pv.front();
     }
     result.nodes = context.nodes;
+#ifndef NDEBUG
+    result.maximum_extension_count = context.maximum_extension_count;
+    result.effective_maximum_ply = context.limits.maximum_ply;
+    result.null_move_searches = context.null_move_searches;
+    result.null_move_pv_searches = context.null_move_pv_searches;
+    result.null_move_verifications = context.null_move_verifications;
+#endif
     result.stopped = context.stopped;
+    result.picker_stats = context.picker_stats;
     return result;
 }
 
+template<Searcher::NodeType node_type>
 int Searcher::negamax(
     Position& position,
     int depth,
@@ -444,6 +532,7 @@ int Searcher::negamax(
     Context& context,
     PvLine& pv,
     bool allow_null) {
+    constexpr bool pv_node = node_type != NodeType::NonPV;
     pv.clear();
     if (depth <= 0) {
         return quiescence(position, alpha, beta, ply, context, pv);
@@ -457,22 +546,28 @@ int Searcher::negamax(
 
     MoveList legal_moves;
     generate_pseudo_legal(position, legal_moves);
-    if (ply == 0 && !context.root_moves.empty()) {
-        MoveList restricted;
-        for (const Move candidate : legal_moves) {
-            for (const Move requested : context.root_moves) {
-                if (candidate.from() == requested.from() &&
-                    candidate.to() == requested.to() &&
-                    candidate.promotion() == requested.promotion()) {
-                    restricted.push(candidate);
-                    break;
+    if constexpr (node_type == NodeType::Root) {
+        if (ply == 0 && !context.root_moves.empty()) {
+            MoveList restricted;
+            for (const Move candidate : legal_moves) {
+                for (const Move requested : context.root_moves) {
+                    if (candidate.from() == requested.from() &&
+                        candidate.to() == requested.to() &&
+                        candidate.promotion() == requested.promotion()) {
+                        restricted.push(candidate);
+                        break;
+                    }
                 }
             }
+            legal_moves = restricted;
         }
-        legal_moves = restricted;
     }
+#ifndef NDEBUG
+    if (ply >= context.limits.maximum_ply) {
+#else
     if (ply >= maximum_ply) {
-        return evaluate_position(position);
+#endif
+        return maximum_ply_score(position, ply);
     }
     const bool checked = in_check(position);
     if (position.rule50() >= 100 || is_repetition(context, position.key())) {
@@ -484,11 +579,23 @@ int Searcher::negamax(
         return evasions.empty() ? -search_mate_score + ply : 0;
     }
 
+    alpha = std::max(alpha, -search_mate_score + ply);
+    beta = std::min(beta, search_mate_score - ply - 1);
+    if (alpha >= beta) {
+        return alpha;
+    }
+
     Move tt_move;
-    const auto tt_hit = table_.probe(position.key(), ply);
+    int static_eval = tt_no_static_evaluation;
+    const auto tt_hit = table_.probe(position.key(), ply, position.rule50());
     if (tt_hit) {
         tt_move = tt_hit->move;
-        if (tt_hit->depth >= depth) {
+        static_eval = tt_hit->static_evaluation;
+        if (static_eval != tt_no_static_evaluation) {
+            context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_eval;
+        }
+        const bool rule50_safe = tt_hit->rule50 == std::min(position.rule50(), 100);
+        if (rule50_safe && tt_hit->depth >= depth) {
             if (tt_hit->bound == Bound::Exact ||
                 (tt_hit->bound == Bound::Lower && tt_hit->score >= beta) ||
                 (tt_hit->bound == Bound::Upper && tt_hit->score <= alpha)) {
@@ -497,38 +604,92 @@ int Searcher::negamax(
         }
     }
 
-    if (allow_null && depth >= 3 && !checked && position.rule50() < 99 &&
-        beta < search_mate_threshold &&
-        has_non_pawn_material(position, position.side_to_move())) {
-        StateInfo null_state;
-        position.make_null(null_state);
-        PvLine null_pv;
-        const int reduction = depth >= 6 ? 3 : 2;
-        context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
-        const int null_score = -negamax(
-            position,
-            depth - 1 - reduction,
-            -beta,
-            -beta + 1,
-            ply + 1,
-            context,
-            null_pv,
-            false);
-        position.unmake_null(null_state);
-        if (context.stopped) {
-            return 0;
+    if constexpr (node_type == NodeType::NonPV) {
+        // Keep deep verification nodes tied to a fresh leaf estimate. This
+        // avoids reusing a stale bound's optional metadata while preserving
+        // the hot-path benefit at shallow/selective nodes.
+        if (static_eval == tt_no_static_evaluation || depth >= 10) {
+            static_eval = evaluate_position(position);
         }
-        if (null_score >= beta) {
-            return null_score;
+        context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_eval;
+        const bool null_enabled =
+#ifndef NDEBUG
+            context.limits.enable_null_move;
+#else
+            true;
+#endif
+        if (null_enabled && allow_null && depth >= 3 && !checked &&
+            position.rule50() < 90 && beta < search_mate_threshold &&
+            static_eval >= beta &&
+            has_non_pawn_material(position, position.side_to_move())) {
+#ifndef NDEBUG
+            const auto record_null_move_attempt = [&context] {
+                ++context.null_move_searches;
+                if constexpr (node_type != NodeType::NonPV) {
+                    ++context.null_move_pv_searches;
+                }
+            };
+            record_null_move_attempt();
+#endif
+            const int eval_term = std::clamp((static_eval - beta) / 180, 0, 3);
+            const int reduction = std::min(depth - 1, 3 + depth / 4 + eval_term);
+            StateInfo null_state;
+            position.make_null(null_state);
+            table_.prefetch(position.key());
+            PvLine null_pv;
+            context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
+            context.stack[static_cast<std::size_t>(ply + 1)].extension_count =
+                context.stack[static_cast<std::size_t>(ply)].extension_count;
+            const int null_score = -negamax<NodeType::NonPV>(
+                position,
+                depth - 1 - reduction,
+                -beta,
+                -beta + 1,
+                ply + 1,
+                context,
+                null_pv,
+                false);
+            position.unmake_null(null_state);
+            if (context.stopped) {
+                return 0;
+            }
+            if (null_score >= beta) {
+                if (depth < 10) {
+                    return std::min(null_score, search_mate_threshold - 1);
+                }
+#ifndef NDEBUG
+                ++context.null_move_verifications;
+#endif
+                PvLine verification_pv;
+                const int verification = negamax<NodeType::NonPV>(
+                    position,
+                    depth - reduction,
+                    beta - 1,
+                    beta,
+                    ply,
+                    context,
+                    verification_pv,
+                    false);
+                if (context.stopped) {
+                    return 0;
+                }
+                if (verification >= beta) {
+                    return verification;
+                }
+            }
         }
     }
 
-    if (depth >= 5 && !checked && beta < search_mate_threshold - 180) {
+    bool probcut_enabled = true;
+#ifndef NDEBUG
+    probcut_enabled = context.limits.enable_probcut;
+#endif
+    if (probcut_enabled && depth >= 5 && !checked && beta < search_mate_threshold - 180) {
         constexpr int probcut_margin = 180;
         MoveList tactical_moves;
         generate_pseudo_legal(position, tactical_moves);
-        for (const Move move : ordered_moves(
-                 position, tactical_moves, tt_move, Move{}, Move{}, empty_history)) {
+        for (std::size_t i = 0; i < tactical_moves.size(); ++i) {
+            const Move move = tactical_moves[i];
             if (!move.has_flag(MoveFlag::Capture) &&
                 !move.has_flag(MoveFlag::EnPassant) &&
                 !move.has_flag(MoveFlag::Promotion)) {
@@ -536,16 +697,24 @@ int Searcher::negamax(
             }
             if (static_exchange_evaluation(position, move) < 0) continue;
             StateInfo state;
-            if (!position.make_move(move, state)) continue;
             const Color moving_side = position.side_to_move();
+            if (!position.make_move(move, state)) continue;
             if (!king_is_safe_after_move(position, moving_side)) {
                 position.unmake_move(move, state);
                 continue;
             }
+#ifndef NDEBUG
+            if (in_check(position)) {
+                ++context.probcut_legal_checks;
+            }
+#endif
             context.keys.push_back(position.key());
+            table_.prefetch(position.key());
             context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
+            context.stack[static_cast<std::size_t>(ply + 1)].extension_count =
+                context.stack[static_cast<std::size_t>(ply)].extension_count;
             PvLine probe_pv;
-            const int probe_score = -negamax(
+            const int probe_score = -negamax<NodeType::NonPV>(
                 position,
                 depth - 4,
                 -beta - probcut_margin,
@@ -568,20 +737,29 @@ int Searcher::negamax(
     const Move previous_move = ply > 0
         ? context.stack[static_cast<std::size_t>(ply)].current_move
         : Move{};
-    const Move first_killer = context.stack[static_cast<std::size_t>(ply)].killers[0];
-    const Move second_killer = context.stack[static_cast<std::size_t>(ply)].killers[1];
+    const Move counter_move = previous_move.is_valid()
+        ? countermoves_[square_index(previous_move.from())][square_index(previous_move.to())]
+        : Move{};
+
+    MovePicker picker(position, legal_moves, tt_move,
+                      context.stack[static_cast<std::size_t>(ply)].killers.data(),
+                      counter_move,
+                      position.side_to_move(),
+                      history_[static_cast<std::size_t>(position.side_to_move())]);
+
     int move_count = 0;
-    for (const Move move : ordered_moves(
-             position,
-             legal_moves,
-             tt_move,
-             first_killer,
-             second_killer,
-             history_[color_index],
-             previous_move.is_valid()
-                 ? countermoves_[square_index(previous_move.from())]
-                     [square_index(previous_move.to())]
-                 : Move{})) {
+    while (true) {
+        const Move move = picker.next();
+        if (!move.is_valid()) break;
+        ++move_count;
+        const bool recaptures = previous_move.is_valid() &&
+            previous_move.to() == move.to() &&
+            (previous_move.has_flag(MoveFlag::Capture) ||
+             previous_move.has_flag(MoveFlag::EnPassant)) &&
+            (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant));
+        const int see_score = recaptures
+            ? static_exchange_evaluation(position, move)
+            : std::numeric_limits<int>::min();
         StateInfo state;
         if (!position.make_move(move, state)) {
             continue;
@@ -592,18 +770,35 @@ int Searcher::negamax(
         }
         ++legal_count;
         context.keys.push_back(position.key());
+        table_.prefetch(position.key());
         PvLine child_pv;
         const bool gives_check = in_check(position);
-        const bool recaptures = previous_move.is_valid() &&
-            previous_move.to() == move.to() &&
-            (previous_move.has_flag(MoveFlag::Capture) ||
-             previous_move.has_flag(MoveFlag::EnPassant)) &&
-            (move.has_flag(MoveFlag::Capture) || move.has_flag(MoveFlag::EnPassant));
-        const int full_depth = depth - 1 + (gives_check ? 1 : 0) + (recaptures ? 1 : 0);
+        const int used = context.stack[static_cast<std::size_t>(ply)].extension_count;
+        int extension = 0;
+        if (used < maximum_extensions) {
+            const bool selective_check = gives_check && depth >= 3 && move_count < 4;
+            const bool sound_recapture = recaptures && depth <= 8 && see_score >= 0;
+            extension = selective_check || sound_recapture ? 1 : 0;
+        }
+        const int child_extension_count = used + extension;
+        context.stack[static_cast<std::size_t>(ply + 1)].extension_count =
+            child_extension_count;
+#ifndef NDEBUG
+        context.maximum_extension_count = std::max(
+            context.maximum_extension_count,
+            child_extension_count);
+#endif
+        const int full_depth = depth - 1 + extension;
         int score = 0;
         context.stack[static_cast<std::size_t>(ply + 1)].current_move = move;
-        if (move_count == 0) {
-            score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+        if (move_count == 1) {
+            if constexpr (pv_node) {
+                score = -negamax<NodeType::PV>(
+                    position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+            } else {
+                score = -negamax<NodeType::NonPV>(
+                    position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+            }
         } else {
             const bool quiet = !move.has_flag(MoveFlag::Capture) &&
                 !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
@@ -615,7 +810,7 @@ int Searcher::negamax(
                 }
                 if (depth >= 8 && move_count >= 12) ++reduction;
             }
-            score = -negamax(
+            score = -negamax<NodeType::NonPV>(
                 position,
                 full_depth - reduction,
                 -alpha - 1,
@@ -624,7 +819,7 @@ int Searcher::negamax(
                 context,
                 child_pv);
             if (!context.stopped && reduction > 0 && score > alpha) {
-                score = -negamax(
+                score = -negamax<NodeType::NonPV>(
                     position,
                     full_depth,
                     -alpha - 1,
@@ -633,11 +828,13 @@ int Searcher::negamax(
                     context,
                     child_pv);
             }
-            if (!context.stopped && score > alpha && score < beta) {
-                score = -negamax(position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+            if constexpr (pv_node) {
+                if (!context.stopped && score > alpha && score < beta) {
+                    score = -negamax<NodeType::PV>(
+                        position, full_depth, -beta, -alpha, ply + 1, context, child_pv);
+                }
             }
         }
-        ++move_count;
         context.keys.pop_back();
         position.unmake_move(move, state);
 
@@ -653,6 +850,7 @@ int Searcher::negamax(
             pv.prepend(move, child_pv);
         }
         if (alpha >= beta) {
+            picker.on_cutoff(move_count);
             const bool quiet = !move.has_flag(MoveFlag::Capture) &&
                 !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
             if (quiet) {
@@ -674,6 +872,8 @@ int Searcher::negamax(
         }
     }
 
+    context.picker_stats.accumulate(picker.collect_stats());
+
     if (legal_count == 0) {
         return checked ? -search_mate_score + ply : 0;
     }
@@ -684,7 +884,16 @@ int Searcher::negamax(
     } else if (best_score >= beta) {
         bound = Bound::Lower;
     }
-    table_.store(position.key(), best_move, best_score, depth, bound, ply);
+    table_.store(
+        position.key(),
+        best_move,
+        best_score,
+        depth,
+        bound,
+        ply,
+        position.rule50(),
+        static_eval,
+        pv_node);
     return best_score;
 }
 
@@ -702,12 +911,58 @@ int Searcher::quiescence(
     if (!consume_node(context)) {
         return 0;
     }
+    ++context.picker_stats.qnodes;
 
+#ifndef NDEBUG
+    if (ply >= context.limits.maximum_ply) {
+#else
     if (ply >= maximum_ply) {
-        return evaluate_position(position);
+#endif
+        return maximum_ply_score(position, ply);
     }
 
     const bool checked = in_check(position);
+
+    // Clamp alpha/beta to mate-distance bounds (same as main search).
+    // This ensures TT mate scores from different plies are compared safely.
+    alpha = std::max(alpha, -search_mate_score + ply);
+    beta = std::min(beta, search_mate_score - ply - 1);
+    if (alpha >= beta) {
+        return alpha;
+    }
+
+    // Transposition-table probe
+    Move tt_move;
+    int static_eval = tt_no_static_evaluation;
+    if (!checked) {
+        const auto tt_hit = table_.probe(position.key(), ply, position.rule50());
+        if (tt_hit) {
+            tt_move = tt_hit->move;
+            static_eval = tt_hit->static_evaluation;
+            if (static_eval != tt_no_static_evaluation) {
+                context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_eval;
+            }
+            const bool rule50_safe = tt_hit->rule50 == std::min(position.rule50(), 100);
+            if (rule50_safe && tt_hit->depth >= 0) {
+                if (tt_hit->bound == Bound::Exact) {
+                    return tt_hit->score;
+                }
+                if (tt_hit->bound == Bound::Lower && tt_hit->score >= beta) {
+                    return tt_hit->score;
+                }
+                if (tt_hit->bound == Bound::Upper && tt_hit->score <= alpha) {
+                    return tt_hit->score;
+                }
+            }
+        }
+    } else {
+        // In check: probe TT for the TT move only (no cutoffs, no static eval)
+        const auto tt_hit = table_.probe(position.key(), ply, position.rule50());
+        if (tt_hit) {
+            tt_move = tt_hit->move;
+        }
+    }
+
     MoveList legal_moves;
     generate_pseudo_legal(
         position,
@@ -726,22 +981,104 @@ int Searcher::quiescence(
             ? 0
             : -search_mate_score + ply;
     }
-    int stand_pat = -infinity;
+
+    const int original_alpha = alpha;
+    int best_score = -infinity;
+    Move best_move;
+
+    // Stand-pat evaluation (use TT static_eval if available)
     if (!checked) {
-        stand_pat = evaluate_position(position);
+        int stand_pat;
+        if (static_eval != tt_no_static_evaluation) {
+            stand_pat = static_eval;
+        } else {
+            stand_pat = evaluate_position(position);
+            static_eval = stand_pat;
+        }
         if (stand_pat >= beta) {
+            table_.store(position.key(), Move{}, stand_pat, 0, Bound::Lower, ply,
+                         position.rule50(), static_eval, false);
             return stand_pat;
         }
         alpha = std::max(alpha, stand_pat);
+        best_score = stand_pat;
     }
 
-    int legal_count = 0;
-    for (const Move move : ordered_moves(
-             position, legal_moves, Move{}, Move{}, Move{}, empty_history)) {
-        if (!checked && !move.has_flag(MoveFlag::Capture) &&
-            !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion)) {
+    // Build tactical move buffer (fixed capacity), with TT move first
+    std::array<std::pair<int, Move>, MoveList::capacity> q_buffer;
+    int q_count = 0;
+
+    bool tt_used = false;
+    if (tt_move.is_valid()) {
+        StateInfo tt_state;
+        if (position.make_move(tt_move, tt_state)) {
+            if (king_is_safe_after_move(position, opposite(position.side_to_move()))) {
+                position.unmake_move(tt_move, tt_state);
+                tt_used = true;
+                q_buffer[static_cast<std::size_t>(q_count++)] = {2'000'000, tt_move};
+            } else {
+                position.unmake_move(tt_move, tt_state);
+            }
+        }
+    }
+
+    bool pruned_this_node = false;
+    for (std::size_t i = 0; i < legal_moves.size(); ++i) {
+        const Move m = legal_moves[i];
+        if (tt_used && m == tt_move) continue;
+        if (!checked && !m.has_flag(MoveFlag::Capture) &&
+            !m.has_flag(MoveFlag::EnPassant) && !m.has_flag(MoveFlag::Promotion)) {
             continue;
         }
+
+        // SEE pruning: only in non-check nodes, for ordinary captures only.
+        // Never prune the TT move, promotions, en-passant, or checking captures.
+        if (!checked && m.has_flag(MoveFlag::Capture) &&
+            !m.has_flag(MoveFlag::Promotion) && !m.has_flag(MoveFlag::EnPassant)) {
+            ++context.picker_stats.see_pruning_calls;
+            if (!see_ge(position, m, 0)) {
+                StateInfo si;
+                bool gives_check = false;
+                if (position.make_move(m, si)) {
+                    gives_check = in_check(position);
+                    position.unmake_move(m, si);
+                }
+                if (!gives_check) {
+                    ++context.picker_stats.captures_pruned_by_see;
+                    pruned_this_node = true;
+                    continue;
+                }
+                ++context.picker_stats.checking_captures_exempted;
+            }
+        } else if (!checked &&
+                   (m.has_flag(MoveFlag::Promotion) || m.has_flag(MoveFlag::EnPassant))) {
+            ++context.picker_stats.promotions_ep_exempted;
+        }
+
+        int score = 0;
+        if (m.has_flag(MoveFlag::Capture) || m.has_flag(MoveFlag::EnPassant)) {
+            const Piece victim = m.has_flag(MoveFlag::EnPassant)
+                ? make_piece(opposite(position.side_to_move()), PieceType::Pawn)
+                : position.piece_on(m.to());
+            const Piece attacker = position.piece_on(m.from());
+            score = victim_value(victim) * 16 - victim_value(attacker);
+        }
+        if (m.has_flag(MoveFlag::Promotion)) {
+            score += 80'000 + victim_value(make_piece(position.side_to_move(), m.promotion()));
+        }
+        q_buffer[static_cast<std::size_t>(q_count++)] = {score, m};
+    }
+
+    if (pruned_this_node) {
+        ++context.picker_stats.qnodes_with_see_pruning;
+    }
+    context.picker_stats.tactical_moves_generated += q_count;
+    std::sort(q_buffer.begin(), q_buffer.begin() + q_count,
+        [](const auto& a, const auto& b) { return a.first > b.first; });
+
+    int legal_count = 0;
+    for (int i = 0; i < q_count; ++i) {
+        const Move move = q_buffer[static_cast<std::size_t>(i)].second;
         StateInfo state;
         if (!position.make_move(move, state)) {
             continue;
@@ -752,6 +1089,7 @@ int Searcher::quiescence(
         }
         ++legal_count;
         context.keys.push_back(position.key());
+        table_.prefetch(position.key());
         PvLine child_pv;
         const int score = -quiescence(position, -beta, -alpha, ply + 1, context, child_pv);
         context.keys.pop_back();
@@ -759,18 +1097,39 @@ int Searcher::quiescence(
         if (context.stopped) {
             return 0;
         }
+        if (score > best_score) {
+            best_score = score;
+            best_move = move;
+        }
         if (score > alpha) {
             alpha = score;
             pv.prepend(move, child_pv);
             if (alpha >= beta) {
-                break;
+                // Tactical beta cutoff — store as lower bound
+                table_.store(position.key(), best_move, best_score, 0, Bound::Lower, ply,
+                             position.rule50(), static_eval, false);
+                return best_score;
             }
         }
     }
+
     if (checked && legal_count == 0) {
         return -search_mate_score + ply;
     }
-    return alpha;
+
+    // Store qsearch result in TT
+    if (legal_count > 0 || !checked) {
+        Bound bound = Bound::Exact;
+        if (best_score <= original_alpha) {
+            bound = Bound::Upper;
+        } else if (best_score >= beta) {
+            bound = Bound::Lower;
+        }
+        table_.store(position.key(), best_move, best_score, 0, bound, ply,
+                     position.rule50(), static_eval, false);
+    }
+
+    return best_score;
 }
 
 bool Searcher::should_stop(Context& context) const {
@@ -792,19 +1151,24 @@ bool Searcher::should_stop(Context& context) const {
 
 bool Searcher::consume_node(Context& context) const {
     if (context.limits.shared_node_budget) {
-        std::uint64_t remaining =
-            context.limits.shared_node_budget->load(std::memory_order_relaxed);
-        while (remaining != 0 &&
-               !context.limits.shared_node_budget->compare_exchange_weak(
-                   remaining,
-                   remaining - 1,
-                   std::memory_order_relaxed,
-                   std::memory_order_relaxed)) {
+        if (context.local_node_budget == 0) {
+            constexpr std::uint64_t chunk_size = 1024;
+            std::uint64_t old =
+                context.limits.shared_node_budget->load(std::memory_order_relaxed);
+            while (old != 0) {
+                const std::uint64_t take = old < chunk_size ? old : chunk_size;
+                if (context.limits.shared_node_budget->compare_exchange_weak(
+                        old, old - take, std::memory_order_relaxed, std::memory_order_relaxed)) {
+                    context.local_node_budget = take;
+                    break;
+                }
+            }
+            if (old == 0) {
+                context.stopped = true;
+                return false;
+            }
         }
-        if (remaining == 0) {
-            context.stopped = true;
-            return false;
-        }
+        --context.local_node_budget;
     }
     ++context.nodes;
     return true;
@@ -818,6 +1182,15 @@ int Searcher::evaluate_position(const Position& position) const {
     const int score = network_ != nullptr ? network_->evaluate(position) : evaluate(position);
     entry = EvalCacheEntry{key, score, true};
     return score;
+}
+
+int Searcher::maximum_ply_score(Position& position, int ply) const {
+    if (!in_check(position)) {
+        return evaluate_position(position);
+    }
+    MoveList evasions;
+    generate_legal(position, evasions);
+    return evasions.empty() ? -search_mate_score + ply : 0;
 }
 
 bool Searcher::is_repetition(const Context& context, std::uint64_t key) {

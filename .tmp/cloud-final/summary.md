@@ -1,0 +1,3239 @@
+# Cloud match 5ddbbc48a2f41f625ae2a56d
+
+- Expected/completed games: 10000/10000
+- Clean evidence: 6794 games (3397 color-swapped pairs)
+- Quarantined: 3206 games (1603 pairs)
+- Raw candidate W/D/L: 5079/2632/2289
+- Clean candidate W/D/L: 3248/1682/1864
+- Shards: 20
+- SPRT decision: **accept**
+- LLR: `25.571711`
+- Pentanomial: `782 803 1088 465 259`
+
+## Termination counts
+
+- Clean ordinary: 6794
+- Clean adjudication: 0
+- Candidate time_loss: 0
+- Candidate illegal_move: 0
+- Candidate disconnect: 0
+- Candidate stall: 0
+- Opponent time_loss: 870
+- Opponent illegal_move: 0
+- Opponent disconnect: 0
+- Opponent stall: 300
+- Infrastructure/unknown unterminated: 0
+- Infrastructure/unknown malformed: 0
+- Infrastructure/unknown unknown: 0
+- Infrastructure/unknown contradictory: 587
+- Infrastructure/unknown runner_failure: 0
+- Infrastructure/unknown paired_quarantine: 1449
+
+## Abnormal games
+
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000000-w` round `1`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000000-b` round `1`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000060-w` round `4`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000060-b` round `4`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000160-w` round `9`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000160-b` round `9`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000200-w` round `11`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000200-b` round `11`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000240-w` round `13`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000240-b` round `13`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000280-w` round `15`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000280-b` round `15`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000340-w` round `18`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000340-b` round `18`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000380-w` round `20`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000380-b` round `20`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000000-w` round `26`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000000-b` round `26`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000140-w` round `33`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000140-b` round `33`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000160-w` round `34`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000160-b` round `34`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000200-w` round `36`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000200-b` round `36`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000280-w` round `40`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000280-b` round `40`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000300-w` round `41`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000300-b` round `41`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000340-w` round `43`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000340-b` round `43`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000360-w` round `44`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000360-b` round `44`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000380-w` round `45`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000380-b` round `45`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000000-w` round `51`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000000-b` round `51`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000100-w` round `56`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000100-b` round `56`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000140-w` round `58`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000140-b` round `58`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000160-w` round `59`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000160-b` round `59`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000280-w` round `65`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000280-b` round `65`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000400-w` round `71`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000400-b` round `71`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000420-w` round `72`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000420-b` round `72`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000440-w` round `73`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000440-b` round `73`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000020-w` round `77`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000020-b` round `77`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000140-w` round `83`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000140-b` round `83`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000200-w` round `86`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000200-b` round `86`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000240-w` round `88`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000240-b` round `88`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000260-w` round `89`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000260-b` round `89`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000300-w` round `91`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000300-b` round `91`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000340-w` round `93`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000340-b` round `93`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000380-w` round `95`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000380-b` round `95`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000000-w` round `101`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000000-b` round `101`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000100-w` round `106`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000100-b` round `106`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000140-w` round `108`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000140-b` round `108`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000300-w` round `116`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000300-b` round `116`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000340-w` round `118`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000340-b` round `118`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000380-w` round `120`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000380-b` round `120`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000400-w` round `121`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000400-b` round `121`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000420-w` round `122`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000420-b` round `122`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000440-w` round `123`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000440-b` round `123`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000100-w` round `131`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000100-b` round `131`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000160-w` round `134`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000160-b` round `134`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000280-w` round `140`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000280-b` round `140`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000300-w` round `141`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000300-b` round `141`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000340-w` round `143`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000340-b` round `143`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000420-w` round `147`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000420-b` round `147`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000460-w` round `149`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000460-b` round `149`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000000-w` round `151`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000000-b` round `151`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000140-w` round `158`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000140-b` round `158`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000180-w` round `160`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000180-b` round `160`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000200-w` round `161`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000200-b` round `161`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000240-w` round `163`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000240-b` round `163`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000260-w` round `164`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000260-b` round `164`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000320-w` round `167`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000320-b` round `167`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000340-w` round `168`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000340-b` round `168`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000380-w` round `170`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000380-b` round `170`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000020-w` round `177`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000020-b` round `177`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000080-w` round `180`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000080-b` round `180`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000160-w` round `184`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000160-b` round `184`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000220-w` round `187`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000220-b` round `187`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000300-w` round `191`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000300-b` round `191`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000340-w` round `193`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000340-b` round `193`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000380-w` round `195`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000380-b` round `195`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000020-w` round `202`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000020-b` round `202`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000160-w` round `209`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000160-b` round `209`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000260-w` round `214`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000260-b` round `214`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000380-w` round `220`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000380-b` round `220`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000440-w` round `223`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000440-b` round `223`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000140-w` round `233`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000140-b` round `233`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000180-w` round `235`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000180-b` round `235`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000280-w` round `240`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000280-b` round `240`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000340-w` round `243`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000340-b` round `243`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000081-w` round `5`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000081-b` round `5`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000121-w` round `7`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000121-b` round `7`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000421-w` round `22`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000421-b` round `22`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000021-w` round `27`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000021-b` round `27`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000121-w` round `32`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000121-b` round `32`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000181-w` round `35`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000181-b` round `35`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000221-w` round `37`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000221-b` round `37`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000241-w` round `38`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000241-b` round `38`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000361-w` round `44`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000361-b` round `44`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000381-w` round `45`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000381-b` round `45`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000421-w` round `47`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000421-b` round `47`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000481-w` round `50`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000481-b` round `50`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000041-w` round `53`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000041-b` round `53`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000081-w` round `55`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000081-b` round `55`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000181-w` round `60`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000181-b` round `60`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000341-w` round `68`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000341-b` round `68`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000361-w` round `69`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000361-b` round `69`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000381-w` round `70`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000381-b` round `70`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000401-w` round `71`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000401-b` round `71`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000021-w` round `77`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000021-b` round `77`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000041-w` round `78`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000041-b` round `78`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000061-w` round `79`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000061-b` round `79`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000121-w` round `82`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000121-b` round `82`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000181-w` round `85`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000181-b` round `85`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000361-w` round `94`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000361-b` round `94`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000401-w` round `96`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000401-b` round `96`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000481-w` round `100`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000481-b` round `100`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000081-w` round `105`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000081-b` round `105`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000161-w` round `109`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000161-b` round `109`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000181-w` round `110`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000181-b` round `110`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000241-w` round `113`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000241-b` round `113`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000281-w` round `115`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000281-b` round `115`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000321-w` round `117`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000321-b` round `117`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000341-w` round `118`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000341-b` round `118`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000381-w` round `120`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000381-b` round `120`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000401-w` round `121`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000401-b` round `121`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000001-w` round `126`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000001-b` round `126`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000041-w` round `128`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000041-b` round `128`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000121-w` round `132`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000121-b` round `132`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000181-w` round `135`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000181-b` round `135`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000281-w` round `140`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000281-b` round `140`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000401-w` round `146`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000401-b` round `146`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000001-w` round `151`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000001-b` round `151`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000021-w` round `152`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000021-b` round `152`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000041-w` round `153`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000041-b` round `153`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000061-w` round `154`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000061-b` round `154`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000081-w` round `155`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000081-b` round `155`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000121-w` round `157`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000121-b` round `157`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000181-w` round `160`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000181-b` round `160`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000261-w` round `164`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000261-b` round `164`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000321-w` round `167`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000321-b` round `167`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000341-w` round `168`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000341-b` round `168`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000361-w` round `169`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000361-b` round `169`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000381-w` round `170`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000381-b` round `170`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000061-w` round `179`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000061-b` round `179`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000081-w` round `180`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000081-b` round `180`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000121-w` round `182`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000121-b` round `182`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000161-w` round `184`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000161-b` round `184`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000261-w` round `189`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000261-b` round `189`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000341-w` round `193`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000341-b` round `193`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000361-w` round `194`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000361-b` round `194`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000381-w` round `195`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000381-b` round `195`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000401-w` round `196`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000401-b` round `196`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000041-w` round `203`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000041-b` round `203`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000121-w` round `207`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000121-b` round `207`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000141-w` round `208`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000141-b` round `208`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000241-w` round `213`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000241-b` round `213`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000341-w` round `218`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000341-b` round `218`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000381-w` round `220`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000381-b` round `220`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000421-w` round `222`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000421-b` round `222`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000021-w` round `227`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000021-b` round `227`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000041-w` round `228`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000041-b` round `228`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000081-w` round `230`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000081-b` round `230`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000101-w` round `231`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000101-b` round `231`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000341-w` round `243`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000341-b` round `243`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000361-w` round `244`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000361-b` round `244`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000381-w` round `245`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000381-b` round `245`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000421-w` round `247`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000421-b` round `247`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000481-w` round `250`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000481-b` round `250`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000030-w` round `2`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000030-b` round `2`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000050-w` round `3`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000050-b` round `3`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000070-w` round `4`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000070-b` round `4`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000130-w` round `7`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000130-b` round `7`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000150-w` round `8`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000150-b` round `8`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000230-w` round `12`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000230-b` round `12`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000290-w` round `15`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000290-b` round `15`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000450-w` round `23`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000450-b` round `23`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000170-w` round `34`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000170-b` round `34`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000270-w` round `39`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000270-b` round `39`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000330-w` round `42`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000330-b` round `42`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000410-w` round `46`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000410-b` round `46`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000490-w` round `50`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000490-b` round `50`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000170-w` round `59`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000170-b` round `59`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000230-w` round `62`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000230-b` round `62`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000330-w` round `67`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000330-b` round `67`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000410-w` round `71`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000410-b` round `71`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000010-w` round `76`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000010-b` round `76`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000050-w` round `78`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000050-b` round `78`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000070-w` round `79`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000070-b` round `79`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000130-w` round `82`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000130-b` round `82`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000190-w` round `85`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000190-b` round `85`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000250-w` round `88`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000250-b` round `88`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000330-w` round `92`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000330-b` round `92`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000070-w` round `104`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000070-b` round `104`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000230-w` round `112`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000230-b` round `112`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000250-w` round `113`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000250-b` round `113`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000290-w` round `115`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000290-b` round `115`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000330-w` round `117`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000330-b` round `117`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000010-w` round `126`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000010-b` round `126`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000050-w` round `128`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000050-b` round `128`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000130-w` round `132`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000130-b` round `132`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000170-w` round `134`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000170-b` round `134`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000230-w` round `137`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000230-b` round `137`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000250-w` round `138`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000250-b` round `138`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000290-w` round `140`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000290-b` round `140`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000330-w` round `142`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000330-b` round `142`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000410-w` round `146`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000410-b` round `146`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000450-w` round `148`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000450-b` round `148`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000470-w` round `149`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000470-b` round `149`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000130-w` round `157`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000130-b` round `157`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000290-w` round `165`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000290-b` round `165`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000030-w` round `177`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000030-b` round `177`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000050-w` round `178`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000050-b` round `178`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000170-w` round `184`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000170-b` round `184`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000250-w` round `188`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000250-b` round `188`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000270-w` round `189`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000270-b` round `189`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000290-w` round `190`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000290-b` round `190`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000330-w` round `192`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000330-b` round `192`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000350-w` round `193`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000350-b` round `193`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000130-w` round `207`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000130-b` round `207`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000250-w` round `213`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000250-b` round `213`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000050-w` round `228`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000050-b` round `228`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000090-w` round `230`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000090-b` round `230`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000130-w` round `232`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000130-b` round `232`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000150-w` round `233`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000150-b` round `233`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000290-w` round `240`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000290-b` round `240`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000310-w` round `241`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000310-b` round `241`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000330-w` round `242`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000330-b` round `242`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000410-w` round `246`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000410-b` round `246`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000131-w` round `7`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000131-b` round `7`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000191-w` round `10`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000191-b` round `10`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000291-w` round `15`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000291-b` round `15`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000311-w` round `16`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000311-b` round `16`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000351-w` round `18`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000351-b` round `18`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000391-w` round `20`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000391-b` round `20`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000071-w` round `29`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000071-b` round `29`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000091-w` round `30`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000091-b` round `30`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000131-w` round `32`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000131-b` round `32`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000311-w` round `41`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000311-b` round `41`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000351-w` round `43`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000351-b` round `43`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000451-w` round `48`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000451-b` round `48`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000051-w` round `53`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000051-b` round `53`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000091-w` round `55`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000091-b` round `55`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000151-w` round `58`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000151-b` round `58`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000231-w` round `62`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000231-b` round `62`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000371-w` round `69`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000371-b` round `69`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000391-w` round `70`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000391-b` round `70`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000071-w` round `79`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000071-b` round `79`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000151-w` round `83`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000151-b` round `83`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000351-w` round `93`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000351-b` round `93`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000371-w` round `94`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000371-b` round `94`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000391-w` round `95`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000391-b` round `95`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000431-w` round `97`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000431-b` round `97`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000451-w` round `98`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000451-b` round `98`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000471-w` round `99`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000471-b` round `99`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000031-w` round `102`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000031-b` round `102`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000071-w` round `104`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000071-b` round `104`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000091-w` round `105`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000091-b` round `105`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000131-w` round `107`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000131-b` round `107`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000291-w` round `115`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000291-b` round `115`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000311-w` round `116`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000311-b` round `116`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000351-w` round `118`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000351-b` round `118`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000371-w` round `119`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000371-b` round `119`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000411-w` round `121`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000411-b` round `121`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000431-w` round `122`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000431-b` round `122`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000451-w` round `123`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000451-b` round `123`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000071-w` round `129`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000071-b` round `129`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000091-w` round `130`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000091-b` round `130`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000131-w` round `132`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000131-b` round `132`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000231-w` round `137`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000231-b` round `137`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000291-w` round `140`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000291-b` round `140`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000311-w` round `141`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000311-b` round `141`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000371-w` round `144`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000371-b` round `144`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000391-w` round `145`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000391-b` round `145`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000451-w` round `148`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000451-b` round `148`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000011-w` round `151`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000011-b` round `151`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000051-w` round `153`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000051-b` round `153`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000071-w` round `154`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000071-b` round `154`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000131-w` round `157`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000131-b` round `157`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000151-w` round `158`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000151-b` round `158`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000191-w` round `160`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000191-b` round `160`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000231-w` round `162`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000231-b` round `162`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000251-w` round `163`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000251-b` round `163`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000271-w` round `164`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000271-b` round `164`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000311-w` round `166`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000311-b` round `166`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000351-w` round `168`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000351-b` round `168`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000371-w` round `169`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000371-b` round `169`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000391-w` round `170`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000391-b` round `170`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000411-w` round `171`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000411-b` round `171`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000011-w` round `176`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000011-b` round `176`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000031-w` round `177`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000031-b` round `177`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000191-w` round `185`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000191-b` round `185`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000291-w` round `190`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000291-b` round `190`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000351-w` round `193`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000351-b` round `193`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000371-w` round `194`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000371-b` round `194`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000451-w` round `198`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000451-b` round `198`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000151-w` round `208`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000151-b` round `208`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000311-w` round `216`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000311-b` round `216`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000351-w` round `218`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000351-b` round `218`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000371-w` round `219`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000371-b` round `219`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000031-w` round `227`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000031-b` round `227`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000051-w` round `228`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000051-b` round `228`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000071-w` round `229`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000071-b` round `229`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000131-w` round `232`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000131-b` round `232`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000191-w` round `235`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000191-b` round `235`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000351-w` round `243`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000351-b` round `243`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000411-w` round `246`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000411-b` round `246`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000451-w` round `248`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000451-b` round `248`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000471-w` round `249`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000471-b` round `249`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000012-w` round `1`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000012-b` round `1`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000092-w` round `5`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000092-b` round `5`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000152-w` round `8`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000152-b` round `8`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000272-w` round `14`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000272-b` round `14`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000372-w` round `19`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000372-b` round `19`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000392-w` round `20`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000392-b` round `20`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000412-w` round `21`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000412-b` round `21`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000432-w` round `22`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000432-b` round `22`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000472-w` round `24`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000472-b` round `24`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000492-w` round `25`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000492-b` round `25`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000012-w` round `26`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000012-b` round `26`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000052-w` round `28`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000052-b` round `28`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000092-w` round `30`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000092-b` round `30`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000112-w` round `31`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000112-b` round `31`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000132-w` round `32`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000132-b` round `32`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000332-w` round `42`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000332-b` round `42`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000452-w` round `48`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000452-b` round `48`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000472-w` round `49`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000472-b` round `49`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000492-w` round `50`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000492-b` round `50`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000092-w` round `55`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000092-b` round `55`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000132-w` round `57`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000132-b` round `57`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000152-w` round `58`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000152-b` round `58`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000232-w` round `62`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000232-b` round `62`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000272-w` round `64`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000272-b` round `64`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000352-w` round `68`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000352-b` round `68`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000372-w` round `69`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000372-b` round `69`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000472-w` round `74`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000472-b` round `74`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000492-w` round `75`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000492-b` round `75`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000032-w` round `77`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000032-b` round `77`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000092-w` round `80`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000092-b` round `80`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000112-w` round `81`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000112-b` round `81`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000172-w` round `84`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000172-b` round `84`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000352-w` round `93`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000352-b` round `93`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000492-w` round `100`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000492-b` round `100`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000092-w` round `105`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000092-b` round `105`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000132-w` round `107`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000132-b` round `107`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000352-w` round `118`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000352-b` round `118`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000392-w` round `120`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000392-b` round `120`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000412-w` round `121`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000412-b` round `121`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000472-w` round `124`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000472-b` round `124`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000092-w` round `130`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000092-b` round `130`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000112-w` round `131`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000112-b` round `131`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000132-w` round `132`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000132-b` round `132`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000352-w` round `143`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000352-b` round `143`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000392-w` round `145`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000392-b` round `145`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000452-w` round `148`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000452-b` round `148`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000472-w` round `149`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000472-b` round `149`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000492-w` round `150`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000492-b` round `150`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000112-w` round `156`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000112-b` round `156`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000132-w` round `157`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000132-b` round `157`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000232-w` round `162`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000232-b` round `162`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000372-w` round `169`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000372-b` round `169`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000492-w` round `175`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000492-b` round `175`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000012-w` round `176`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000012-b` round `176`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000072-w` round `179`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000072-b` round `179`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000092-w` round `180`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000092-b` round `180`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000112-w` round `181`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000112-b` round `181`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000132-w` round `182`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000132-b` round `182`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000452-w` round `198`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000452-b` round `198`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000492-w` round `200`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000492-b` round `200`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000112-w` round `206`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000112-b` round `206`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000232-w` round `212`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000232-b` round `212`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000252-w` round `213`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000252-b` round `213`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000312-w` round `216`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000312-b` round `216`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000372-w` round `219`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000372-b` round `219`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000412-w` round `221`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000412-b` round `221`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000472-w` round `224`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000472-b` round `224`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000492-w` round `225`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000492-b` round `225`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000012-w` round `226`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000012-b` round `226`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000072-w` round `229`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000072-b` round `229`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000132-w` round `232`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000132-b` round `232`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000152-w` round `233`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000152-b` round `233`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000172-w` round `234`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000172-b` round `234`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000192-w` round `235`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000192-b` round `235`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000232-w` round `237`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000232-b` round `237`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000352-w` round `243`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000352-b` round `243`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000372-w` round `244`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000372-b` round `244`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000492-w` round `250`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000492-b` round `250`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000053-w` round `3`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000053-b` round `3`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000073-w` round `4`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000073-b` round `4`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000293-w` round `15`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000293-b` round `15`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000333-w` round `17`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000333-b` round `17`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000453-w` round `23`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000453-b` round `23`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000493-w` round `25`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000493-b` round `25`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000013-w` round `26`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000013-b` round `26`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000033-w` round `27`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000033-b` round `27`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000133-w` round `32`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000133-b` round `32`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000213-w` round `36`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000213-b` round `36`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000233-w` round `37`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000233-b` round `37`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000353-w` round `43`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000353-b` round `43`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000393-w` round `45`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000393-b` round `45`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000013-w` round `51`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000013-b` round `51`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000033-w` round `52`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000033-b` round `52`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000133-w` round `57`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000133-b` round `57`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000153-w` round `58`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000153-b` round `58`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000233-w` round `62`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000233-b` round `62`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000493-w` round `75`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000493-b` round `75`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000013-w` round `76`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000013-b` round `76`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000153-w` round `83`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000153-b` round `83`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000193-w` round `85`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000193-b` round `85`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000233-w` round `87`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000233-b` round `87`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000353-w` round `93`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000353-b` round `93`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000413-w` round `96`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000413-b` round `96`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000433-w` round `97`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000433-b` round `97`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000493-w` round `100`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000493-b` round `100`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000073-w` round `104`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000073-b` round `104`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000113-w` round `106`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000113-b` round `106`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000273-w` round `114`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000273-b` round `114`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000353-w` round `118`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000353-b` round `118`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000393-w` round `120`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000393-b` round `120`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000413-w` round `121`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000413-b` round `121`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000473-w` round `124`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000473-b` round `124`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000133-w` round `132`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000133-b` round `132`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000173-w` round `134`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000173-b` round `134`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000233-w` round `137`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000233-b` round `137`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000333-w` round `142`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000333-b` round `142`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000393-w` round `145`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000393-b` round `145`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000493-w` round `150`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000493-b` round `150`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000093-w` round `155`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000093-b` round `155`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000113-w` round `156`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000113-b` round `156`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000133-w` round `157`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000133-b` round `157`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000153-w` round `158`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000153-b` round `158`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000173-w` round `159`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000173-b` round `159`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000193-w` round `160`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000193-b` round `160`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000293-w` round `165`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000293-b` round `165`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000333-w` round `167`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000333-b` round `167`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000393-w` round `170`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000393-b` round `170`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000033-w` round `177`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000033-b` round `177`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000093-w` round `180`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000093-b` round `180`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000113-w` round `181`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000113-b` round `181`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000133-w` round `182`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000133-b` round `182`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000193-w` round `185`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000193-b` round `185`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000233-w` round `187`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000233-b` round `187`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000333-w` round `192`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000333-b` round `192`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000393-w` round `195`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000393-b` round `195`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000473-w` round `199`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000473-b` round `199`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000493-w` round `200`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000493-b` round `200`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000033-w` round `202`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000033-b` round `202`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000093-w` round `205`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000093-b` round `205`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000293-w` round `215`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000293-b` round `215`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000393-w` round `220`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000393-b` round `220`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000413-w` round `221`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000413-b` round `221`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000493-w` round `225`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000493-b` round `225`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000033-w` round `227`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000033-b` round `227`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000053-w` round `228`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000053-b` round `228`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000093-w` round `230`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000093-b` round `230`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000113-w` round `231`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000113-b` round `231`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000133-w` round `232`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000133-b` round `232`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000153-w` round `233`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000153-b` round `233`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000213-w` round `236`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000213-b` round `236`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000233-w` round `237`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000233-b` round `237`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000353-w` round `243`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000353-b` round `243`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000393-w` round `245`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000393-b` round `245`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000493-w` round `250`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000493-b` round `250`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000114-w` round `6`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000114-b` round `6`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000134-w` round `7`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000134-b` round `7`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000154-w` round `8`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000154-b` round `8`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000194-w` round `10`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000194-b` round `10`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000254-w` round `13`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000254-b` round `13`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000274-w` round `14`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000274-b` round `14`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000494-w` round `25`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000494-b` round `25`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000014-w` round `26`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000014-b` round `26`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000034-w` round `27`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000034-b` round `27`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000054-w` round `28`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000054-b` round `28`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000074-w` round `29`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000074-b` round `29`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000334-w` round `42`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000334-b` round `42`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000354-w` round `43`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000354-b` round `43`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000434-w` round `47`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000434-b` round `47`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000454-w` round `48`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000454-b` round `48`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000494-w` round `50`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000494-b` round `50`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000074-w` round `54`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000074-b` round `54`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000094-w` round `55`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000094-b` round `55`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000114-w` round `56`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000114-b` round `56`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000154-w` round `58`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000154-b` round `58`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000214-w` round `61`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000214-b` round `61`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000334-w` round `67`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000334-b` round `67`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000374-w` round `69`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000374-b` round `69`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000434-w` round `72`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000434-b` round `72`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000474-w` round `74`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000474-b` round `74`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000494-w` round `75`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000494-b` round `75`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000014-w` round `76`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000014-b` round `76`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000074-w` round `79`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000074-b` round `79`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000134-w` round `82`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000134-b` round `82`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000154-w` round `83`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000154-b` round `83`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000254-w` round `88`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000254-b` round `88`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000294-w` round `90`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000294-b` round `90`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000374-w` round `94`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000374-b` round `94`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000494-w` round `100`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000494-b` round `100`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000014-w` round `101`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000014-b` round `101`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000134-w` round `107`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000134-b` round `107`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000154-w` round `108`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000154-b` round `108`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000174-w` round `109`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000174-b` round `109`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000194-w` round `110`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000194-b` round `110`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000254-w` round `113`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000254-b` round `113`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000314-w` round `116`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000314-b` round `116`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000434-w` round `122`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000434-b` round `122`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000454-w` round `123`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000454-b` round `123`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000474-w` round `124`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000474-b` round `124`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000494-w` round `125`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000494-b` round `125`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000034-w` round `127`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000034-b` round `127`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000074-w` round `129`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000074-b` round `129`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000094-w` round `130`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000094-b` round `130`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000114-w` round `131`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000114-b` round `131`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000154-w` round `133`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000154-b` round `133`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000234-w` round `137`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000234-b` round `137`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000254-w` round `138`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000254-b` round `138`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000274-w` round `139`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000274-b` round `139`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000294-w` round `140`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000294-b` round `140`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000334-w` round `142`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000334-b` round `142`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000374-w` round `144`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000374-b` round `144`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000434-w` round `147`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000434-b` round `147`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000494-w` round `150`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000494-b` round `150`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000154-w` round `158`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000154-b` round `158`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000194-w` round `160`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000194-b` round `160`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000274-w` round `164`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000274-b` round `164`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000294-w` round `165`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000294-b` round `165`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000354-w` round `168`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000354-b` round `168`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000434-w` round `172`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000434-b` round `172`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000474-w` round `174`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000474-b` round `174`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000494-w` round `175`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000494-b` round `175`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000014-w` round `176`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000014-b` round `176`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000034-w` round `177`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000034-b` round `177`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000054-w` round `178`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000054-b` round `178`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000074-w` round `179`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000074-b` round `179`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000154-w` round `183`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000154-b` round `183`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000174-w` round `184`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000174-b` round `184`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000474-w` round `199`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000474-b` round `199`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000494-w` round `200`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000494-b` round `200`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000034-w` round `202`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000034-b` round `202`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000074-w` round `204`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000074-b` round `204`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000114-w` round `206`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000114-b` round `206`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000134-w` round `207`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000134-b` round `207`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000174-w` round `209`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000174-b` round `209`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000434-w` round `222`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000434-b` round `222`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000454-w` round `223`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000454-b` round `223`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000494-w` round `225`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000494-b` round `225`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000014-w` round `226`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000014-b` round `226`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000034-w` round `227`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000034-b` round `227`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000054-w` round `228`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000054-b` round `228`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000134-w` round `232`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000134-b` round `232`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000174-w` round `234`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000174-b` round `234`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000194-w` round `235`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000194-b` round `235`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000314-w` round `241`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000314-b` round `241`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000374-w` round `244`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000374-b` round `244`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000474-w` round `249`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000474-b` round `249`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000494-w` round `250`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000494-b` round `250`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000035-w` round `2`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000035-b` round `2`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000095-w` round `5`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000095-b` round `5`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000155-w` round `8`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000155-b` round `8`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000195-w` round `10`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000195-b` round `10`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000215-w` round `11`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000215-b` round `11`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000335-w` round `17`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000335-b` round `17`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000495-w` round `25`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000495-b` round `25`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000055-w` round `28`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000055-b` round `28`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000075-w` round `29`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000075-b` round `29`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000095-w` round `30`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000095-b` round `30`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000155-w` round `33`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000155-b` round `33`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000195-w` round `35`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000195-b` round `35`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000395-w` round `45`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000395-b` round `45`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000415-w` round `46`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000415-b` round `46`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000435-w` round `47`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000435-b` round `47`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000475-w` round `49`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000475-b` round `49`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000035-w` round `52`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000035-b` round `52`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000095-w` round `55`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000095-b` round `55`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000155-w` round `58`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000155-b` round `58`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000215-w` round `61`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000215-b` round `61`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000035-w` round `77`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000035-b` round `77`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000095-w` round `80`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000095-b` round `80`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000155-w` round `83`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000155-b` round `83`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000255-w` round `88`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000255-b` round `88`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000355-w` round `93`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000355-b` round `93`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000395-w` round `95`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000395-b` round `95`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000435-w` round `97`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000435-b` round `97`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000095-w` round `105`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000095-b` round `105`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000115-w` round `106`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000115-b` round `106`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000155-w` round `108`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000155-b` round `108`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000175-w` round `109`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000175-b` round `109`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000195-w` round `110`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000195-b` round `110`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000335-w` round `117`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000335-b` round `117`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000455-w` round `123`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000455-b` round `123`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000015-w` round `126`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000015-b` round `126`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000035-w` round `127`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000035-b` round `127`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000155-w` round `133`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000155-b` round `133`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000215-w` round `136`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000215-b` round `136`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000455-w` round `148`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000455-b` round `148`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000475-w` round `149`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000475-b` round `149`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000035-w` round `152`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000035-b` round `152`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000215-w` round `161`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000215-b` round `161`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000295-w` round `165`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000295-b` round `165`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000315-w` round `166`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000315-b` round `166`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000475-w` round `174`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000475-b` round `174`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000115-w` round `181`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000115-b` round `181`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000155-w` round `183`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000155-b` round `183`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000195-w` round `185`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000195-b` round `185`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000395-w` round `195`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000395-b` round `195`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000215-w` round `211`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000215-b` round `211`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000235-w` round `212`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000235-b` round `212`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000295-w` round `215`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000295-b` round `215`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000335-w` round `217`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000335-b` round `217`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000395-w` round `220`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000395-b` round `220`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000035-w` round `227`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000035-b` round `227`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000135-w` round `232`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000135-b` round `232`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000155-w` round `233`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000155-b` round `233`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000175-w` round `234`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000175-b` round `234`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000255-w` round `238`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000255-b` round `238`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000475-w` round `249`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000475-b` round `249`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000096-w` round `5`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000096-b` round `5`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000216-w` round `11`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000216-b` round `11`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000256-w` round `13`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000256-b` round `13`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000296-w` round `15`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000296-b` round `15`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000316-w` round `16`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000316-b` round `16`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000376-w` round `19`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000376-b` round `19`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000476-w` round `24`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000476-b` round `24`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000116-w` round `31`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000116-b` round `31`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000196-w` round `35`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000196-b` round `35`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000256-w` round `38`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000256-b` round `38`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000276-w` round `39`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000276-b` round `39`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000376-w` round `44`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000376-b` round `44`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000436-w` round `47`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000436-b` round `47`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000036-w` round `52`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000036-b` round `52`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000056-w` round `53`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000056-b` round `53`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000136-w` round `57`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000136-b` round `57`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000236-w` round `62`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000236-b` round `62`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000256-w` round `63`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000256-b` round `63`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000276-w` round `64`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000276-b` round `64`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000296-w` round `65`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000296-b` round `65`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000316-w` round `66`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000316-b` round `66`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000336-w` round `67`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000336-b` round `67`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000376-w` round `69`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000376-b` round `69`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000436-w` round `72`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000436-b` round `72`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000476-w` round `74`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000476-b` round `74`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000056-w` round `78`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000056-b` round `78`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000156-w` round `83`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000156-b` round `83`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000196-w` round `85`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000196-b` round `85`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000316-w` round `91`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000316-b` round `91`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000376-w` round `94`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000376-b` round `94`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000476-w` round `99`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000476-b` round `99`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000496-w` round `100`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000496-b` round `100`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000036-w` round `102`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000036-b` round `102`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000156-w` round `108`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000156-b` round `108`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000236-w` round `112`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000236-b` round `112`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000256-w` round `113`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000256-b` round `113`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000316-w` round `116`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000316-b` round `116`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000336-w` round `117`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000336-b` round `117`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000376-w` round `119`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000376-b` round `119`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000416-w` round `121`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000416-b` round `121`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000436-w` round `122`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000436-b` round `122`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000476-w` round `124`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000476-b` round `124`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000496-w` round `125`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000496-b` round `125`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000036-w` round `127`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000036-b` round `127`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000056-w` round `128`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000056-b` round `128`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000196-w` round `135`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000196-b` round `135`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000256-w` round `138`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000256-b` round `138`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000276-w` round `139`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000276-b` round `139`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000436-w` round `147`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000436-b` round `147`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000476-w` round `149`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000476-b` round `149`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000496-w` round `150`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000496-b` round `150`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000036-w` round `152`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000036-b` round `152`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000056-w` round `153`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000056-b` round `153`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000116-w` round `156`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000116-b` round `156`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000216-w` round `161`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000216-b` round `161`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000256-w` round `163`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000256-b` round `163`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000336-w` round `167`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000336-b` round `167`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000376-w` round `169`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000376-b` round `169`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000436-w` round `172`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000436-b` round `172`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000036-w` round `177`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000036-b` round `177`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000056-w` round `178`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000056-b` round `178`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000096-w` round `180`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000096-b` round `180`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000136-w` round `182`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000136-b` round `182`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000156-w` round `183`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000156-b` round `183`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000196-w` round `185`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000196-b` round `185`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000256-w` round `188`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000256-b` round `188`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000336-w` round `192`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000336-b` round `192`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000356-w` round `193`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000356-b` round `193`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000376-w` round `194`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000376-b` round `194`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000456-w` round `198`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000456-b` round `198`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000016-w` round `201`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000016-b` round `201`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000056-w` round `203`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000056-b` round `203`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000136-w` round `207`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000136-b` round `207`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000236-w` round `212`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000236-b` round `212`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000256-w` round `213`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000256-b` round `213`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000316-w` round `216`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000316-b` round `216`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000336-w` round `217`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000336-b` round `217`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000376-w` round `219`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000376-b` round `219`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000056-w` round `228`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000056-b` round `228`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000116-w` round `231`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000116-b` round `231`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000196-w` round `235`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000196-b` round `235`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000256-w` round `238`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000256-b` round `238`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000296-w` round `240`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000296-b` round `240`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000316-w` round `241`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000316-b` round `241`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000376-w` round `244`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000376-b` round `244`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000436-w` round `247`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000436-b` round `247`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000456-w` round `248`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000456-b` round `248`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000496-w` round `250`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000496-b` round `250`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000017-w` round `1`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000017-b` round `1`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000117-w` round `6`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000117-b` round `6`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000137-w` round `7`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000137-b` round `7`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000177-w` round `9`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000177-b` round `9`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000317-w` round `16`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000317-b` round `16`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000337-w` round `17`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000337-b` round `17`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000357-w` round `18`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000357-b` round `18`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000477-w` round `24`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000477-b` round `24`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000017-w` round `26`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000017-b` round `26`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000037-w` round `27`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000037-b` round `27`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000157-w` round `33`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000157-b` round `33`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000177-w` round `34`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000177-b` round `34`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000237-w` round `37`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000237-b` round `37`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000257-w` round `38`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000257-b` round `38`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000277-w` round `39`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000277-b` round `39`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000337-w` round `42`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000337-b` round `42`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000417-w` round `46`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000417-b` round `46`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000477-w` round `49`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000477-b` round `49`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000077-w` round `54`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000077-b` round `54`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000137-w` round `57`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000137-b` round `57`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000217-w` round `61`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000217-b` round `61`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000237-w` round `62`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000237-b` round `62`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000257-w` round `63`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000257-b` round `63`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000297-w` round `65`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000297-b` round `65`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000337-w` round `67`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000337-b` round `67`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000357-w` round `68`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000357-b` round `68`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000437-w` round `72`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000437-b` round `72`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000497-w` round `75`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000497-b` round `75`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000057-w` round `78`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000057-b` round `78`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000157-w` round `83`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000157-b` round `83`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000177-w` round `84`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000177-b` round `84`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000197-w` round `85`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000197-b` round `85`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000237-w` round `87`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000237-b` round `87`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000357-w` round `93`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000357-b` round `93`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000397-w` round `95`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000397-b` round `95`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000417-w` round `96`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000417-b` round `96`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000077-w` round `104`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000077-b` round `104`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000257-w` round `113`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000257-b` round `113`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000277-w` round `114`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000277-b` round `114`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000337-w` round `117`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000337-b` round `117`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000357-w` round `118`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000357-b` round `118`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000377-w` round `119`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000377-b` round `119`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000397-w` round `120`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000397-b` round `120`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000477-w` round `124`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000477-b` round `124`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000017-w` round `126`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000017-b` round `126`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000057-w` round `128`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000057-b` round `128`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000137-w` round `132`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000137-b` round `132`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000177-w` round `134`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000177-b` round `134`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000217-w` round `136`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000217-b` round `136`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000237-w` round `137`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000237-b` round `137`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000277-w` round `139`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000277-b` round `139`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000297-w` round `140`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000297-b` round `140`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000357-w` round `143`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000357-b` round `143`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000477-w` round `149`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000477-b` round `149`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000017-w` round `151`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000017-b` round `151`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000057-w` round `153`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000057-b` round `153`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000137-w` round `157`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000137-b` round `157`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000157-w` round `158`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000157-b` round `158`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000177-w` round `159`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000177-b` round `159`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000197-w` round `160`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000197-b` round `160`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000237-w` round `162`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000237-b` round `162`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000477-w` round `174`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000477-b` round `174`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000177-w` round `184`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000177-b` round `184`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000237-w` round `187`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000237-b` round `187`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000297-w` round `190`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000297-b` round `190`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000337-w` round `192`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000337-b` round `192`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000357-w` round `193`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000357-b` round `193`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000477-w` round `199`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000477-b` round `199`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000017-w` round `201`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000017-b` round `201`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000057-w` round `203`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000057-b` round `203`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000137-w` round `207`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000137-b` round `207`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000157-w` round `208`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000157-b` round `208`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000237-w` round `212`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000237-b` round `212`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000257-w` round `213`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000257-b` round `213`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000337-w` round `217`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000337-b` round `217`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000357-w` round `218`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000357-b` round `218`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000017-w` round `226`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000017-b` round `226`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000157-w` round `233`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000157-b` round `233`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000177-w` round `234`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000177-b` round `234`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000217-w` round `236`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000217-b` round `236`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000317-w` round `241`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000317-b` round `241`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000337-w` round `242`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000337-b` round `242`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000078-w` round `4`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000078-b` round `4`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000138-w` round `7`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000138-b` round `7`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000178-w` round `9`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000178-b` round `9`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000258-w` round `13`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000258-b` round `13`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000298-w` round `15`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000298-b` round `15`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000318-w` round `16`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000318-b` round `16`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000358-w` round `18`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000358-b` round `18`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000018-w` round `26`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000018-b` round `26`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000058-w` round `28`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000058-b` round `28`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000138-w` round `32`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000138-b` round `32`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000158-w` round `33`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000158-b` round `33`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000198-w` round `35`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000198-b` round `35`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000218-w` round `36`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000218-b` round `36`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000298-w` round `40`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000298-b` round `40`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000358-w` round `43`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000358-b` round `43`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000418-w` round `46`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000418-b` round `46`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000438-w` round `47`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000438-b` round `47`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000098-w` round `55`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000098-b` round `55`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000138-w` round `57`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000138-b` round `57`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000158-w` round `58`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000158-b` round `58`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000178-w` round `59`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000178-b` round `59`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000418-w` round `71`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000418-b` round `71`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000438-w` round `72`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000438-b` round `72`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000458-w` round `73`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000458-b` round `73`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000058-w` round `78`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000058-b` round `78`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000138-w` round `82`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000138-b` round `82`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000178-w` round `84`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000178-b` round `84`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000258-w` round `88`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000258-b` round `88`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000298-w` round `90`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000298-b` round `90`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000358-w` round `93`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000358-b` round `93`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000498-w` round `100`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000498-b` round `100`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000058-w` round `103`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000058-b` round `103`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000098-w` round `105`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000098-b` round `105`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000118-w` round `106`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000118-b` round `106`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000138-w` round `107`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000138-b` round `107`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000158-w` round `108`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000158-b` round `108`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000198-w` round `110`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000198-b` round `110`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000218-w` round `111`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000218-b` round `111`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000278-w` round `114`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000278-b` round `114`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000298-w` round `115`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000298-b` round `115`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000358-w` round `118`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000358-b` round `118`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000418-w` round `121`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000418-b` round `121`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000438-w` round `122`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000438-b` round `122`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000458-w` round `123`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000458-b` round `123`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000478-w` round `124`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000478-b` round `124`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000078-w` round `129`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000078-b` round `129`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000118-w` round `131`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000118-b` round `131`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000138-w` round `132`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000138-b` round `132`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000218-w` round `136`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000218-b` round `136`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000258-w` round `138`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000258-b` round `138`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000318-w` round `141`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000318-b` round `141`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000358-w` round `143`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000358-b` round `143`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000378-w` round `144`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000378-b` round `144`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000418-w` round `146`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000418-b` round `146`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000498-w` round `150`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000498-b` round `150`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000138-w` round `157`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000138-b` round `157`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000158-w` round `158`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000158-b` round `158`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000318-w` round `166`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000318-b` round `166`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000358-w` round `168`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000358-b` round `168`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000418-w` round `171`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000418-b` round `171`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000458-w` round `173`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000458-b` round `173`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000478-w` round `174`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000478-b` round `174`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000098-w` round `180`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000098-b` round `180`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000138-w` round `182`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000138-b` round `182`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000158-w` round `183`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000158-b` round `183`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000178-w` round `184`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000178-b` round `184`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000298-w` round `190`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000298-b` round `190`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000318-w` round `191`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000318-b` round `191`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000458-w` round `198`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000458-b` round `198`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000478-w` round `199`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000478-b` round `199`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000098-w` round `205`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000098-b` round `205`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000138-w` round `207`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000138-b` round `207`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000158-w` round `208`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000158-b` round `208`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000218-w` round `211`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000218-b` round `211`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000298-w` round `215`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000298-b` round `215`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000358-w` round `218`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000358-b` round `218`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000098-w` round `230`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000098-b` round `230`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000138-w` round `232`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000138-b` round `232`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000158-w` round `233`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000158-b` round `233`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000178-w` round `234`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000178-b` round `234`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000318-w` round `241`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000318-b` round `241`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000358-w` round `243`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000358-b` round `243`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000458-w` round `248`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000458-b` round `248`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000019-w` round `1`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000019-b` round `1`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000099-w` round `5`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000099-b` round `5`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000119-w` round `6`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000119-b` round `6`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000179-w` round `9`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000179-b` round `9`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000219-w` round `11`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000219-b` round `11`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000299-w` round `15`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000299-b` round `15`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000339-w` round `17`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000339-b` round `17`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000359-w` round `18`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000359-b` round `18`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000399-w` round `20`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000399-b` round `20`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000439-w` round `22`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000439-b` round `22`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000459-w` round `23`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000459-b` round `23`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000019-w` round `26`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000019-b` round `26`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000239-w` round `37`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000239-b` round `37`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000259-w` round `38`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000259-b` round `38`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000279-w` round `39`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000279-b` round `39`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000359-w` round `43`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000359-b` round `43`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000379-w` round `44`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000379-b` round `44`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000079-w` round `54`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000079-b` round `54`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000099-w` round `55`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000099-b` round `55`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000119-w` round `56`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000119-b` round `56`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000299-w` round `65`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000299-b` round `65`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000339-w` round `67`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000339-b` round `67`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000359-w` round `68`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000359-b` round `68`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000379-w` round `69`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000379-b` round `69`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000399-w` round `70`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000399-b` round `70`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000439-w` round `72`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000439-b` round `72`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000079-w` round `79`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000079-b` round `79`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000119-w` round `81`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000119-b` round `81`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000159-w` round `83`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000159-b` round `83`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000179-w` round `84`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000179-b` round `84`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000239-w` round `87`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000239-b` round `87`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000279-w` round `89`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000279-b` round `89`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000339-w` round `92`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000339-b` round `92`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000359-w` round `93`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000359-b` round `93`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000379-w` round `94`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000379-b` round `94`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000179-w` round `109`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000179-b` round `109`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000239-w` round `112`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000239-b` round `112`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000299-w` round `115`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000299-b` round `115`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000319-w` round `116`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000319-b` round `116`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000339-w` round `117`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000339-b` round `117`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000359-w` round `118`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000359-b` round `118`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000419-w` round `121`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000419-b` round `121`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000459-w` round `123`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000459-b` round `123`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000479-w` round `124`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000479-b` round `124`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000499-w` round `125`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000499-b` round `125`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000059-w` round `128`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000059-b` round `128`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000079-w` round `129`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000079-b` round `129`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000099-w` round `130`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000099-b` round `130`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000239-w` round `137`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000239-b` round `137`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000299-w` round `140`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000299-b` round `140`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000319-w` round `141`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000319-b` round `141`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000359-w` round `143`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000359-b` round `143`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000399-w` round `145`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000399-b` round `145`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000079-w` round `154`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000079-b` round `154`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000179-w` round `159`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000179-b` round `159`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000279-w` round `164`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000279-b` round `164`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000299-w` round `165`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000299-b` round `165`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000319-w` round `166`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000319-b` round `166`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000419-w` round `171`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000419-b` round `171`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000479-w` round `174`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000479-b` round `174`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000499-w` round `175`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000499-b` round `175`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000079-w` round `179`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000079-b` round `179`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000099-w` round `180`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000099-b` round `180`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000299-w` round `190`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000299-b` round `190`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000339-w` round `192`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000339-b` round `192`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000359-w` round `193`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000359-b` round `193`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000439-w` round `197`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000439-b` round `197`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000459-w` round `198`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000459-b` round `198`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000059-w` round `203`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000059-b` round `203`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000079-w` round `204`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000079-b` round `204`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000099-w` round `205`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000099-b` round `205`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000159-w` round `208`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000159-b` round `208`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000179-w` round `209`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000179-b` round `209`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000279-w` round `214`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000279-b` round `214`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000319-w` round `216`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000319-b` round `216`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000339-w` round `217`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000339-b` round `217`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000379-w` round `219`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000379-b` round `219`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000399-w` round `220`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000399-b` round `220`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000479-w` round `224`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000479-b` round `224`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000019-w` round `226`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000019-b` round `226`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000299-w` round `240`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000299-b` round `240`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000319-w` round `241`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000319-b` round `241`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000379-w` round `244`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000379-b` round `244`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000419-w` round `246`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000419-b` round `246`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000479-w` round `249`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000479-b` round `249`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000022-w` round `2`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000022-b` round `2`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000082-w` round `5`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000082-b` round `5`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000122-w` round `7`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000122-b` round `7`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000162-w` round `9`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000162-b` round `9`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000182-w` round `10`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000182-b` round `10`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000202-w` round `11`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000202-b` round `11`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000222-w` round `12`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000222-b` round `12`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000242-w` round `13`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000242-b` round `13`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000282-w` round `15`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000282-b` round `15`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000302-w` round `16`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000302-b` round `16`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000342-w` round `18`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000342-b` round `18`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000462-w` round `24`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000462-b` round `24`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000022-w` round `27`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000022-b` round `27`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000062-w` round `29`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000062-b` round `29`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000102-w` round `31`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000102-b` round `31`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000122-w` round `32`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000122-b` round `32`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000182-w` round `35`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000182-b` round `35`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000202-w` round `36`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000202-b` round `36`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000242-w` round `38`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000242-b` round `38`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000282-w` round `40`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000282-b` round `40`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000342-w` round `43`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000342-b` round `43`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000362-w` round `44`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000362-b` round `44`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000402-w` round `46`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000402-b` round `46`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000462-w` round `49`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000462-b` round `49`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000482-w` round `50`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000482-b` round `50`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000002-w` round `51`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000002-b` round `51`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000022-w` round `52`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000022-b` round `52`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000102-w` round `56`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000102-b` round `56`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000122-w` round `57`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000122-b` round `57`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000142-w` round `58`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000142-b` round `58`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000242-w` round `63`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000242-b` round `63`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000362-w` round `69`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000362-b` round `69`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000402-w` round `71`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000402-b` round `71`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000022-w` round `77`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000022-b` round `77`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000042-w` round `78`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000042-b` round `78`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000062-w` round `79`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000062-b` round `79`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000122-w` round `82`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000122-b` round `82`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000142-w` round `83`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000142-b` round `83`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000162-w` round `84`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000162-b` round `84`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000202-w` round `86`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000202-b` round `86`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000222-w` round `87`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000222-b` round `87`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000242-w` round `88`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000242-b` round `88`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000282-w` round `90`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000282-b` round `90`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000342-w` round `93`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000342-b` round `93`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000362-w` round `94`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000362-b` round `94`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000402-w` round `96`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000402-b` round `96`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000462-w` round `99`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000462-b` round `99`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000022-w` round `102`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000022-b` round `102`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000182-w` round `110`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000182-b` round `110`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000202-w` round `111`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000202-b` round `111`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000222-w` round `112`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000222-b` round `112`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000242-w` round `113`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000242-b` round `113`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000282-w` round `115`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000282-b` round `115`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000302-w` round `116`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000302-b` round `116`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000342-w` round `118`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000342-b` round `118`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000462-w` round `124`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000462-b` round `124`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000002-w` round `126`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000002-b` round `126`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000022-w` round `127`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000022-b` round `127`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000062-w` round `129`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000062-b` round `129`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000242-w` round `138`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000242-b` round `138`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000282-w` round `140`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000282-b` round `140`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000342-w` round `143`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000342-b` round `143`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000402-w` round `146`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000402-b` round `146`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000022-w` round `152`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000022-b` round `152`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000062-w` round `154`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000062-b` round `154`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000182-w` round `160`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000182-b` round `160`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000222-w` round `162`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000222-b` round `162`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000242-w` round `163`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000242-b` round `163`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000302-w` round `166`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000302-b` round `166`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000342-w` round `168`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000342-b` round `168`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000402-w` round `171`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000402-b` round `171`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000022-w` round `177`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000022-b` round `177`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000062-w` round `179`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000062-b` round `179`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000142-w` round `183`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000142-b` round `183`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000222-w` round `187`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000222-b` round `187`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000302-w` round `191`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000302-b` round `191`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000342-w` round `193`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000342-b` round `193`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000402-w` round `196`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000402-b` round `196`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000442-w` round `198`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000442-b` round `198`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000482-w` round `200`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000482-b` round `200`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000022-w` round `202`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000022-b` round `202`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000062-w` round `204`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000062-b` round `204`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000102-w` round `206`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000102-b` round `206`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000222-w` round `212`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000222-b` round `212`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000242-w` round `213`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000242-b` round `213`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000282-w` round `215`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000282-b` round `215`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000342-w` round `218`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000342-b` round `218`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000402-w` round `221`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000402-b` round `221`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000022-w` round `227`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000022-b` round `227`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000162-w` round `234`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000162-b` round `234`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000222-w` round `237`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000222-b` round `237`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000242-w` round `238`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000242-b` round `238`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000282-w` round `240`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000282-b` round `240`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000302-w` round `241`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000302-b` round `241`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000342-w` round `243`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000342-b` round `243`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000362-w` round `244`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000362-b` round `244`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000402-w` round `246`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000402-b` round `246`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000462-w` round `249`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000462-b` round `249`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000003-w` round `1`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000003-b` round `1`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000143-w` round `8`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000143-b` round `8`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000163-w` round `9`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000163-b` round `9`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000203-w` round `11`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000203-b` round `11`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000223-w` round `12`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000223-b` round `12`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000283-w` round `15`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000283-b` round `15`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000343-w` round `18`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000343-b` round `18`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000403-w` round `21`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000403-b` round `21`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000463-w` round `24`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000463-b` round `24`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000003-w` round `26`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000003-b` round `26`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000083-w` round `30`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000083-b` round `30`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000123-w` round `32`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000123-b` round `32`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000143-w` round `33`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000143-b` round `33`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000163-w` round `34`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000163-b` round `34`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000223-w` round `37`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000223-b` round `37`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000283-w` round `40`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000283-b` round `40`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000343-w` round `43`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000343-b` round `43`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000363-w` round `44`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000363-b` round `44`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000383-w` round `45`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000383-b` round `45`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000403-w` round `46`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000403-b` round `46`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000043-w` round `53`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000043-b` round `53`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000083-w` round `55`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000083-b` round `55`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000143-w` round `58`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000143-b` round `58`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000183-w` round `60`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000183-b` round `60`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000203-w` round `61`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000203-b` round `61`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000223-w` round `62`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000223-b` round `62`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000283-w` round `65`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000283-b` round `65`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000343-w` round `68`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000343-b` round `68`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000003-w` round `76`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000003-b` round `76`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000063-w` round `79`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000063-b` round `79`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000163-w` round `84`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000163-b` round `84`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000223-w` round `87`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000223-b` round `87`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000283-w` round `90`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000283-b` round `90`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000303-w` round `91`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000303-b` round `91`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000343-w` round `93`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000343-b` round `93`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000383-w` round `95`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000383-b` round `95`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000403-w` round `96`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000403-b` round `96`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000423-w` round `97`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000423-b` round `97`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000483-w` round `100`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000483-b` round `100`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000063-w` round `104`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000063-b` round `104`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000143-w` round `108`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000143-b` round `108`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000163-w` round `109`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000163-b` round `109`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000203-w` round `111`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000203-b` round `111`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000223-w` round `112`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000223-b` round `112`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000283-w` round `115`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000283-b` round `115`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000303-w` round `116`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000303-b` round `116`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000343-w` round `118`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000343-b` round `118`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000063-w` round `129`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000063-b` round `129`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000083-w` round `130`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000083-b` round `130`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000123-w` round `132`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000123-b` round `132`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000143-w` round `133`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000143-b` round `133`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000163-w` round `134`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000163-b` round `134`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000183-w` round `135`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000183-b` round `135`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000203-w` round `136`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000203-b` round `136`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000343-w` round `143`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000343-b` round `143`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000403-w` round `146`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000403-b` round `146`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000003-w` round `151`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000003-b` round `151`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000043-w` round `153`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000043-b` round `153`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000083-w` round `155`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000083-b` round `155`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000123-w` round `157`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000123-b` round `157`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000163-w` round `159`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000163-b` round `159`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000183-w` round `160`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000183-b` round `160`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000203-w` round `161`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000203-b` round `161`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000263-w` round `164`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000263-b` round `164`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000283-w` round `165`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000283-b` round `165`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000303-w` round `166`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000303-b` round `166`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000383-w` round `170`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000383-b` round `170`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000423-w` round `172`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000423-b` round `172`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000003-w` round `176`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000003-b` round `176`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000043-w` round `178`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000043-b` round `178`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000223-w` round `187`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000223-b` round `187`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000303-w` round `191`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000303-b` round `191`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000443-w` round `198`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000443-b` round `198`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000003-w` round `201`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000003-b` round `201`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000083-w` round `205`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000083-b` round `205`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000123-w` round `207`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000123-b` round `207`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000203-w` round `211`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000203-b` round `211`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000223-w` round `212`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000223-b` round `212`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000263-w` round `214`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000263-b` round `214`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000283-w` round `215`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000283-b` round `215`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000303-w` round `216`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000303-b` round `216`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000463-w` round `224`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000463-b` round `224`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000003-w` round `226`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000003-b` round `226`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000063-w` round `229`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000063-b` round `229`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000103-w` round `231`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000103-b` round `231`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000143-w` round `233`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000143-b` round `233`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000183-w` round `235`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000183-b` round `235`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000203-w` round `236`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000203-b` round `236`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000223-w` round `237`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000223-b` round `237`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000263-w` round `239`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000263-b` round `239`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000283-w` round `240`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000283-b` round `240`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000303-w` round `241`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000303-b` round `241`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000383-w` round `245`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000383-b` round `245`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000403-w` round `246`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000403-b` round `246`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000423-w` round `247`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000423-b` round `247`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000463-w` round `249`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000463-b` round `249`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000024-w` round `2`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000024-b` round `2`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000144-w` round `8`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000144-b` round `8`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000204-w` round `11`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000204-b` round `11`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000284-w` round `15`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000284-b` round `15`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000344-w` round `18`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000344-b` round `18`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000024-w` round `27`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000024-b` round `27`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000044-w` round `28`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000044-b` round `28`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000104-w` round `31`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000104-b` round `31`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000224-w` round `37`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000224-b` round `37`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000284-w` round `40`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000284-b` round `40`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000444-w` round `48`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000444-b` round `48`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000464-w` round `49`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000464-b` round `49`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000024-w` round `52`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000024-b` round `52`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000084-w` round `55`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000084-b` round `55`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000104-w` round `56`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000104-b` round `56`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000164-w` round `59`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000164-b` round `59`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000324-w` round `67`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000324-b` round `67`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000444-w` round `73`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000444-b` round `73`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000024-w` round `77`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000024-b` round `77`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000084-w` round `80`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000084-b` round `80`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000104-w` round `81`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000104-b` round `81`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000144-w` round `83`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000144-b` round `83`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000284-w` round `90`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000284-b` round `90`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000324-w` round `92`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000324-b` round `92`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000004-w` round `101`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000004-b` round `101`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000064-w` round `104`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000064-b` round `104`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000224-w` round `112`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000224-b` round `112`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000244-w` round `113`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000244-b` round `113`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000264-w` round `114`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000264-b` round `114`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000444-w` round `123`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000444-b` round `123`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000004-w` round `126`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000004-b` round `126`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000024-w` round `127`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000024-b` round `127`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000084-w` round `130`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000084-b` round `130`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000104-w` round `131`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000104-b` round `131`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000224-w` round `137`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000224-b` round `137`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000444-w` round `148`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000444-b` round `148`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000464-w` round `149`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000464-b` round `149`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000024-w` round `152`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000024-b` round `152`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000084-w` round `155`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000084-b` round `155`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000104-w` round `156`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000104-b` round `156`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000144-w` round `158`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000144-b` round `158`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000244-w` round `163`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000244-b` round `163`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000284-w` round `165`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000284-b` round `165`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000344-w` round `168`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000344-b` round `168`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000484-w` round `175`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000484-b` round `175`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000004-w` round `176`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000004-b` round `176`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000044-w` round `178`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000044-b` round `178`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000144-w` round `183`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000144-b` round `183`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000024-w` round `202`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000024-b` round `202`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000084-w` round `205`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000084-b` round `205`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000104-w` round `206`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000104-b` round `206`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000204-w` round `211`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000204-b` round `211`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000344-w` round `218`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000344-b` round `218`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000444-w` round `223`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000444-b` round `223`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000024-w` round `227`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000024-b` round `227`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000124-w` round `232`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000124-b` round `232`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000144-w` round `233`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000144-b` round `233`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000224-w` round `237`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000224-b` round `237`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000264-w` round `239`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000264-b` round `239`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000284-w` round `240`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000284-b` round `240`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000364-w` round `244`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000364-b` round `244`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000384-w` round `245`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000384-b` round `245`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000444-w` round `248`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000444-b` round `248`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000065-w` round `4`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000065-b` round `4`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000105-w` round `6`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000105-b` round `6`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000125-w` round `7`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000125-b` round `7`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000145-w` round `8`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000145-b` round `8`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000185-w` round `10`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000185-b` round `10`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000205-w` round `11`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000205-b` round `11`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000245-w` round `13`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000245-b` round `13`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000265-w` round `14`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000265-b` round `14`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000285-w` round `15`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000285-b` round `15`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000305-w` round `16`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000305-b` round `16`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000345-w` round `18`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000345-b` round `18`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000405-w` round `21`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000405-b` round `21`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000425-w` round `22`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000425-b` round `22`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000105-w` round `31`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000105-b` round `31`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000145-w` round `33`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000145-b` round `33`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000205-w` round `36`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000205-b` round `36`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000245-w` round `38`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000245-b` round `38`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000265-w` round `39`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000265-b` round `39`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000305-w` round `41`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000305-b` round `41`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000325-w` round `42`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000325-b` round `42`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000385-w` round `45`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000385-b` round `45`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000405-w` round `46`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000405-b` round `46`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000425-w` round `47`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000425-b` round `47`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000445-w` round `48`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000445-b` round `48`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000005-w` round `51`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000005-b` round `51`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000145-w` round `58`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000145-b` round `58`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000165-w` round `59`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000165-b` round `59`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000245-w` round `63`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000245-b` round `63`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000265-w` round `64`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000265-b` round `64`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000305-w` round `66`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000305-b` round `66`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000325-w` round `67`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000325-b` round `67`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000425-w` round `72`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000425-b` round `72`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000005-w` round `76`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000005-b` round `76`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000025-w` round `77`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000025-b` round `77`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000065-w` round `79`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000065-b` round `79`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000145-w` round `83`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000145-b` round `83`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000185-w` round `85`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000185-b` round `85`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000205-w` round `86`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000205-b` round `86`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000225-w` round `87`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000225-b` round `87`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000265-w` round `89`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000265-b` round `89`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000305-w` round `91`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000305-b` round `91`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000345-w` round `93`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000345-b` round `93`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000365-w` round `94`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000365-b` round `94`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000405-w` round `96`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000405-b` round `96`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000425-w` round `97`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000425-b` round `97`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000465-w` round `99`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000465-b` round `99`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000005-w` round `101`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000005-b` round `101`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000065-w` round `104`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000065-b` round `104`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000085-w` round `105`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000085-b` round `105`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000105-w` round `106`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000105-b` round `106`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000145-w` round `108`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000145-b` round `108`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000245-w` round `113`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000245-b` round `113`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000285-w` round `115`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000285-b` round `115`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000305-w` round `116`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000305-b` round `116`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000405-w` round `121`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000405-b` round `121`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000025-w` round `127`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000025-b` round `127`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000145-w` round `133`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000145-b` round `133`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000245-w` round `138`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000245-b` round `138`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000365-w` round `144`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000365-b` round `144`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000405-w` round `146`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000405-b` round `146`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000445-w` round `148`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000445-b` round `148`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000065-w` round `154`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000065-b` round `154`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000105-w` round `156`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000105-b` round `156`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000185-w` round `160`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000185-b` round `160`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000225-w` round `162`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000225-b` round `162`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000245-w` round `163`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000245-b` round `163`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000265-w` round `164`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000265-b` round `164`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000305-w` round `166`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000305-b` round `166`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000445-w` round `173`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000445-b` round `173`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000065-w` round `179`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000065-b` round `179`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000145-w` round `183`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000145-b` round `183`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000185-w` round `185`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000185-b` round `185`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000205-w` round `186`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000205-b` round `186`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000265-w` round `189`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000265-b` round `189`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000365-w` round `194`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000365-b` round `194`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000385-w` round `195`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000385-b` round `195`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000405-w` round `196`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000405-b` round `196`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000485-w` round `200`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000485-b` round `200`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000005-w` round `201`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000005-b` round `201`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000065-w` round `204`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000065-b` round `204`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000145-w` round `208`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000145-b` round `208`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000225-w` round `212`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000225-b` round `212`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000285-w` round `215`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000285-b` round `215`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000305-w` round `216`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000305-b` round `216`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000325-w` round `217`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000325-b` round `217`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000405-w` round `221`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000405-b` round `221`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000485-w` round `225`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000485-b` round `225`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000005-w` round `226`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000005-b` round `226`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000045-w` round `228`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000045-b` round `228`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000125-w` round `232`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000125-b` round `232`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000145-w` round `233`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000145-b` round `233`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000185-w` round `235`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000185-b` round `235`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000265-w` round `239`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000265-b` round `239`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000285-w` round `240`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000285-b` round `240`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000325-w` round `242`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000325-b` round `242`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000405-w` round `246`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000405-b` round `246`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000465-w` round `249`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000465-b` round `249`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000485-w` round `250`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000485-b` round `250`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000146-w` round `8`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000146-b` round `8`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000166-w` round `9`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000166-b` round `9`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000226-w` round `12`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000226-b` round `12`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000266-w` round `14`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000266-b` round `14`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000326-w` round `17`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000326-b` round `17`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000346-w` round `18`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000346-b` round `18`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000366-w` round `19`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000366-b` round `19`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000466-w` round `24`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000466-b` round `24`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000486-w` round `25`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000486-b` round `25`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000006-w` round `26`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000006-b` round `26`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000066-w` round `29`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000066-b` round `29`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000086-w` round `30`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000086-b` round `30`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000126-w` round `32`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000126-b` round `32`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000166-w` round `34`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000166-b` round `34`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000326-w` round `42`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000326-b` round `42`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000406-w` round `46`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000406-b` round `46`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000426-w` round `47`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000426-b` round `47`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000446-w` round `48`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000446-b` round `48`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000466-w` round `49`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000466-b` round `49`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000006-w` round `51`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000006-b` round `51`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000086-w` round `55`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000086-b` round `55`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000126-w` round `57`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000126-b` round `57`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000146-w` round `58`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000146-b` round `58`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000306-w` round `66`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000306-b` round `66`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000386-w` round `70`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000386-b` round `70`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000406-w` round `71`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000406-b` round `71`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000426-w` round `72`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000426-b` round `72`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000006-w` round `76`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000006-b` round `76`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000026-w` round `77`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000026-b` round `77`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000126-w` round `82`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000126-b` round `82`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000306-w` round `91`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000306-b` round `91`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000326-w` round `92`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000326-b` round `92`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000346-w` round `93`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000346-b` round `93`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000406-w` round `96`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000406-b` round `96`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000466-w` round `99`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000466-b` round `99`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000006-w` round `101`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000006-b` round `101`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000086-w` round `105`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000086-b` round `105`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000106-w` round `106`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000106-b` round `106`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000146-w` round `108`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000146-b` round `108`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000226-w` round `112`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000226-b` round `112`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000306-w` round `116`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000306-b` round `116`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000326-w` round `117`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000326-b` round `117`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000346-w` round `118`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000346-b` round `118`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000366-w` round `119`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000366-b` round `119`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000426-w` round `122`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000426-b` round `122`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000446-w` round `123`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000446-b` round `123`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000466-w` round `124`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000466-b` round `124`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000486-w` round `125`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000486-b` round `125`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000066-w` round `129`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000066-b` round `129`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000106-w` round `131`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000106-b` round `131`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000146-w` round `133`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000146-b` round `133`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000306-w` round `141`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000306-b` round `141`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000326-w` round `142`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000326-b` round `142`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000366-w` round `144`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000366-b` round `144`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000386-w` round `145`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000386-b` round `145`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000446-w` round `148`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000446-b` round `148`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000466-w` round `149`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000466-b` round `149`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000006-w` round `151`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000006-b` round `151`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000106-w` round `156`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000106-b` round `156`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000126-w` round `157`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000126-b` round `157`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000206-w` round `161`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000206-b` round `161`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000306-w` round `166`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000306-b` round `166`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000326-w` round `167`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000326-b` round `167`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000366-w` round `169`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000366-b` round `169`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000006-w` round `176`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000006-b` round `176`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000086-w` round `180`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000086-b` round `180`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000126-w` round `182`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000126-b` round `182`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000146-w` round `183`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000146-b` round `183`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000306-w` round `191`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000306-b` round `191`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000326-w` round `192`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000326-b` round `192`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000366-w` round `194`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000366-b` round `194`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000406-w` round `196`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000406-b` round `196`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000446-w` round `198`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000446-b` round `198`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000006-w` round `201`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000006-b` round `201`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000066-w` round `204`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000066-b` round `204`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000086-w` round `205`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000086-b` round `205`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000226-w` round `212`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000226-b` round `212`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000326-w` round `217`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000326-b` round `217`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000346-w` round `218`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000346-b` round `218`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000446-w` round `223`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000446-b` round `223`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000466-w` round `224`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000466-b` round `224`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000006-w` round `226`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000006-b` round `226`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000066-w` round `229`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000066-b` round `229`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000106-w` round `231`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000106-b` round `231`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000126-w` round `232`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000126-b` round `232`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000146-w` round `233`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000146-b` round `233`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000226-w` round `237`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000226-b` round `237`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000306-w` round `241`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000306-b` round `241`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000326-w` round `242`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000326-b` round `242`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000366-w` round `244`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000366-b` round `244`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000466-w` round `249`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000466-b` round `249`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000187-w` round `10`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000187-b` round `10`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000207-w` round `11`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000207-b` round `11`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000347-w` round `18`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000347-b` round `18`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000367-w` round `19`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000367-b` round `19`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000387-w` round `20`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000387-b` round `20`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000487-w` round `25`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000487-b` round `25`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000067-w` round `29`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000067-b` round `29`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000087-w` round `30`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000087-b` round `30`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000147-w` round `33`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000147-b` round `33`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000167-w` round `34`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000167-b` round `34`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000327-w` round `42`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000327-b` round `42`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000427-w` round `47`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000427-b` round `47`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000487-w` round `50`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000487-b` round `50`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000087-w` round `55`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000087-b` round `55`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000227-w` round `62`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000227-b` round `62`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000327-w` round `67`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000327-b` round `67`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000487-w` round `75`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000487-b` round `75`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000067-w` round `79`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000067-b` round `79`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000207-w` round `86`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000207-b` round `86`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000227-w` round `87`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000227-b` round `87`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000267-w` round `89`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000267-b` round `89`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000327-w` round `92`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000327-b` round `92`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000487-w` round `100`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000487-b` round `100`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000087-w` round `105`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000087-b` round `105`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000147-w` round `108`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000147-b` round `108`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000167-w` round `109`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000167-b` round `109`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000187-w` round `110`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000187-b` round `110`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000327-w` round `117`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000327-b` round `117`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000347-w` round `118`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000347-b` round `118`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000087-w` round `130`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000087-b` round `130`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000167-w` round `134`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000167-b` round `134`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000187-w` round `135`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000187-b` round `135`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000207-w` round `136`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000207-b` round `136`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000347-w` round `143`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000347-b` round `143`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000407-w` round `146`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000407-b` round `146`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000067-w` round `154`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000067-b` round `154`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000127-w` round `157`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000127-b` round `157`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000227-w` round `162`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000227-b` round `162`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000267-w` round `164`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000267-b` round `164`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000307-w` round `166`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000307-b` round `166`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000327-w` round `167`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000327-b` round `167`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000367-w` round `169`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000367-b` round `169`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000167-w` round `184`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000167-b` round `184`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000187-w` round `185`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000187-b` round `185`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000227-w` round `187`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000227-b` round `187`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000267-w` round `189`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000267-b` round `189`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000347-w` round `193`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000347-b` round `193`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000367-w` round `194`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000367-b` round `194`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000487-w` round `200`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000487-b` round `200`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000047-w` round `203`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000047-b` round `203`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000167-w` round `209`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000167-b` round `209`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000327-w` round `217`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000327-b` round `217`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000067-w` round `229`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000067-b` round `229`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000167-w` round `234`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000167-b` round `234`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000207-w` round `236`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000207-b` round `236`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000327-w` round `242`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000327-b` round `242`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000387-w` round `245`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000387-b` round `245`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000487-w` round `250`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000487-b` round `250`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000008-w` round `1`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000008-b` round `1`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000028-w` round `2`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000028-b` round `2`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000048-w` round `3`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000048-b` round `3`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000068-w` round `4`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000068-b` round `4`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000108-w` round `6`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000108-b` round `6`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000148-w` round `8`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000148-b` round `8`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000208-w` round `11`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000208-b` round `11`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000228-w` round `12`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000228-b` round `12`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000248-w` round `13`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000248-b` round `13`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000308-w` round `16`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000308-b` round `16`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000328-w` round `17`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000328-b` round `17`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000408-w` round `21`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000408-b` round `21`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000448-w` round `23`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000448-b` round `23`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000488-w` round `25`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000488-b` round `25`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000028-w` round `27`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000028-b` round `27`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000068-w` round `29`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000068-b` round `29`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000208-w` round `36`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000208-b` round `36`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000308-w` round `41`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000308-b` round `41`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000328-w` round `42`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000328-b` round `42`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000428-w` round `47`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000428-b` round `47`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000028-w` round `52`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000028-b` round `52`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000068-w` round `54`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000068-b` round `54`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000148-w` round `58`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000148-b` round `58`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000168-w` round `59`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000168-b` round `59`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000428-w` round `72`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000428-b` round `72`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000468-w` round `74`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000468-b` round `74`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000028-w` round `77`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000028-b` round `77`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000188-w` round `85`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000188-b` round `85`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000248-w` round `88`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000248-b` round `88`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000308-w` round `91`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000308-b` round `91`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000328-w` round `92`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000328-b` round `92`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000348-w` round `93`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000348-b` round `93`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000448-w` round `98`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000448-b` round `98`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000488-w` round `100`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000488-b` round `100`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000008-w` round `101`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000008-b` round `101`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000048-w` round `103`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000048-b` round `103`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000168-w` round `109`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000168-b` round `109`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000208-w` round `111`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000208-b` round `111`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000228-w` round `112`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000228-b` round `112`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000308-w` round `116`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000308-b` round `116`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000328-w` round `117`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000328-b` round `117`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000448-w` round `123`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000448-b` round `123`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000048-w` round `128`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000048-b` round `128`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000148-w` round `133`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000148-b` round `133`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000168-w` round `134`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000168-b` round `134`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000228-w` round `137`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000228-b` round `137`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000248-w` round `138`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000248-b` round `138`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000328-w` round `142`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000328-b` round `142`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000028-w` round `152`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000028-b` round `152`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000048-w` round `153`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000048-b` round `153`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000068-w` round `154`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000068-b` round `154`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000108-w` round `156`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000108-b` round `156`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000228-w` round `162`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000228-b` round `162`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000248-w` round `163`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000248-b` round `163`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000428-w` round `172`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000428-b` round `172`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000028-w` round `177`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000028-b` round `177`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000148-w` round `183`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000148-b` round `183`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000248-w` round `188`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000248-b` round `188`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000328-w` round `192`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000328-b` round `192`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000348-w` round `193`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000348-b` round `193`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000108-w` round `206`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000108-b` round `206`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000168-w` round `209`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000168-b` round `209`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000188-w` round `210`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000188-b` round `210`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000228-w` round `212`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000228-b` round `212`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000248-w` round `213`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000248-b` round `213`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000308-w` round `216`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000308-b` round `216`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000348-w` round `218`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000348-b` round `218`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000408-w` round `221`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000408-b` round `221`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000468-w` round `224`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000468-b` round `224`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000008-w` round `226`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000008-b` round `226`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000028-w` round `227`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000028-b` round `227`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000068-w` round `229`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000068-b` round `229`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000088-w` round `230`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000088-b` round `230`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000108-w` round `231`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000108-b` round `231`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000148-w` round `233`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000148-b` round `233`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000168-w` round `234`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000168-b` round `234`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000248-w` round `238`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000248-b` round `238`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000308-w` round `241`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000308-b` round `241`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000328-w` round `242`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000328-b` round `242`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000029-w` round `2`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000029-b` round `2`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000049-w` round `3`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000049-b` round `3`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000089-w` round `5`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000089-b` round `5`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000109-w` round `6`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000109-b` round `6`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000169-w` round `9`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000169-b` round `9`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000189-w` round `10`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000189-b` round `10`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000329-w` round `17`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000329-b` round `17`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000349-w` round `18`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000349-b` round `18`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000389-w` round `20`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000389-b` round `20`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000429-w` round `22`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000429-b` round `22`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000489-w` round `25`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0000-p000489-b` round `25`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000069-w` round `29`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000069-b` round `29`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000109-w` round `31`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000109-b` round `31`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000229-w` round `37`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000229-b` round `37`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000249-w` round `38`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0001-p000249-b` round `38`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000049-w` round `53`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000049-b` round `53`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000089-w` round `55`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000089-b` round `55`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000129-w` round `57`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000129-b` round `57`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000209-w` round `61`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000209-b` round `61`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000229-w` round `62`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000229-b` round `62`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000249-w` round `63`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000249-b` round `63`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000309-w` round `66`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000309-b` round `66`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000389-w` round `70`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000389-b` round `70`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000429-w` round `72`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000429-b` round `72`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000469-w` round `74`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000469-b` round `74`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000489-w` round `75`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0002-p000489-b` round `75`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000009-w` round `76`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000009-b` round `76`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000109-w` round `81`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000109-b` round `81`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000229-w` round `87`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000229-b` round `87`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000249-w` round `88`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000249-b` round `88`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000269-w` round `89`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000269-b` round `89`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000309-w` round `91`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000309-b` round `91`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000389-w` round `95`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000389-b` round `95`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000469-w` round `99`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0003-p000469-b` round `99`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000129-w` round `107`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000129-b` round `107`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000149-w` round `108`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000149-b` round `108`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000189-w` round `110`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000189-b` round `110`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000209-w` round `111`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000209-b` round `111`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000229-w` round `112`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000229-b` round `112`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000249-w` round `113`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000249-b` round `113`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000269-w` round `114`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000269-b` round `114`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000389-w` round `120`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000389-b` round `120`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000409-w` round `121`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000409-b` round `121`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000469-w` round `124`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0004-p000469-b` round `124`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000149-w` round `133`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000149-b` round `133`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000209-w` round `136`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000209-b` round `136`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000229-w` round `137`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000229-b` round `137`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000249-w` round `138`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000249-b` round `138`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000289-w` round `140`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000289-b` round `140`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000349-w` round `143`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000349-b` round `143`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000389-w` round `145`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000389-b` round `145`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000429-w` round `147`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0005-p000429-b` round `147`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000069-w` round `154`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000069-b` round `154`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000089-w` round `155`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000089-b` round `155`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000109-w` round `156`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000109-b` round `156`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000129-w` round `157`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000129-b` round `157`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000189-w` round `160`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000189-b` round `160`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000229-w` round `162`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000229-b` round `162`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000249-w` round `163`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000249-b` round `163`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000309-w` round `166`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000309-b` round `166`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000349-w` round `168`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000349-b` round `168`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000389-w` round `170`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000389-b` round `170`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000409-w` round `171`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000409-b` round `171`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000429-w` round `172`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000429-b` round `172`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000469-w` round `174`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0006-p000469-b` round `174`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000209-w` round `186`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000209-b` round `186`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000229-w` round `187`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000229-b` round `187`: stall (opponent), result `0-1`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000249-w` round `188`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000249-b` round `188`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000309-w` round `191`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000309-b` round `191`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000409-w` round `196`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000409-b` round `196`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000429-w` round `197`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0007-p000429-b` round `197`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000049-w` round `203`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000049-b` round `203`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000129-w` round `207`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000129-b` round `207`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000189-w` round `210`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000189-b` round `210`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000309-w` round `216`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000309-b` round `216`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000449-w` round `223`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0008-p000449-b` round `223`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000109-w` round `231`: contradictory (unknown), result `1/2-1/2`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000109-b` round `231`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000229-w` round `237`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000229-b` round `237`: paired_quarantine (unknown), result `0-1`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000249-w` round `238`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000249-b` round `238`: time_loss (opponent), result `0-1`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000309-w` round `241`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000309-b` round `241`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000349-w` round `243`: time_loss (opponent), result `1-0`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000349-b` round `243`: paired_quarantine (unknown), result `1-0`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000409-w` round `246`: paired_quarantine (unknown), result `1/2-1/2`, termination ``
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000409-b` round `246`: contradictory (unknown), result `1/2-1/2`, termination `time forfeit`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000469-w` round `249`: stall (opponent), result `1-0`, termination `stalled connection`
+- `5ddbbc48a2f41f625ae2a56d-c0009-p000469-b` round `249`: paired_quarantine (unknown), result `1-0`, termination ``

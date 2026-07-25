@@ -7,8 +7,8 @@
 int main(int argc, char** argv) {
     if (argc == 3 && std::string_view(argv[1]) == "--require-network") {
         std::string error;
-        if (!blaze::NetworkLoader::load(argv[2], error)) {
-            std::cerr << "critical: required Blaze network unavailable: " << error << '\n';
+        if (!blaze::NetworkEvaluator::create(argv[2], error)) {
+            std::cerr << "critical: required NNUE network unavailable: " << error << '\n';
             return 1;
         }
     } else if (argc != 1) {

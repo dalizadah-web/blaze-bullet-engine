@@ -11,17 +11,27 @@ on:
       baseline_ref:
         description: Baseline branch, tag, or commit
         required: true
-        default: 4d25363fef79ff2025670e248ed07b3d81747d3a
+        default: 5245d6e97af4eb956349aa4f70f6f8c1df58e6d6
         type: string
       games:
-        description: Total games (even; pairs must divide by shards)
+        description: Total games (exactly 2 * suite positions * repeats)
         required: true
-        default: 400
+        default: 2000
+        type: number
+      opening_start:
+        description: One-based first suite position for the cloud lane
+        required: true
+        default: 1
+        type: number
+      opening_repeats:
+        description: Explicit complete cycles over the opening suite
+        required: true
+        default: 10
         type: number
       shards:
-        description: Parallel runners (1-20)
+        description: Parallel runners (1-40)
         required: true
-        default: 20
+        default: 40
         type: number
       time_control:
         description: CuteChess base+increment in seconds
@@ -48,6 +58,11 @@ on:
         required: true
         default: 5
         type: number
+      stockfish_elo:
+        description: Use Stockfish as baseline with this UCI_Elo rating
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -62,8 +77,12 @@ jobs:
     outputs:
       matrix: ${{ steps.spec.outputs.matrix }}
       experiment_id: ${{ steps.spec.outputs.experiment_id }}
+      candidate_commit: ${{ steps.spec.outputs.candidate_commit }}
+      baseline_commit: ${{ steps.spec.outputs.baseline_commit }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
@@ -76,24 +95,33 @@ jobs:
         id: spec
         shell: bash
         run: |
+          STOCKFISH_ELO=${{ inputs.stockfish_elo }}
+          BASELINE_INITSTR_FLAG=""
+          if [ -n "$STOCKFISH_ELO" ]; then
+            BASELINE_INITSTR_FLAG="--baseline-initstr UCI_Elo=$STOCKFISH_ELO"
+          fi
           python -m tools.cloud_match.prepare \
             --base config/cloud/default-match.json \
             --output prepared/spec.json \
             --candidate-ref '${{ inputs.candidate_ref }}' \
             --baseline-ref '${{ inputs.baseline_ref }}' \
             --games '${{ inputs.games }}' \
+            --opening-start '${{ inputs.opening_start }}' \
+            --opening-repeats '${{ inputs.opening_repeats }}' \
             --shards '${{ inputs.shards }}' \
             --time-control '${{ inputs.time_control }}' \
             --threads '${{ inputs.threads }}' \
             --hash-mb '${{ inputs.hash_mb }}' \
+            --repo-root . \
             --elo0 '${{ inputs.elo0 }}' \
             --elo1 '${{ inputs.elo1 }}' \
+            $BASELINE_INITSTR_FLAG \
             --github-output "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
           name: match-spec-${{ steps.spec.outputs.experiment_id }}
           path: prepared/spec.json
-          retention-days: 30
+          retention-days: 1
           if-no-files-found: error
 
   build:
@@ -107,13 +135,15 @@ jobs:
       - name: Checkout candidate
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.candidate_ref }}
+          ref: ${{ needs.prepare.outputs.candidate_commit }}
           path: candidate-src
+          submodules: recursive
       - name: Checkout baseline
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.baseline_ref }}
+          ref: ${{ needs.prepare.outputs.baseline_commit }}
           path: baseline-src
+          submodules: recursive
       - uses: actions/download-artifact@v4
         with:
           name: match-spec-${{ needs.prepare.outputs.experiment_id }}
@@ -140,13 +170,27 @@ jobs:
           chmod +x bundle/cutechess-cli
       - name: Build candidate and baseline
         shell: bash
+        env:
+          STOCKFISH_ELO: ${{ inputs.stockfish_elo }}
         run: |
-          mkdir -p candidate-src/build/blaze baseline-src/build/blaze bundle
+          mkdir -p candidate-src/build/blaze bundle
           make -C candidate-src -f Makefile.blaze blaze -j2
-          make -C baseline-src -f Makefile.blaze blaze -j2 \
-            RELEASE_FLAGS='-std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Isrc'
           cp candidate-src/build/blaze/blaze.exe bundle/candidate
-          cp baseline-src/build/blaze/blaze.exe bundle/baseline
+          chmod +x bundle/candidate
+          if [ -n "$STOCKFISH_ELO" ]; then
+            curl --fail --location --retry 3 \
+              -o stockfish.tar \
+              'https://github.com/official-stockfish/Stockfish/releases/download/sf_18/stockfish-ubuntu-x86-64-avx2.tar'
+            tar -xf stockfish.tar
+            stockfish_bin="$(find stockfish -type f -name 'stockfish-*' | head -1)"
+            cp "$stockfish_bin" bundle/baseline
+            chmod +x bundle/baseline
+          else
+            mkdir -p baseline-src/build/blaze
+            make -C baseline-src -f Makefile.blaze blaze -j2 \
+              RELEASE_FLAGS='-std=c++20 -O3 -DNDEBUG -DNNUE_EMBEDDING_OFF -Wall -Wextra -Wpedantic -Wno-empty-body -Isrc'
+            cp baseline-src/build/blaze/blaze.exe bundle/baseline
+          fi
           cp prepared/spec.json bundle/spec.json
           python - <<'PY'
           import json
@@ -161,22 +205,103 @@ jobs:
           shutil.copy2(source, destination)
           PY
           git -C candidate-src rev-parse HEAD > bundle/candidate-commit.txt
+          git -C baseline-src rev-parse HEAD > bundle/baseline-commit.txt
+          candidate_sha256="$(sha256sum bundle/candidate | awk '{print $1}')"
+          baseline_sha256="$(sha256sum bundle/baseline | awk '{print $1}')"
+          candidate_commit="$(cat bundle/candidate-commit.txt)"
+          baseline_commit="$(cat bundle/baseline-commit.txt)"
+          CANDIDATE_SHA256="$candidate_sha256" BASELINE_SHA256="$baseline_sha256" \
+            CANDIDATE_COMMIT="$candidate_commit" BASELINE_COMMIT="$baseline_commit" \
+            PYTHONPATH=farm-src python - <<'PY'
+          import os
+          from pathlib import Path
+          from tools.cloud_match.prepare import finalize_frozen_spec
+          from tools.cloud_match.spec import CloudMatchSpec
+
+          path = Path("bundle/spec.json")
+          prepared = CloudMatchSpec.from_json(path)
+          if prepared.candidate_commit != os.environ["CANDIDATE_COMMIT"]:
+              raise SystemExit("candidate checkout does not match prepared commit")
+          if prepared.baseline_commit != os.environ["BASELINE_COMMIT"]:
+              raise SystemExit("baseline checkout does not match prepared commit")
+          finalize_frozen_spec(
+              path,
+              candidate_sha256=os.environ["CANDIDATE_SHA256"],
+              baseline_sha256=os.environ["BASELINE_SHA256"],
+          )
+          PY
           chmod +x bundle/candidate bundle/baseline bundle/cutechess-cli
+      - name: Fetch NNUE networks and smoke-test both engines
+        shell: bash
+        run: |
+          set -euo pipefail
+          spec="bundle/spec.json"
+          for key in candidate_initstr baseline_initstr; do
+            val="$(jq -r ".$key // \"\"" "$spec")"
+            if [[ -z "$val" ]]; then
+              echo "ERROR: $key is empty in spec" >&2
+              exit 1
+            fi
+            file="$(echo "$val" | sed -n 's/.*EvalFile=\(\S\+\).*/\1/p')"
+            if [[ -z "$file" ]]; then
+              file="$(echo "$val" | grep -oP 'EvalFile=\K\S+' || true)"
+            fi
+            if [[ -z "$file" ]]; then
+              echo "ERROR: cannot extract EvalFile from $key='$val'" >&2
+              exit 1
+            fi
+            echo "Fetching $file …"
+            curl --fail --location --retry 3 \
+              -o "bundle/$file" \
+              "https://tests.stockfishchess.org/api/nn/$file"
+            got="$(sha256sum "bundle/$file" | awk '{print $1}')"
+          expected_prefix="${file%.nnue}"
+          expected_prefix="${expected_prefix#nn-}"
+          if [[ "$got" != "$expected_prefix"* ]]; then
+            echo "ERROR: $file SHA-256 $got does not start with $expected_prefix" >&2
+              exit 1
+            fi
+            echo "$got  bundle/$file" >> bundle/nnue-sha256.txt
+          done
+          for name in candidate baseline; do
+            binary="bundle/$name"
+            uci_file="$(jq -r ".${name}_initstr" "$spec" | grep -oP 'EvalFile=\K\S+')"
+            echo "Smoke-testing $name ($uci_file) …"
+            output=$(echo -e "uci\nsetoption name EvalFile value $uci_file\nsetoption name UseNNUE value true\nisready\nucinewgame\nposition startpos\ngo movetime 500\nquit" | timeout 15 "$binary" 2>/dev/null || true)
+            if echo "$output" | grep -q 'bestmove 0000'; then
+              echo "ERROR: $name returned bestmove 0000 (NNUE load failed)" >&2
+              echo "$output" | tail -5
+              exit 1
+            fi
+            if ! echo "$output" | grep -qP 'bestmove [a-h][1-8][a-h][1-8]'; then
+              echo "ERROR: $name did not return a legal bestmove" >&2
+              echo "$output" | tail -5
+              exit 1
+            fi
+            echo "$name NNUE smoke-test PASSED"
+          done
+          echo "All NNUE preflight checks passed"
           tar -czf frozen-match.tar.gz -C bundle .
       - name: Verify frozen artifact hashes
-        run: sha256sum bundle/candidate bundle/baseline bundle/cutechess-cli frozen-match.tar.gz
+        run: sha256sum bundle/candidate bundle/baseline bundle/cutechess-cli bundle/*.nnue bundle/nnue-sha256.txt frozen-match.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: frozen-match-${{ needs.prepare.outputs.experiment_id }}
           path: frozen-match.tar.gz
-          retention-days: 30
+          retention-days: 1
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: finalized-match-spec-${{ needs.prepare.outputs.experiment_id }}
+          path: bundle/spec.json
+          retention-days: 1
           if-no-files-found: error
 
   shards:
     needs: [prepare, build]
     strategy:
       fail-fast: false
-      max-parallel: 20
+      max-parallel: 40
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     runs-on: ubuntu-24.04
     steps:
@@ -211,12 +336,12 @@ jobs:
         with:
           name: shard-${{ needs.prepare.outputs.experiment_id }}-${{ matrix.shard }}
           path: shard-${{ matrix.shard }}
-          retention-days: 30
+          retention-days: 1
           if-no-files-found: error
 
   aggregate:
     if: ${{ always() && needs.shards.result == 'success' }}
-    needs: [prepare, shards]
+    needs: [prepare, build, shards]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -228,8 +353,8 @@ jobs:
       - run: pip install -r tools/cloud_match/requirements.txt
       - uses: actions/download-artifact@v4
         with:
-          name: match-spec-${{ needs.prepare.outputs.experiment_id }}
-          path: prepared
+          name: finalized-match-spec-${{ needs.prepare.outputs.experiment_id }}
+          path: finalized
       - uses: actions/download-artifact@v4
         with:
           pattern: shard-${{ needs.prepare.outputs.experiment_id }}-*
@@ -239,7 +364,7 @@ jobs:
         run: |
           mapfile -t manifests < <(find downloaded-shards -name shard.json -type f | sort)
           python -m tools.cloud_match.aggregate \
-            --spec prepared/spec.json \
+            --spec finalized/spec.json \
             --shards "${manifests[@]}" \
             --output summary
           cat summary/summary.md >> "$GITHUB_STEP_SUMMARY"
@@ -247,5 +372,5 @@ jobs:
         with:
           name: result-${{ needs.prepare.outputs.experiment_id }}
           path: summary
-          retention-days: 90
+          retention-days: 30
           if-no-files-found: error

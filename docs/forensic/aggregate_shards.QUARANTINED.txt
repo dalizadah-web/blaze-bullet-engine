@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+"""Aggregate successful shard results from cloud match runs."""
+import json
+from pathlib import Path
+
+shard_results = {}
+for run_dir in ['29611822159', '29612186850']:
+    base = Path('artifacts/cloud-match') / run_dir
+    for shard_dir in base.glob('shard-*'):
+        result_file = shard_dir / 'match' / 'result.json'
+        if result_file.exists():
+            data = json.loads(result_file.read_text())
+            idx = int(shard_dir.name.split('-')[-1])
+            shard_results[idx] = data
+
+print(f'Found {len(shard_results)} successful shards')
+for idx in sorted(shard_results):
+    r = shard_results[idx]
+    c = r['counts']
+    print(f'  shard {idx:2d}: {c["wins2"]:2d}W2 {c["wins1_draw1"]:2d}W1D1 {c["draws2"]:2d}D2 {c["losses1_draw1"]:2d}L1D1 {c["losses2"]:2d}L2 LLR={r["llr"]:.4f} games={r["games"]}')
+
+totals = [0, 0, 0, 0, 0]
+total_games = 0
+for idx in sorted(shard_results):
+    c = shard_results[idx]['counts']
+    totals[0] += c['wins2']
+    totals[1] += c['wins1_draw1']
+    totals[2] += c['draws2']
+    totals[3] += c['losses1_draw1']
+    totals[4] += c['losses2']
+    total_games += shard_results[idx]['games']
+
+pairs = sum(totals)
+score = (totals[0] * 2 + totals[1] + totals[2]) / (pairs * 2) * 100
+print(f'\nTotal games: {total_games}')
+print(f'Aggregate: W2={totals[0]} W1D1={totals[1]} D2={totals[2]} L1D1={totals[3]} L2={totals[4]}')
+print(f'Score: {score:.1f}%')
+print(f'Pairs: {pairs}')
