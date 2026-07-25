@@ -73,6 +73,8 @@ class Network {
 
     std::size_t get_content_hash() const;
 
+    bool is_loaded() const { return std::string(evalFile.current).size() > 0; }
+
     NetworkOutput evaluate(const Position&                         pos,
                            AccumulatorStack&                       accumulatorStack,
                            AccumulatorCaches::Cache<FTDimensions>& cache) const;

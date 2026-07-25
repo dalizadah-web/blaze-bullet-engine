@@ -48,6 +48,7 @@ TEST_CASE(move_overhead_option_is_validated_for_clock_safety) {
 TEST_CASE(required_nnue_reports_critical_failure_instead_of_playing_fallback) {
     std::ostringstream output;
     UciSession session(output);
+    CHECK(session.process_line("setoption name EvalFile value nonexistent.nnue"));
     CHECK(session.process_line("setoption name UseNNUE value true"));
     CHECK(session.process_line("position startpos"));
     CHECK(!session.process_line("go depth 1"));

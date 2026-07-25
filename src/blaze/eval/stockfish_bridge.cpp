@@ -29,6 +29,9 @@ struct GlobalState {
         Bitboards::init();
         Position::init();
         network.load("", path);
+        if (!network.is_loaded()) {
+            throw std::runtime_error("no valid NNUE weights loaded from '" + path + "'");
+        }
         cache.clear(network);
     }
 };
