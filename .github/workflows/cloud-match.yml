@@ -172,7 +172,8 @@ jobs:
           STOCKFISH_ELO: ${{ inputs.stockfish_elo }}
         run: |
           mkdir -p candidate-src/build/blaze bundle
-          make -C candidate-src -f Makefile.blaze blaze -j2
+          make -C candidate-src -f Makefile.blaze blaze -j2 \
+            RELEASE_FLAGS='-std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wno-empty-body -Wno-range-loop-construct -Isrc'
           cp candidate-src/build/blaze/blaze.exe bundle/candidate
           chmod +x bundle/candidate
           if [ -n "$STOCKFISH_ELO" ]; then
