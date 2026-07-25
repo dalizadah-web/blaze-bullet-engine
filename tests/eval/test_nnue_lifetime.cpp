@@ -138,7 +138,7 @@ TEST_CASE(nnue_failed_creation_cleanup) {
 // 8.  Single-evaluator contract — only one evaluator may exist at a
 //     time.  A second create() is rejected with a clear error.
 //----------------------------------------------------------------------
-TEST_CASE(nnue_second_create_is_rejected) {
+TEST_CASE(nnue_independent_evaluators_can_coexist) {
     Attacks::initialize();
     std::string error_a;
     auto a = NetworkEvaluator::create(kNetworkPath, error_a);
@@ -146,9 +146,8 @@ TEST_CASE(nnue_second_create_is_rejected) {
 
     std::string error_b;
     auto b = NetworkEvaluator::create(kNetworkPath, error_b);
-    CHECK(!b.has_value());
-    CHECK(!error_b.empty());
-    CHECK(error_b.find("already alive") != std::string::npos);
+    CHECK(b.has_value());
+    CHECK_EQ(a->evaluate(startpos()), b->evaluate(startpos()));
 }
 
 //----------------------------------------------------------------------
@@ -216,6 +215,29 @@ TEST_CASE(nnue_create_evaluate_destroy_cycle) {
         // Two distinct positions should produce distinct scores.
         CHECK(opt->evaluate(*pos1) != opt->evaluate(*pos2));
     }
+}
+
+TEST_CASE(nnue_thread_state_matches_a_fresh_direct_refresh_after_a_move) {
+    std::string error;
+    auto evaluator = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(evaluator.has_value());
+
+    auto parsed = Position::from_fen(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    CHECK(parsed.has_value());
+    Position position = *parsed;
+    auto state = evaluator->make_thread_state();
+    state.reset(position);
+    CHECK_EQ(state.evaluate(position), evaluator->evaluate(position));
+
+    StateInfo move_state;
+    CHECK(position.make_move(
+        Move{Square::E2, Square::E4, MoveFlag::DoublePush}, move_state, true));
+    state.push(position, move_state);
+    CHECK_EQ(state.evaluate(position), evaluator->evaluate(position));
+    state.pop();
+    position.unmake_move(Move{Square::E2, Square::E4, MoveFlag::DoublePush}, move_state);
+    CHECK_EQ(state.evaluate(position), evaluator->evaluate(position));
 }
 
 }  // namespace

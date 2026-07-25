@@ -100,6 +100,10 @@ SearchResult Searcher::search(
     }
 
     Context context;
+    if (network_ != nullptr) {
+        context.nnue.emplace(network_->make_thread_state());
+        context.nnue->reset(position);
+    }
     context.limits = limits;
     context.stack[0].extension_count = 0;
 #ifndef NDEBUG
@@ -484,6 +488,10 @@ SearchResult Searcher::search_window(
     const std::vector<std::uint64_t>& prior_keys,
     std::chrono::steady_clock::time_point start) {
     Context context;
+    if (network_ != nullptr) {
+        context.nnue.emplace(network_->make_thread_state());
+        context.nnue->reset(position);
+    }
     context.limits = limits;
     context.stack[0].extension_count = 0;
 #ifndef NDEBUG
@@ -567,7 +575,7 @@ int Searcher::negamax(
 #else
     if (ply >= maximum_ply) {
 #endif
-        return maximum_ply_score(position, ply);
+        return maximum_ply_score(position, ply, context);
     }
     const bool checked = in_check(position);
     if (position.rule50() >= 100 || is_repetition(context, position.key())) {
@@ -609,7 +617,7 @@ int Searcher::negamax(
         // avoids reusing a stale bound's optional metadata while preserving
         // the hot-path benefit at shallow/selective nodes.
         if (static_eval == tt_no_static_evaluation || depth >= 10) {
-            static_eval = evaluate_position(position);
+            static_eval = evaluate_position(position, context);
         }
         context.stack[static_cast<std::size_t>(ply)].static_evaluation = static_eval;
         const bool null_enabled =
@@ -634,7 +642,8 @@ int Searcher::negamax(
             const int eval_term = std::clamp((static_eval - beta) / 180, 0, 3);
             const int reduction = std::min(depth - 1, 3 + depth / 4 + eval_term);
             StateInfo null_state;
-            position.make_null(null_state);
+            position.make_null(null_state, context.nnue.has_value());
+            if (context.nnue) context.nnue->push(position, null_state);
             table_.prefetch(position.key());
             PvLine null_pv;
             context.stack[static_cast<std::size_t>(ply + 1)].current_move = Move{};
@@ -649,6 +658,7 @@ int Searcher::negamax(
                 context,
                 null_pv,
                 false);
+            if (context.nnue) context.nnue->pop();
             position.unmake_null(null_state);
             if (context.stopped) {
                 return 0;
@@ -698,11 +708,12 @@ int Searcher::negamax(
             if (static_exchange_evaluation(position, move) < 0) continue;
             StateInfo state;
             const Color moving_side = position.side_to_move();
-            if (!position.make_move(move, state)) continue;
+            if (!position.make_move(move, state, context.nnue.has_value())) continue;
             if (!king_is_safe_after_move(position, moving_side)) {
                 position.unmake_move(move, state);
                 continue;
             }
+            if (context.nnue) context.nnue->push(position, state);
 #ifndef NDEBUG
             if (in_check(position)) {
                 ++context.probcut_legal_checks;
@@ -723,6 +734,7 @@ int Searcher::negamax(
                 context,
                 probe_pv);
             context.keys.pop_back();
+            if (context.nnue) context.nnue->pop();
             position.unmake_move(move, state);
             if (context.stopped) return 0;
             if (probe_score >= beta + probcut_margin) return probe_score;
@@ -761,13 +773,14 @@ int Searcher::negamax(
             ? static_exchange_evaluation(position, move)
             : std::numeric_limits<int>::min();
         StateInfo state;
-        if (!position.make_move(move, state)) {
+        if (!position.make_move(move, state, context.nnue.has_value())) {
             continue;
         }
         if (!king_is_safe_after_move(position, opposite(position.side_to_move()))) {
             position.unmake_move(move, state);
             continue;
         }
+        if (context.nnue) context.nnue->push(position, state);
         ++legal_count;
         context.keys.push_back(position.key());
         table_.prefetch(position.key());
@@ -836,6 +849,7 @@ int Searcher::negamax(
             }
         }
         context.keys.pop_back();
+        if (context.nnue) context.nnue->pop();
         position.unmake_move(move, state);
 
         if (context.stopped) {
@@ -918,7 +932,7 @@ int Searcher::quiescence(
 #else
     if (ply >= maximum_ply) {
 #endif
-        return maximum_ply_score(position, ply);
+        return maximum_ply_score(position, ply, context);
     }
 
     const bool checked = in_check(position);
@@ -992,7 +1006,7 @@ int Searcher::quiescence(
         if (static_eval != tt_no_static_evaluation) {
             stand_pat = static_eval;
         } else {
-            stand_pat = evaluate_position(position);
+            stand_pat = evaluate_position(position, context);
             static_eval = stand_pat;
         }
         if (stand_pat >= beta) {
@@ -1080,19 +1094,21 @@ int Searcher::quiescence(
     for (int i = 0; i < q_count; ++i) {
         const Move move = q_buffer[static_cast<std::size_t>(i)].second;
         StateInfo state;
-        if (!position.make_move(move, state)) {
+        if (!position.make_move(move, state, context.nnue.has_value())) {
             continue;
         }
         if (!king_is_safe_after_move(position, opposite(position.side_to_move()))) {
             position.unmake_move(move, state);
             continue;
         }
+        if (context.nnue) context.nnue->push(position, state);
         ++legal_count;
         context.keys.push_back(position.key());
         table_.prefetch(position.key());
         PvLine child_pv;
         const int score = -quiescence(position, -beta, -alpha, ply + 1, context, child_pv);
         context.keys.pop_back();
+        if (context.nnue) context.nnue->pop();
         position.unmake_move(move, state);
         if (context.stopped) {
             return 0;
@@ -1174,19 +1190,19 @@ bool Searcher::consume_node(Context& context) const {
     return true;
 }
 
-int Searcher::evaluate_position(const Position& position) const {
+int Searcher::evaluate_position(const Position& position, Context& context) const {
     constexpr std::size_t cache_mask = 4095U;
     const std::uint64_t key = position.key();
     EvalCacheEntry& entry = eval_cache_[static_cast<std::size_t>(key) & cache_mask];
     if (entry.valid && entry.key == key) return entry.score;
-    const int score = network_ != nullptr ? network_->evaluate(position) : evaluate(position);
+    const int score = context.nnue ? context.nnue->evaluate(position) : evaluate(position);
     entry = EvalCacheEntry{key, score, true};
     return score;
 }
 
-int Searcher::maximum_ply_score(Position& position, int ply) const {
+int Searcher::maximum_ply_score(Position& position, int ply, Context& context) const {
     if (!in_check(position)) {
-        return evaluate_position(position);
+        return evaluate_position(position, context);
     }
     MoveList evasions;
     generate_legal(position, evasions);

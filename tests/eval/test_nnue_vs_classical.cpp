@@ -103,6 +103,8 @@ TEST_CASE(nnue_vs_classical_throughput) {
 
     (void)classical_sum;
     (void)nnue_sum;
+    (void)classical_per_us;
+    (void)nnue_per_us;
 }
 
 }  // namespace

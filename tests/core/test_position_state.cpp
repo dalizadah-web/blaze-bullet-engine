@@ -51,6 +51,68 @@ TEST_CASE(normal_move_updates_and_restores_all_state) {
     CHECK_EQ(position.key(), key);
 }
 
+TEST_CASE(nnue_delta_records_piece_changes_without_board_serialization) {
+    auto position = position_from(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    blaze::StateInfo state;
+
+    CHECK(position.make_move(
+        blaze::Move{blaze::Square::E2, blaze::Square::E4, blaze::MoveFlag::DoublePush}, state, true));
+
+    CHECK_EQ(state.nnue.primary_piece, blaze::Piece::WhitePawn);
+    CHECK_EQ(state.nnue.primary_from, blaze::Square::E2);
+    CHECK_EQ(state.nnue.primary_to, blaze::Square::E4);
+    CHECK_EQ(state.nnue.removed_piece, blaze::Piece::None);
+    CHECK_EQ(state.nnue.added_piece, blaze::Piece::None);
+    CHECK_EQ(state.nnue.moving_side, blaze::Color::White);
+    CHECK_EQ(state.nnue.white_king_before, blaze::Square::E1);
+    CHECK_EQ(state.nnue.white_king_after, blaze::Square::E1);
+    CHECK_EQ(state.nnue.black_king_before, blaze::Square::E8);
+    CHECK_EQ(state.nnue.black_king_after, blaze::Square::E8);
+}
+
+TEST_CASE(nnue_delta_encodes_en_passant_promotion_and_castling_piece_changes) {
+    {
+        auto position = position_from("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 2");
+        blaze::StateInfo state;
+        CHECK(position.make_move(
+            blaze::Move{blaze::Square::E5, blaze::Square::D6,
+                         blaze::MoveFlag::Capture | blaze::MoveFlag::EnPassant},
+            state, true));
+        CHECK_EQ(state.nnue.primary_piece, blaze::Piece::WhitePawn);
+        CHECK_EQ(state.nnue.removed_piece, blaze::Piece::BlackPawn);
+        CHECK_EQ(state.nnue.removed_square, blaze::Square::D5);
+    }
+    {
+        auto position = position_from("4k3/P7/8/8/8/8/8/4K3 w - - 0 1");
+        blaze::StateInfo state;
+        CHECK(position.make_move(
+            blaze::Move{blaze::Square::A7, blaze::Square::A8, blaze::MoveFlag::Promotion,
+                         blaze::PieceType::Queen},
+            state, true));
+        CHECK_EQ(state.nnue.primary_piece, blaze::Piece::WhitePawn);
+        CHECK_EQ(state.nnue.primary_to, blaze::Square::None);
+        CHECK_EQ(state.nnue.added_piece, blaze::Piece::WhiteQueen);
+        CHECK_EQ(state.nnue.added_square, blaze::Square::A8);
+    }
+    {
+        auto position = position_from("4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1");
+        blaze::StateInfo state;
+        CHECK(position.make_move(
+            blaze::Move{blaze::Square::E1, blaze::Square::G1, blaze::MoveFlag::CastleKing},
+            state, true));
+        CHECK_EQ(state.nnue.primary_piece, blaze::Piece::WhiteKing);
+        CHECK_EQ(state.nnue.primary_from, blaze::Square::E1);
+        CHECK_EQ(state.nnue.primary_to, blaze::Square::G1);
+        CHECK_EQ(state.nnue.removed_piece, blaze::Piece::WhiteRook);
+        CHECK_EQ(state.nnue.removed_square, blaze::Square::H1);
+        CHECK_EQ(state.nnue.added_piece, blaze::Piece::WhiteRook);
+        CHECK_EQ(state.nnue.added_square, blaze::Square::F1);
+        CHECK_EQ(state.nnue.white_king_before, blaze::Square::E1);
+        CHECK_EQ(state.nnue.white_king_after, blaze::Square::G1);
+    }
+}
+
 TEST_CASE(capture_move_round_trips) {
     auto position = position_from("4k3/8/8/3p4/4P3/8/8/4K3 w - - 7 10");
     require_round_trip(

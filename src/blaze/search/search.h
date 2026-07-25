@@ -15,6 +15,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace blaze {
@@ -100,6 +101,7 @@ private:
         std::vector<std::uint64_t> keys;
         std::vector<Move> root_moves;
         std::array<SearchStackEntry, 132> stack{};
+        std::optional<NnueThreadState> nnue{};
         MovePicker::Stats picker_stats;
     };
 
@@ -147,8 +149,8 @@ private:
         PvLine& pv);
     [[nodiscard]] bool should_stop(Context& context) const;
     [[nodiscard]] bool consume_node(Context& context) const;
-    [[nodiscard]] int evaluate_position(const Position& position) const;
-    [[nodiscard]] int maximum_ply_score(Position& position, int ply) const;
+    [[nodiscard]] int evaluate_position(const Position& position, Context& context) const;
+    [[nodiscard]] int maximum_ply_score(Position& position, int ply, Context& context) const;
     [[nodiscard]] static bool is_repetition(const Context& context, std::uint64_t key);
 };
 

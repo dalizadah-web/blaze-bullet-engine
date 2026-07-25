@@ -1,6 +1,7 @@
 #include "blaze/core/position.h"
 
 #include "blaze/core/attacks.h"
+#include "blaze/core/attacks.h"
 #include "blaze/core/move.h"
 #include "blaze/core/zobrist.h"
 
@@ -13,6 +14,98 @@
 namespace blaze {
 
 namespace {
+
+using NnueDelta = blaze::StateInfo::NnueDelta;
+using NnueThreatChange = blaze::StateInfo::NnueThreatChange;
+
+blaze::Square king_square(const blaze::Position& position, blaze::Color color) {
+    const blaze::Bitboard kings = position.pieces(color, blaze::PieceType::King);
+    return kings == 0 ? blaze::Square::None
+                      : static_cast<blaze::Square>(std::countr_zero(kings));
+}
+
+blaze::Bitboard attacks_from(const blaze::Position& position, blaze::Piece piece, blaze::Square from) {
+    using blaze::PieceType;
+    switch (blaze::type_of(piece)) {
+        case PieceType::Pawn: return blaze::Attacks::pawn(blaze::color_of(piece), from);
+        case PieceType::Knight: return blaze::Attacks::knight(from);
+        case PieceType::Bishop: return blaze::Attacks::bishop(from, position.occupied());
+        case PieceType::Rook: return blaze::Attacks::rook(from, position.occupied());
+        case PieceType::Queen: return blaze::Attacks::queen(from, position.occupied());
+        case PieceType::King: return blaze::Attacks::king(from);
+        case PieceType::None: return 0;
+    }
+    return 0;
+}
+
+template <std::size_t Capacity>
+std::size_t collect_threats(
+    const blaze::Position& position,
+    std::array<NnueThreatChange, Capacity>& output) {
+    std::size_t count = 0;
+    for (const blaze::Color color : {blaze::Color::White, blaze::Color::Black}) {
+        for (int type_value = static_cast<int>(blaze::PieceType::Pawn);
+             type_value <= static_cast<int>(blaze::PieceType::King);
+             ++type_value) {
+            const blaze::PieceType type = static_cast<blaze::PieceType>(type_value);
+            blaze::Bitboard pieces = position.pieces(color, type);
+            while (pieces != 0) {
+                const blaze::Square from = static_cast<blaze::Square>(std::countr_zero(pieces));
+                pieces &= pieces - 1;
+                const blaze::Piece attacker = position.piece_on(from);
+                blaze::Bitboard targets = attacks_from(position, attacker, from) & position.occupied();
+                while (targets != 0) {
+                    const blaze::Square to = static_cast<blaze::Square>(std::countr_zero(targets));
+                    targets &= targets - 1;
+                    assert(count < Capacity);
+                    output[count++] = NnueThreatChange{
+                        attacker, position.piece_on(to), from, to, false};
+                }
+            }
+        }
+    }
+    return count;
+}
+
+void fill_nnue_threat_delta(
+    const blaze::Position& before,
+    const blaze::Position& after,
+    NnueDelta& delta) {
+    std::array<NnueThreatChange, 128> before_threats{};
+    std::array<NnueThreatChange, 128> after_threats{};
+    const std::size_t before_count = collect_threats(before, before_threats);
+    const std::size_t after_count = collect_threats(after, after_threats);
+
+    delta.threat_count = 0;
+    auto append = [&](NnueThreatChange change) {
+        assert(delta.threat_count < delta.threats.size());
+        delta.threats[delta.threat_count++] = change;
+    };
+    for (std::size_t i = 0; i < before_count; ++i) {
+        bool present = false;
+        for (std::size_t j = 0; j < after_count; ++j) {
+            if (before_threats[i].same_feature(after_threats[j])) {
+                present = true;
+                break;
+            }
+        }
+        if (!present) append(before_threats[i]);
+    }
+    for (std::size_t i = 0; i < after_count; ++i) {
+        bool present = false;
+        for (std::size_t j = 0; j < before_count; ++j) {
+            if (after_threats[i].same_feature(before_threats[j])) {
+                present = true;
+                break;
+            }
+        }
+        if (!present) {
+            NnueThreatChange added = after_threats[i];
+            added.added = true;
+            append(added);
+        }
+    }
+}
 
 [[nodiscard]] Piece piece_from_fen_char(char character) {
     switch (character) {
@@ -375,7 +468,7 @@ bool Position::is_consistent() const {
     return rebuilt == piece_bitboards_ && occupied == occupied_ && key_ == recompute_key();
 }
 
-bool Position::make_move(Move move, StateInfo& state) {
+bool Position::make_move(Move move, StateInfo& state, bool collect_nnue_delta) {
     if (!move.is_valid()) {
         return false;
     }
@@ -437,6 +530,32 @@ bool Position::make_move(Move move, StateInfo& state) {
     state.key = key_;
     state.captured_piece = captured;
     state.captured_square = captured == Piece::None ? Square::None : captured_square;
+    if (collect_nnue_delta) {
+        state.nnue = {};
+        state.nnue.moving_side = side_to_move_;
+        state.nnue.primary_piece = mover;
+        state.nnue.primary_from = move.from();
+        state.nnue.primary_to = is_promotion ? Square::None : move.to();
+        state.nnue.removed_piece = captured;
+        state.nnue.removed_square = captured == Piece::None ? Square::None : captured_square;
+        state.nnue.added_piece = is_promotion
+            ? make_piece(side_to_move_, move.promotion())
+            : Piece::None;
+        state.nnue.added_square = is_promotion ? move.to() : Square::None;
+        if (is_castle) {
+            const bool king_side = move.has_flag(MoveFlag::CastleKing);
+            state.nnue.removed_piece = make_piece(side_to_move_, PieceType::Rook);
+            state.nnue.removed_square = side_to_move_ == Color::White
+                ? (king_side ? Square::H1 : Square::A1)
+                : (king_side ? Square::H8 : Square::A8);
+            state.nnue.added_piece = state.nnue.removed_piece;
+            state.nnue.added_square = side_to_move_ == Color::White
+                ? (king_side ? Square::F1 : Square::D1)
+                : (king_side ? Square::F8 : Square::D8);
+        }
+        state.nnue.white_king_before = king_square(*this, Color::White);
+        state.nnue.black_king_before = king_square(*this, Color::Black);
+    }
 
     if (ep_is_effective()) {
         key_ ^= Zobrist::ep_file(file_of(ep_square_));
@@ -484,6 +603,14 @@ bool Position::make_move(Move move, StateInfo& state) {
         key_ ^= Zobrist::ep_file(file_of(ep_square_));
     }
 
+    if (collect_nnue_delta) {
+        state.nnue.white_king_after = king_square(*this, Color::White);
+        state.nnue.black_king_after = king_square(*this, Color::Black);
+        Position before = *this;
+        before.unmake_move(move, state);
+        fill_nnue_threat_delta(before, *this, state.nnue);
+    }
+
     assert(is_consistent());
     return true;
 }
@@ -523,7 +650,7 @@ void Position::unmake_move(Move move, const StateInfo& state) {
     assert(is_consistent());
 }
 
-void Position::make_null(StateInfo& state) {
+void Position::make_null(StateInfo& state, bool collect_nnue_delta) {
     state.side_to_move = side_to_move_;
     state.castling_rights = castling_rights_;
     state.ep_square = ep_square_;
@@ -532,6 +659,15 @@ void Position::make_null(StateInfo& state) {
     state.key = key_;
     state.captured_piece = Piece::None;
     state.captured_square = Square::None;
+    if (collect_nnue_delta) {
+        state.nnue = {};
+        state.nnue.moving_side = side_to_move_;
+        state.nnue.is_null = true;
+        state.nnue.white_king_before = king_square(*this, Color::White);
+        state.nnue.black_king_before = king_square(*this, Color::Black);
+        state.nnue.white_king_after = state.nnue.white_king_before;
+        state.nnue.black_king_after = state.nnue.black_king_before;
+    }
 
     if (ep_is_effective()) {
         key_ ^= Zobrist::ep_file(file_of(ep_square_));

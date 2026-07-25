@@ -75,6 +75,11 @@ class Network {
 
     bool is_loaded() const { return std::string(evalFile.current).size() > 0; }
 
+    // Blaze's direct Big-NNUE evaluator owns the mutable accumulator state.
+    // Expose immutable loaded parameters without exposing Stockfish Position.
+    const Transformer& transformer() const noexcept { return featureTransformer; }
+    const Arch& architecture(std::size_t bucket) const noexcept { return network[bucket]; }
+
     NetworkOutput evaluate(const Position&                         pos,
                            AccumulatorStack&                       accumulatorStack,
                            AccumulatorCaches::Cache<FTDimensions>& cache) const;

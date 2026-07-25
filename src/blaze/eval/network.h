@@ -10,6 +10,28 @@
 
 namespace blaze {
 
+class NnueThreadState final {
+public:
+    NnueThreadState(NnueThreadState&&) noexcept;
+    NnueThreadState& operator=(NnueThreadState&&) noexcept;
+    ~NnueThreadState();
+
+    NnueThreadState(const NnueThreadState&) = delete;
+    NnueThreadState& operator=(const NnueThreadState&) = delete;
+
+    void reset(const Position& position);
+    void push(const Position& position_after, const StateInfo& move_state);
+    void pop();
+    [[nodiscard]] int evaluate(const Position& position) const;
+
+private:
+    struct Impl;
+    explicit NnueThreadState(std::unique_ptr<Impl> impl);
+
+    std::unique_ptr<Impl> impl_;
+    friend class NetworkEvaluator;
+};
+
 class NetworkEvaluator final {
 public:
     static std::optional<NetworkEvaluator> create(
@@ -19,7 +41,8 @@ public:
     NetworkEvaluator& operator=(NetworkEvaluator&& other) noexcept;
     ~NetworkEvaluator();
 
-    int evaluate(const Position& position) const;
+    [[nodiscard]] int evaluate(const Position& position) const;
+    [[nodiscard]] NnueThreadState make_thread_state() const;
 
 private:
     struct Impl;

@@ -5,6 +5,7 @@
 #include "blaze/core/types.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -41,6 +42,41 @@ struct StateInfo {
     std::uint64_t key = 0;
     Piece captured_piece = Piece::None;
     Square captured_square = Square::None;
+    struct NnueThreatChange {
+        Piece attacker = Piece::None;
+        Piece attacked = Piece::None;
+        Square from = Square::None;
+        Square to = Square::None;
+        bool added = false;
+
+        [[nodiscard]] constexpr bool same_feature(const NnueThreatChange& other) const {
+            return attacker == other.attacker && attacked == other.attacked &&
+                   from == other.from && to == other.to;
+        }
+    };
+
+    // This is deliberately a value owned by the move state rather than an
+    // evaluator callback.  A search worker can consume it after make_move()
+    // and discard it by restoring the StateInfo on unmake.
+    struct NnueDelta {
+        static constexpr std::size_t max_threat_changes = 96;
+
+        Color moving_side = Color::White;
+        Piece primary_piece = Piece::None;
+        Square primary_from = Square::None;
+        Square primary_to = Square::None;
+        Piece removed_piece = Piece::None;
+        Square removed_square = Square::None;
+        Piece added_piece = Piece::None;
+        Square added_square = Square::None;
+        Square white_king_before = Square::None;
+        Square white_king_after = Square::None;
+        Square black_king_before = Square::None;
+        Square black_king_after = Square::None;
+        std::array<NnueThreatChange, max_threat_changes> threats{};
+        std::uint8_t threat_count = 0;
+        bool is_null = false;
+    } nnue{};
 };
 
 class Position {
@@ -59,9 +95,9 @@ public:
     [[nodiscard]] bool is_consistent() const;
     [[nodiscard]] std::uint64_t key() const { return key_; }
 
-    bool make_move(Move move, StateInfo& state);
+    bool make_move(Move move, StateInfo& state, bool collect_nnue_delta = false);
     void unmake_move(Move move, const StateInfo& state);
-    void make_null(StateInfo& state);
+    void make_null(StateInfo& state, bool collect_nnue_delta = false);
     void unmake_null(const StateInfo& state);
     [[nodiscard]] bool is_legal(Move move);
 
