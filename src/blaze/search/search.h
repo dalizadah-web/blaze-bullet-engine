@@ -101,7 +101,7 @@ private:
         std::vector<std::uint64_t> keys;
         std::vector<Move> root_moves;
         std::array<SearchStackEntry, 132> stack{};
-        std::optional<NnueThreadState> nnue{};
+        NnueThreadState* nnue = nullptr;
         MovePicker::Stats picker_stats;
     };
 
@@ -110,6 +110,7 @@ private:
     mutable std::array<EvalCacheEntry, 4096> eval_cache_{};
     std::array<std::array<Move, 64>, 64> countermoves_{};
     std::array<std::array<std::array<int, 64>, 64>, 2> history_{};
+    std::optional<NnueThreadState> worker_nnue_{};
 
     [[nodiscard]] SearchResult search_parallel(
         Position position,
@@ -126,9 +127,12 @@ private:
         int extension_count,
         int alpha,
         int beta,
+        NnueThreadState* nnue,
         const std::atomic<bool>* external_stop,
         const std::vector<std::uint64_t>& prior_keys,
         std::chrono::steady_clock::time_point start);
+    [[nodiscard]] NnueThreadState* prepare_nnue(const Position& position);
+    void reset_task_heuristics();
 
     template<NodeType node_type>
     [[nodiscard]] int negamax(

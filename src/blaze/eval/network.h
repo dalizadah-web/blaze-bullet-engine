@@ -14,6 +14,33 @@ namespace blaze {
 
 [[nodiscard]] int sf_nnue_public_score(int raw_network_output);
 
+struct NnueRuntimeStats {
+    std::uint64_t network_loads = 0;
+    std::uint64_t thread_state_constructions = 0;
+    std::uint64_t root_tasks = 0;
+    std::uint64_t root_task_state_constructions = 0;
+    std::uint64_t hot_path_heap_allocations = 0;
+    std::uint64_t fen_serializations = 0;
+    std::uint64_t stockfish_position_constructions = 0;
+    std::uint64_t accumulator_refreshes = 0;
+    std::uint64_t refresh_cache_hits = 0;
+    std::uint64_t incremental_updates = 0;
+    std::uint64_t evaluations = 0;
+};
+
+void reset_nnue_runtime_stats();
+[[nodiscard]] NnueRuntimeStats nnue_runtime_stats();
+void note_legacy_nnue_bridge_evaluation();
+
+class NnueRootTaskScope final {
+public:
+    NnueRootTaskScope();
+    ~NnueRootTaskScope();
+
+    NnueRootTaskScope(const NnueRootTaskScope&) = delete;
+    NnueRootTaskScope& operator=(const NnueRootTaskScope&) = delete;
+};
+
 // Test-only exact oracle surface. It is a value copy and is never used by
 // search or normal evaluation.
 struct NnueDebugSnapshot {

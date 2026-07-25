@@ -49,6 +49,7 @@ int evaluate_state_raw(const std::string& fen) {
         tls_cache_ready = true;
     }
 
+    blaze::note_legacy_nnue_bridge_evaluation();
     Position pos;
     StateInfo si;
     pos.set(fen, false, &si);
@@ -71,6 +72,7 @@ blaze::NnueDebugSnapshot debug_state(const std::string& fen) {
         tls_cache_ready = true;
     }
 
+    blaze::note_legacy_nnue_bridge_evaluation();
     Position pos;
     StateInfo si;
     pos.set(fen, false, &si);

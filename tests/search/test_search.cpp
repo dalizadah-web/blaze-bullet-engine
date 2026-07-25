@@ -20,6 +20,8 @@ Position position(std::string_view fen) {
     return *parsed;
 }
 
+static constexpr const char* kBigNnuePath = "nn-c288c895ea92.nnue";
+
 TEST_CASE(search_finds_and_proves_mate_in_one) {
     Position root = position("7k/5Q2/6K1/8/8/8/8/8 w - - 0 1");
     TranspositionTable table(4);
@@ -363,6 +365,66 @@ TEST_CASE(search_parallel_root_split_preserves_classical_evaluation) {
     const SearchResult many = parallel.search(root, limits);
 
     CHECK_EQ(one.score, many.score);
+}
+
+TEST_CASE(direct_nnue_workers_reuse_private_state_across_root_tasks) {
+    std::string error;
+    auto evaluator = NetworkEvaluator::create(kBigNnuePath, error);
+    CHECK(evaluator.has_value());
+
+    Position root = position(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    SearchLimits limits{.depth = 3};
+    limits.threads = 4;
+
+    reset_nnue_runtime_stats();
+    std::vector<SearchResult> results;
+    for (int repetition = 0; repetition < 3; ++repetition) {
+        TranspositionTable table(8);
+        Searcher searcher(table, &*evaluator);
+        results.push_back(searcher.search(root, limits));
+        CHECK(root.is_legal(results.back().best_move));
+    }
+
+    for (std::size_t i = 1; i < results.size(); ++i) {
+        CHECK_EQ(results[i].score, results[0].score);
+        CHECK_EQ(results[i].best_move, results[0].best_move);
+        CHECK_EQ(results[i].pv, results[0].pv);
+    }
+
+    const NnueRuntimeStats stats = nnue_runtime_stats();
+    CHECK(stats.root_tasks > stats.thread_state_constructions);
+    CHECK_EQ(stats.thread_state_constructions,
+             static_cast<std::uint64_t>(results.size()) * (limits.threads + 1));
+    CHECK_EQ(stats.root_task_state_constructions, 0U);
+    CHECK_EQ(stats.hot_path_heap_allocations, 0U);
+    CHECK_EQ(stats.fen_serializations, 0U);
+    CHECK_EQ(stats.stockfish_position_constructions, 0U);
+    CHECK_EQ(stats.network_loads, 0U);
+    CHECK(stats.incremental_updates > stats.thread_state_constructions);
+}
+
+TEST_CASE(direct_nnue_single_worker_reuses_refresh_cache_and_scratch) {
+    std::string error;
+    auto evaluator = NetworkEvaluator::create(kBigNnuePath, error);
+    CHECK(evaluator.has_value());
+    Position root = position(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    TranspositionTable table(8);
+    Searcher searcher(table, &*evaluator);
+
+    reset_nnue_runtime_stats();
+    const SearchResult first = searcher.search(root, SearchLimits{.depth = 2});
+    table.clear();
+    const SearchResult second = searcher.search(root, SearchLimits{.depth = 2});
+    CHECK_EQ(second.score, first.score);
+    CHECK_EQ(second.best_move, first.best_move);
+    CHECK_EQ(second.pv, first.pv);
+
+    const NnueRuntimeStats stats = nnue_runtime_stats();
+    CHECK_EQ(stats.thread_state_constructions, 1U);
+    CHECK(stats.refresh_cache_hits >= 1U);
+    CHECK_EQ(stats.hot_path_heap_allocations, 0U);
 }
 
 TEST_CASE(search_start_position_depth_five_stays_under_node_regression_budget) {

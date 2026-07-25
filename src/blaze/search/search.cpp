@@ -58,6 +58,21 @@ int victim_value(Piece piece) {
 
 }  // namespace
 
+NnueThreadState* Searcher::prepare_nnue(const Position& position) {
+    if (network_ == nullptr) return nullptr;
+    if (!worker_nnue_.has_value()) {
+        worker_nnue_.emplace(network_->make_thread_state());
+    }
+    worker_nnue_->reset(position);
+    return &*worker_nnue_;
+}
+
+void Searcher::reset_task_heuristics() {
+    eval_cache_ = {};
+    countermoves_ = {};
+    history_ = {};
+}
+
 SearchResult Searcher::search(
     Position position,
     const SearchLimits& limits,
@@ -100,10 +115,7 @@ SearchResult Searcher::search(
     }
 
     Context context;
-    if (network_ != nullptr) {
-        context.nnue.emplace(network_->make_thread_state());
-        context.nnue->reset(position);
-    }
+    context.nnue = prepare_nnue(position);
     context.limits = limits;
     context.stack[0].extension_count = 0;
 #ifndef NDEBUG
@@ -178,6 +190,7 @@ SearchResult Searcher::debug_search_window(
     int alpha,
     int beta) {
     SearchLimits limits{.depth = depth};
+    NnueThreadState* nnue = prepare_nnue(position);
     return search_window(
         std::move(position),
         limits,
@@ -187,6 +200,7 @@ SearchResult Searcher::debug_search_window(
         0,
         alpha,
         beta,
+        nnue,
         nullptr,
         {},
         std::chrono::steady_clock::now());
@@ -239,6 +253,18 @@ SearchResult Searcher::search_parallel(
         ? std::make_shared<std::atomic<std::uint64_t>>(limits.nodes)
         : std::shared_ptr<std::atomic<std::uint64_t>>{};
     std::atomic<bool> parallel_stop = false;
+    const unsigned worker_count = std::min<unsigned>(
+        static_cast<unsigned>(limits.threads),
+        static_cast<unsigned>(legal_moves.size()));
+    Searcher serial_worker(table_, network_);
+    NnueThreadState* serial_nnue = serial_worker.prepare_nnue(position);
+    std::vector<std::unique_ptr<Searcher>> worker_searchers;
+    worker_searchers.reserve(worker_count);
+    for (unsigned worker_index = 0; worker_index < worker_count; ++worker_index) {
+        auto worker = std::make_unique<Searcher>(table_, network_);
+        static_cast<void>(worker->prepare_nnue(position));
+        worker_searchers.push_back(std::move(worker));
+    }
     table_.new_search();
     for (int depth = 1; depth <= maximum_depth; ++depth) {
         if (external_stop != nullptr && external_stop->load(std::memory_order_relaxed)) {
@@ -273,10 +299,13 @@ SearchResult Searcher::search_parallel(
         std::atomic<std::size_t> next_task{0};
         // Search first root move serially to establish alpha before parallel workers
         {
+            NnueRootTaskScope root_task_scope;
+            serial_worker.reset_task_heuristics();
             Position child = position;
             StateInfo state;
             const Move root_move = tasks[0].move;
-            if (child.make_move(root_move, state)) {
+            if (child.make_move(root_move, state, serial_nnue != nullptr)) {
+                if (serial_nnue != nullptr) serial_nnue->push(child, state);
                 const int root_extension = in_check(child) && depth >= 3 ? 1 : 0;
                 const int child_depth = depth - 1 + root_extension;
                 SearchLimits child_limits = limits;
@@ -287,19 +316,21 @@ SearchResult Searcher::search_parallel(
                 child_limits.shared_node_budget = shared_node_budget;
                 std::vector<std::uint64_t> child_history = prior_keys;
                 child_history.push_back(position.key());
-                Searcher child_searcher(table_, network_);
-                SearchResult child_result = child_searcher.search_window(
+                SearchResult child_result = serial_worker.search_window(
                     child, child_limits, child_depth, 1, root_move, root_extension,
-                    root_alpha, root_beta, external_stop, child_history, search_start);
+                    root_alpha, root_beta, serial_nnue, external_stop, child_history,
+                    search_start);
                 int score = -child_result.score;
                 // Re-search with full window if the result falls outside the
                 // aspiration window, or if no aspiration was set (alpha=-inf).
                 if (!child_result.stopped && (score <= root_alpha || score >= root_beta)) {
-                    child_result = child_searcher.search_window(
+                    child_result = serial_worker.search_window(
                         child, child_limits, child_depth, 1, root_move, root_extension,
-                        -infinity, infinity, external_stop, child_history, search_start);
+                        -infinity, infinity, serial_nnue, external_stop, child_history,
+                        search_start);
                     score = -child_result.score;
                 }
+                if (serial_nnue != nullptr) serial_nnue->pop();
                 TaskResult& task = tasks[0];
                 task.score = score;
                 task.nodes = child_result.nodes;
@@ -322,13 +353,14 @@ SearchResult Searcher::search_parallel(
             }
         }
         next_task.store(1, std::memory_order_relaxed);
-        const unsigned worker_count = std::min<unsigned>(
-            static_cast<unsigned>(limits.threads),
-            static_cast<unsigned>(legal_moves.size()));
         std::vector<std::thread> workers;
         workers.reserve(worker_count);
         for (unsigned worker_index = 0; worker_index < worker_count; ++worker_index) {
-            workers.emplace_back([&, depth] {
+            workers.emplace_back([&, depth, worker_index] {
+                Searcher& child_searcher = *worker_searchers[worker_index];
+                NnueThreadState* child_nnue = child_searcher.worker_nnue_.has_value()
+                    ? &*child_searcher.worker_nnue_
+                    : nullptr;
                 while (!parallel_stop.load(std::memory_order_relaxed)) {
                     if (external_stop != nullptr && external_stop->load(std::memory_order_relaxed)) {
                         parallel_stop.store(true, std::memory_order_relaxed);
@@ -338,12 +370,15 @@ SearchResult Searcher::search_parallel(
                     if (index >= tasks.size()) {
                         break;
                     }
+                    NnueRootTaskScope root_task_scope;
+                    child_searcher.reset_task_heuristics();
                     Position child = position;
                     StateInfo state;
                     const Move root_move = tasks[index].move;
-                    if (!child.make_move(root_move, state)) {
+                    if (!child.make_move(root_move, state, child_nnue != nullptr)) {
                         continue;
                     }
+                    if (child_nnue != nullptr) child_nnue->push(child, state);
                     const int root_extension =
                         in_check(child) && depth >= 3 && index < 4 ? 1 : 0;
                     const int child_depth = depth - 1 + root_extension;
@@ -355,7 +390,6 @@ SearchResult Searcher::search_parallel(
                     child_limits.shared_node_budget = shared_node_budget;
                     std::vector<std::uint64_t> child_history = prior_keys;
                     child_history.push_back(position.key());
-                    Searcher child_searcher(table_, network_);
                     const int observed_alpha = shared_alpha.load(std::memory_order_relaxed);
                     const int child_alpha = observed_alpha == -infinity
                         ? -infinity
@@ -372,6 +406,7 @@ SearchResult Searcher::search_parallel(
                         root_extension,
                         child_alpha,
                         child_beta,
+                        child_nnue,
                         external_stop,
                         child_history,
                         search_start);
@@ -394,6 +429,7 @@ SearchResult Searcher::search_parallel(
                             root_extension,
                             -infinity,
                             infinity,
+                            child_nnue,
                             external_stop,
                             child_history,
                             search_start);
@@ -407,6 +443,7 @@ SearchResult Searcher::search_parallel(
 #endif
                         score = -child_result.score;
                     }
+                    if (child_nnue != nullptr) child_nnue->pop();
                     TaskResult& task = tasks[index];
                     task.score = -child_result.score;
                     task.nodes = child_result.nodes;
@@ -484,14 +521,12 @@ SearchResult Searcher::search_window(
     int extension_count,
     int alpha,
     int beta,
+    NnueThreadState* nnue,
     const std::atomic<bool>* external_stop,
     const std::vector<std::uint64_t>& prior_keys,
     std::chrono::steady_clock::time_point start) {
     Context context;
-    if (network_ != nullptr) {
-        context.nnue.emplace(network_->make_thread_state());
-        context.nnue->reset(position);
-    }
+    context.nnue = nnue;
     context.limits = limits;
     context.stack[0].extension_count = 0;
 #ifndef NDEBUG
@@ -642,7 +677,7 @@ int Searcher::negamax(
             const int eval_term = std::clamp((static_eval - beta) / 180, 0, 3);
             const int reduction = std::min(depth - 1, 3 + depth / 4 + eval_term);
             StateInfo null_state;
-            position.make_null(null_state, context.nnue.has_value());
+            position.make_null(null_state, context.nnue != nullptr);
             if (context.nnue) context.nnue->push(position, null_state);
             table_.prefetch(position.key());
             PvLine null_pv;
@@ -708,7 +743,7 @@ int Searcher::negamax(
             if (static_exchange_evaluation(position, move) < 0) continue;
             StateInfo state;
             const Color moving_side = position.side_to_move();
-            if (!position.make_move(move, state, context.nnue.has_value())) continue;
+            if (!position.make_move(move, state, context.nnue != nullptr)) continue;
             if (!king_is_safe_after_move(position, moving_side)) {
                 position.unmake_move(move, state);
                 continue;
@@ -773,7 +808,7 @@ int Searcher::negamax(
             ? static_exchange_evaluation(position, move)
             : std::numeric_limits<int>::min();
         StateInfo state;
-        if (!position.make_move(move, state, context.nnue.has_value())) {
+        if (!position.make_move(move, state, context.nnue != nullptr)) {
             continue;
         }
         if (!king_is_safe_after_move(position, opposite(position.side_to_move()))) {
@@ -1094,7 +1129,7 @@ int Searcher::quiescence(
     for (int i = 0; i < q_count; ++i) {
         const Move move = q_buffer[static_cast<std::size_t>(i)].second;
         StateInfo state;
-        if (!position.make_move(move, state, context.nnue.has_value())) {
+        if (!position.make_move(move, state, context.nnue != nullptr)) {
             continue;
         }
         if (!king_is_safe_after_move(position, opposite(position.side_to_move()))) {
