@@ -186,7 +186,7 @@ void apply_delta(
     }
 }
 
-int evaluate_accumulator(const Accumulator& accumulator, const DirectWeights& weights, const Position& position) {
+int evaluate_raw_accumulator(const Accumulator& accumulator, const DirectWeights& weights, const Position& position) {
     const std::size_t us = static_cast<std::size_t>(position.side_to_move());
     const std::size_t them = static_cast<std::size_t>(opposite(position.side_to_move()));
     const std::size_t bucket = (std::popcount(position.occupied()) - 1) / 4;
@@ -209,8 +209,13 @@ int evaluate_accumulator(const Accumulator& accumulator, const DirectWeights& we
         (accumulator.piece_psqt[us][bucket] - accumulator.piece_psqt[them][bucket] +
          accumulator.threat_psqt[us][bucket] - accumulator.threat_psqt[them][bucket]) / 2;
     const std::int32_t positional = weights.network.architecture(bucket).propagate(transformed.data());
-    const int score = static_cast<int>((psqt + positional) / Stockfish::Eval::NNUE::OutputScale);
-    return std::clamp(score, -search_mate_threshold + 1, search_mate_threshold - 1);
+    // The legacy bridge exposed the two Network::evaluate() components after
+    // their internal OutputScale division, then divided their sum once more.
+    // Keep that public score contract while the bridge remains the oracle.
+    // Match Network::evaluate(): each component is converted from network
+    // units independently before its wrapper combines the two values.
+    return static_cast<int>(psqt / Stockfish::Eval::NNUE::OutputScale) +
+           static_cast<int>(positional / Stockfish::Eval::NNUE::OutputScale);
 }
 
 }  // namespace
@@ -268,14 +273,27 @@ void NnueThreadState::pop() {
     if (impl_->ply > 0) --impl_->ply;
 }
 
+int sf_nnue_public_score(int raw_network_output) {
+    return std::clamp(raw_network_output / Stockfish::Eval::NNUE::OutputScale,
+        -search_mate_threshold + 1, search_mate_threshold - 1);
+}
+
+int NnueThreadState::raw_evaluate(const Position& position) const {
+    return evaluate_raw_accumulator(impl_->stack[impl_->ply], *impl_->weights, position);
+}
+
 int NnueThreadState::evaluate(const Position& position) const {
-    return evaluate_accumulator(impl_->stack[impl_->ply], *impl_->weights, position);
+    return sf_nnue_public_score(raw_evaluate(position));
 }
 
 int NetworkEvaluator::evaluate(const Position& position) const {
+    return sf_nnue_public_score(raw_evaluate(position));
+}
+
+int NetworkEvaluator::raw_evaluate(const Position& position) const {
     auto state = make_thread_state();
     state.reset(position);
-    return state.evaluate(position);
+    return state.raw_evaluate(position);
 }
 
 }  // namespace blaze

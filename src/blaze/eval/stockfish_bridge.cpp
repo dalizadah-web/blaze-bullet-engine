@@ -1,4 +1,5 @@
 #include "blaze/eval/stockfish_bridge.h"
+#include "blaze/eval/network.h"
 
 #include "bitboard.h"
 #include "misc.h"
@@ -38,7 +39,7 @@ struct GlobalState {
 
 GlobalState* g_state = nullptr;
 
-int evaluate_state(const std::string& fen) {
+int evaluate_state_raw(const std::string& fen) {
     thread_local Eval::NNUE::AccumulatorCaches::Cache<FTDimensions> tls_cache{};
     thread_local bool tls_cache_ready = false;
     if (!tls_cache_ready) {
@@ -57,8 +58,7 @@ int evaluate_state(const std::string& fen) {
     const auto result = g_state->network.evaluate(pos, *stack, tls_cache);
     const auto [psqt, positional] = result;
 
-    constexpr int OutputScale = 16;
-    return (static_cast<int>(psqt) + static_cast<int>(positional)) / OutputScale;
+    return static_cast<int>(psqt) + static_cast<int>(positional);
 }
 
 }
@@ -82,5 +82,10 @@ void blaze::sf_nnue_destroy() {
 
 int blaze::sf_nnue_evaluate(const std::string& fen) {
     if (!g_state) return 0;
-    return evaluate_state(fen);
+    return sf_nnue_public_score(sf_nnue_evaluate_raw(fen));
+}
+
+int blaze::sf_nnue_evaluate_raw(const std::string& fen) {
+    if (!g_state) return 0;
+    return evaluate_state_raw(fen);
 }

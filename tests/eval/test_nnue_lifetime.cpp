@@ -6,6 +6,7 @@
 #include "test_support.h"
 
 #include <optional>
+#include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -238,6 +239,48 @@ TEST_CASE(nnue_thread_state_matches_a_fresh_direct_refresh_after_a_move) {
     state.pop();
     position.unmake_move(Move{Square::E2, Square::E4, MoveFlag::DoublePush}, move_state);
     CHECK_EQ(state.evaluate(position), evaluator->evaluate(position));
+}
+
+TEST_CASE(direct_big_nnue_matches_the_legacy_bridge_oracle) {
+    Attacks::initialize();
+    std::string error;
+    auto evaluator = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(evaluator.has_value());
+    CHECK(sf_nnue_init(kNetworkPath, error));
+
+    const std::array<const char*, 3> fens{
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/2NP4/PPP2PPP/R1BQK2R w KQkq - 4 5",
+        "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 2"};
+    for (const char* fen : fens) {
+        const auto position = Position::from_fen(fen);
+        CHECK(position.has_value());
+        const int legacy_raw = sf_nnue_evaluate_raw(position->to_fen());
+        const int direct_raw = evaluator->raw_evaluate(*position);
+        auto state = evaluator->make_thread_state();
+        state.reset(*position);
+        const int incremental_raw = state.raw_evaluate(*position);
+        const int legacy_public = sf_nnue_evaluate(position->to_fen());
+        const int fresh_public = evaluator->evaluate(*position);
+        const int incremental_public = state.evaluate(*position);
+        std::cerr << "NNUE oracle fen=" << position->to_fen()
+                  << " legacy_raw=" << legacy_raw
+                  << " fresh_direct_raw=" << direct_raw
+                  << " incremental_raw=" << incremental_raw
+                  << " legacy_public=" << legacy_public
+                  << " fresh_direct_public=" << fresh_public
+                  << " incremental_public=" << incremental_public << '\n';
+        if (direct_raw != legacy_raw) {
+            std::cerr << "NNUE raw mismatch fen=" << position->to_fen()
+                      << " expected=" << legacy_raw << " actual=" << direct_raw << '\n';
+        }
+        CHECK_EQ(direct_raw, legacy_raw);
+        CHECK_EQ(incremental_raw, legacy_raw);
+        CHECK_EQ(fresh_public, sf_nnue_public_score(legacy_raw));
+        CHECK_EQ(legacy_public, sf_nnue_public_score(legacy_raw));
+        CHECK_EQ(incremental_public, sf_nnue_public_score(legacy_raw));
+    }
+    sf_nnue_destroy();
 }
 
 }  // namespace

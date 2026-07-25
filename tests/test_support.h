@@ -2,6 +2,7 @@
 #define BLAZE_TEST_SUPPORT_H
 
 #include <exception>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -50,8 +51,10 @@ public:
 inline int run_all() {
     int passed = 0;
     int failed = 0;
+    const char* filter = std::getenv("BLAZE_TEST_FILTER");
 
     for (const Case& test_case : registry()) {
+        if (filter != nullptr && test_case.name.find(filter) == std::string_view::npos) continue;
         try {
             test_case.function();
             ++passed;

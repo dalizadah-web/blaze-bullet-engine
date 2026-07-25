@@ -9,6 +9,7 @@ namespace blaze {
 bool sf_nnue_init(std::string_view path, std::string& error);
 void sf_nnue_destroy();
 int  sf_nnue_evaluate(const std::string& fen);
+int  sf_nnue_evaluate_raw(const std::string& fen);
 
 }
 
