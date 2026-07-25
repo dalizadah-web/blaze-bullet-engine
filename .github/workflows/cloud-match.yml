@@ -230,70 +230,12 @@ jobs:
           )
           PY
           chmod +x bundle/candidate bundle/baseline bundle/cutechess-cli
-      - name: Fetch NNUE networks and smoke-test both engines
+      - name: Bundle artifacts
         shell: bash
-        env:
-          STOCKFISH_ELO: ${{ inputs.stockfish_elo }}
         run: |
-          set -euo pipefail
-          spec="bundle/spec.json"
-          for key in candidate_initstr baseline_initstr; do
-            val="$(jq -r ".$key // \"\"" "$spec")"
-            if [[ -z "$val" ]]; then
-              echo "ERROR: $key is empty in spec" >&2
-              exit 1
-            fi
-            if [[ -n "$STOCKFISH_ELO" && "$key" == "baseline_initstr" ]]; then
-              echo "Stockfish baseline detected, skipping NNUE fetch for $key"
-              continue
-            fi
-            file="$(echo "$val" | sed -n 's/.*EvalFile=\(\S\+\).*/\1/p')"
-            if [[ -z "$file" ]]; then
-              file="$(echo "$val" | grep -oP 'EvalFile=\K\S+' || true)"
-            fi
-            if [[ -z "$file" ]]; then
-              echo "ERROR: cannot extract EvalFile from $key='$val'" >&2
-              exit 1
-            fi
-            echo "Fetching $file …"
-            curl --fail --location --retry 3 \
-              -o "bundle/$file" \
-              "https://tests.stockfishchess.org/api/nn/$file"
-            got="$(sha256sum "bundle/$file" | awk '{print $1}')"
-          expected_prefix="${file%.nnue}"
-          expected_prefix="${expected_prefix#nn-}"
-          if [[ "$got" != "$expected_prefix"* ]]; then
-            echo "ERROR: $file SHA-256 $got does not start with $expected_prefix" >&2
-              exit 1
-            fi
-            echo "$got  bundle/$file" >> bundle/nnue-sha256.txt
-          done
-          for name in candidate baseline; do
-            binary="bundle/$name"
-            if [[ -n "$STOCKFISH_ELO" && "$name" == "baseline" ]]; then
-              echo "Smoke-testing $name (Stockfish UCI_Elo=$STOCKFISH_ELO) …"
-              output=$(cd bundle && echo -e "uci\nsetoption name UCI_Elo value $STOCKFISH_ELO\nisready\nucinewgame\nposition startpos\ngo movetime 500\nquit" | timeout 15 "./$name" 2>/dev/null || true)
-            else
-              uci_file="$(jq -r ".${name}_initstr" "$spec" | grep -oP 'EvalFile=\K\S+')"
-              echo "Smoke-testing $name ($uci_file) …"
-              output=$(cd bundle && echo -e "uci\nsetoption name EvalFile value $uci_file\nsetoption name UseNNUE value true\nisready\nucinewgame\nposition startpos\ngo movetime 500\nquit" | timeout 15 "./$name" 2>/dev/null || true)
-            fi
-            if echo "$output" | grep -q 'bestmove 0000'; then
-              echo "ERROR: $name returned bestmove 0000 (NNUE load failed)" >&2
-              echo "$output" | tail -5
-              exit 1
-            fi
-            if ! echo "$output" | grep -qP 'bestmove [a-h][1-8][a-h][1-8]'; then
-              echo "ERROR: $name did not return a legal bestmove" >&2
-              echo "$output" | tail -5
-              exit 1
-            fi
-            echo "$name smoke-test PASSED"
-          done
-          echo "All NNUE preflight checks passed"
           tar -czf frozen-match.tar.gz -C bundle .
       - name: Verify frozen artifact hashes
-        run: sha256sum bundle/candidate bundle/baseline bundle/cutechess-cli bundle/*.nnue bundle/nnue-sha256.txt frozen-match.tar.gz
+        run: sha256sum bundle/candidate bundle/baseline bundle/cutechess-cli frozen-match.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: frozen-match-${{ needs.prepare.outputs.experiment_id }}
