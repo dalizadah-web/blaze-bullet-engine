@@ -78,6 +78,85 @@ void accumulate_subtract_scalar(std::int16_t* destination, const std::int16_t* w
         destination[i] = static_cast<std::int16_t>(destination[i] - weights[i]);
 }
 
+void accumulate_fused_scalar(std::int16_t* destination,
+                             const std::int16_t* const* removed,
+                             std::size_t removed_count,
+                             const std::int16_t* const* added,
+                             std::size_t added_count) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; ++i) {
+        std::int16_t value = destination[i];
+        // Narrow after each row to retain the pre-existing signed-wrap semantics.
+        for (std::size_t row = 0; row < removed_count; ++row)
+            value = static_cast<std::int16_t>(value - removed[row][i]);
+        for (std::size_t row = 0; row < added_count; ++row)
+            value = static_cast<std::int16_t>(value + added[row][i]);
+        destination[i] = value;
+    }
+}
+
+void accumulate_fused_1_1_scalar(std::int16_t* destination,
+                                 const std::int16_t* const* removed,
+                                 std::size_t,
+                                 const std::int16_t* const* added,
+                                 std::size_t) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; ++i)
+        destination[i] = static_cast<std::int16_t>(
+            static_cast<std::int16_t>(destination[i] - removed[0][i]) + added[0][i]);
+}
+
+void accumulate_fused_2_1_scalar(std::int16_t* destination,
+                                 const std::int16_t* const* removed,
+                                 std::size_t,
+                                 const std::int16_t* const* added,
+                                 std::size_t) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; ++i) {
+        const std::int16_t value = static_cast<std::int16_t>(destination[i] - removed[0][i]);
+        destination[i] = static_cast<std::int16_t>(
+            static_cast<std::int16_t>(value - removed[1][i]) + added[0][i]);
+    }
+}
+
+void accumulate_fused_2_2_scalar(std::int16_t* destination,
+                                 const std::int16_t* const* removed,
+                                 std::size_t,
+                                 const std::int16_t* const* added,
+                                 std::size_t) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; ++i) {
+        std::int16_t value = static_cast<std::int16_t>(destination[i] - removed[0][i]);
+        value = static_cast<std::int16_t>(value - removed[1][i]);
+        value = static_cast<std::int16_t>(value + added[0][i]);
+        destination[i] = static_cast<std::int16_t>(value + added[1][i]);
+    }
+}
+
+void accumulate_fused_threats_scalar(std::int16_t* destination,
+                                     const std::int8_t* const* removed,
+                                     std::size_t removed_count,
+                                     const std::int8_t* const* added,
+                                     std::size_t added_count) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; ++i) {
+        std::int16_t value = destination[i];
+        for (std::size_t row = 0; row < removed_count; ++row)
+            value = static_cast<std::int16_t>(value - removed[row][i]);
+        for (std::size_t row = 0; row < added_count; ++row)
+            value = static_cast<std::int16_t>(value + added[row][i]);
+        destination[i] = value;
+    }
+}
+
+void accumulate_fused_threats_2_2_scalar(std::int16_t* destination,
+                                         const std::int8_t* const* removed,
+                                         std::size_t,
+                                         const std::int8_t* const* added,
+                                         std::size_t) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; ++i) {
+        std::int16_t value = static_cast<std::int16_t>(destination[i] - removed[0][i]);
+        value = static_cast<std::int16_t>(value - removed[1][i]);
+        value = static_cast<std::int16_t>(value + added[0][i]);
+        destination[i] = static_cast<std::int16_t>(value + added[1][i]);
+    }
+}
+
 void transform_scalar(const std::int16_t* pieces,
                       const std::int16_t* threats,
                       std::uint8_t* output) noexcept {
@@ -137,6 +216,12 @@ KernelSet select_kernels(bool allow_avx2) noexcept {
     KernelSet kernels{
         accumulate_add_scalar,
         accumulate_subtract_scalar,
+        accumulate_fused_scalar,
+        accumulate_fused_1_1_scalar,
+        accumulate_fused_2_1_scalar,
+        accumulate_fused_2_2_scalar,
+        accumulate_fused_threats_scalar,
+        accumulate_fused_threats_2_2_scalar,
         transform_scalar,
         propagate_scalar,
         false};
@@ -147,6 +232,12 @@ KernelSet select_kernels(bool allow_avx2) noexcept {
         kernels = KernelSet{
             accumulate_add_avx2,
             accumulate_subtract_avx2,
+            accumulate_fused_avx2,
+            accumulate_fused_1_1_avx2,
+            accumulate_fused_2_1_avx2,
+            accumulate_fused_2_2_avx2,
+            accumulate_fused_threats_avx2,
+            accumulate_fused_threats_2_2_avx2,
             transform_avx2,
             propagate_avx2,
             true};

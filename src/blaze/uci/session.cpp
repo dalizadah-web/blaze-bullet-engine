@@ -47,6 +47,39 @@ std::string benchmark_stats_json() {
         << ",\"refresh_cache_key_misses\":" << stats.refresh_cache_key_misses
         << ",\"refresh_cache_hit_bytes\":" << stats.refresh_cache_hit_bytes
         << ",\"king_bucket_refreshes\":" << stats.king_bucket_refreshes
+        << ",\"halfka_removed_features\":[";
+    for (std::size_t i = 0; i < stats.halfka_removed_features.size(); ++i) {
+        if (i != 0) out << ',';
+        out << stats.halfka_removed_features[i];
+    }
+    out << "],\"halfka_added_features\":[";
+    for (std::size_t i = 0; i < stats.halfka_added_features.size(); ++i) {
+        if (i != 0) out << ',';
+        out << stats.halfka_added_features[i];
+    }
+    out << "],\"full_threats_removed_features\":[";
+    for (std::size_t i = 0; i < stats.full_threats_removed_features.size(); ++i) {
+        if (i != 0) out << ',';
+        out << stats.full_threats_removed_features[i];
+    }
+    out << "],\"full_threats_added_features\":[";
+    for (std::size_t i = 0; i < stats.full_threats_added_features.size(); ++i) {
+        if (i != 0) out << ',';
+        out << stats.full_threats_added_features[i];
+    }
+    out << "],\"total_dirty_rows\":[";
+    for (std::size_t i = 0; i < stats.total_dirty_rows.size(); ++i) {
+        if (i != 0) out << ',';
+        out << stats.total_dirty_rows[i];
+    }
+    out << "],\"delta_move_types\":[";
+    for (std::size_t i = 0; i < stats.delta_move_types.size(); ++i) {
+        if (i != 0) out << ',';
+        out << stats.delta_move_types[i];
+    }
+    out << "],\"accumulator_full_passes\":" << stats.accumulator_full_passes
+        << ",\"accumulator_bytes_read\":" << stats.accumulator_bytes_read
+        << ",\"accumulator_bytes_written\":" << stats.accumulator_bytes_written
         << ",\"components\":{";
     for (std::size_t i = 0; i < stats.components.size(); ++i) {
         if (i != 0) out << ',';

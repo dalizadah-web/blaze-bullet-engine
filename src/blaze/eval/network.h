@@ -56,6 +56,17 @@ struct NnueBenchmarkStats {
     std::uint64_t refresh_cache_hit_bytes = 0;
     std::array<std::array<std::uint64_t, 8>, 2> refresh_cache_hits_by_perspective_bucket{};
     std::uint64_t king_bucket_refreshes = 0;
+    // Per-move accumulator work distribution. These arrays are populated only
+    // in the profile binary; their fixed bounds match NnueDelta capacity.
+    std::array<std::uint64_t, 3> halfka_removed_features{};
+    std::array<std::uint64_t, 3> halfka_added_features{};
+    std::array<std::uint64_t, 97> full_threats_removed_features{};
+    std::array<std::uint64_t, 97> full_threats_added_features{};
+    std::array<std::uint64_t, 197> total_dirty_rows{};
+    std::array<std::uint64_t, 7> delta_move_types{};
+    std::uint64_t accumulator_full_passes = 0;
+    std::uint64_t accumulator_bytes_read = 0;
+    std::uint64_t accumulator_bytes_written = 0;
     std::array<NnueProfileComponentStats,
                static_cast<std::size_t>(NnueProfileComponent::Count)> components{};
 };

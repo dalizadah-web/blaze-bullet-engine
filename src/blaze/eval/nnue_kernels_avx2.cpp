@@ -102,6 +102,108 @@ void accumulate_subtract_avx2(std::int16_t* destination, const std::int16_t* wei
     }
 }
 
+void accumulate_fused_avx2(std::int16_t* destination,
+                           const std::int16_t* const* removed,
+                           std::size_t removed_count,
+                           const std::int16_t* const* added,
+                           std::size_t added_count) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; i += 16) {
+        __m256i value = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(destination + i));
+        for (std::size_t row = 0; row < removed_count; ++row)
+            value = _mm256_sub_epi16(value,
+                _mm256_loadu_si256(reinterpret_cast<const __m256i*>(removed[row] + i)));
+        for (std::size_t row = 0; row < added_count; ++row)
+            value = _mm256_add_epi16(value,
+                _mm256_loadu_si256(reinterpret_cast<const __m256i*>(added[row] + i)));
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(destination + i), value);
+    }
+}
+
+void accumulate_fused_1_1_avx2(std::int16_t* destination,
+                               const std::int16_t* const* removed,
+                               std::size_t,
+                               const std::int16_t* const* added,
+                               std::size_t) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; i += 16) {
+        __m256i value = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(destination + i));
+        value = _mm256_sub_epi16(value,
+            _mm256_loadu_si256(reinterpret_cast<const __m256i*>(removed[0] + i)));
+        value = _mm256_add_epi16(value,
+            _mm256_loadu_si256(reinterpret_cast<const __m256i*>(added[0] + i)));
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(destination + i), value);
+    }
+}
+
+void accumulate_fused_2_1_avx2(std::int16_t* destination,
+                               const std::int16_t* const* removed,
+                               std::size_t,
+                               const std::int16_t* const* added,
+                               std::size_t) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; i += 16) {
+        __m256i value = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(destination + i));
+        value = _mm256_sub_epi16(value,
+            _mm256_loadu_si256(reinterpret_cast<const __m256i*>(removed[0] + i)));
+        value = _mm256_sub_epi16(value,
+            _mm256_loadu_si256(reinterpret_cast<const __m256i*>(removed[1] + i)));
+        value = _mm256_add_epi16(value,
+            _mm256_loadu_si256(reinterpret_cast<const __m256i*>(added[0] + i)));
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(destination + i), value);
+    }
+}
+
+void accumulate_fused_2_2_avx2(std::int16_t* destination,
+                               const std::int16_t* const* removed,
+                               std::size_t,
+                               const std::int16_t* const* added,
+                               std::size_t) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; i += 16) {
+        __m256i value = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(destination + i));
+        value = _mm256_sub_epi16(value,
+            _mm256_loadu_si256(reinterpret_cast<const __m256i*>(removed[0] + i)));
+        value = _mm256_sub_epi16(value,
+            _mm256_loadu_si256(reinterpret_cast<const __m256i*>(removed[1] + i)));
+        value = _mm256_add_epi16(value,
+            _mm256_loadu_si256(reinterpret_cast<const __m256i*>(added[0] + i)));
+        value = _mm256_add_epi16(value,
+            _mm256_loadu_si256(reinterpret_cast<const __m256i*>(added[1] + i)));
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(destination + i), value);
+    }
+}
+
+inline __m256i load_threat_row(const std::int8_t* row) noexcept {
+    return _mm256_cvtepi8_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(row)));
+}
+
+void accumulate_fused_threats_avx2(std::int16_t* destination,
+                                   const std::int8_t* const* removed,
+                                   std::size_t removed_count,
+                                   const std::int8_t* const* added,
+                                   std::size_t added_count) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; i += 16) {
+        __m256i value = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(destination + i));
+        for (std::size_t row = 0; row < removed_count; ++row)
+            value = _mm256_sub_epi16(value, load_threat_row(removed[row] + i));
+        for (std::size_t row = 0; row < added_count; ++row)
+            value = _mm256_add_epi16(value, load_threat_row(added[row] + i));
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(destination + i), value);
+    }
+}
+
+void accumulate_fused_threats_2_2_avx2(std::int16_t* destination,
+                                       const std::int8_t* const* removed,
+                                       std::size_t,
+                                       const std::int8_t* const* added,
+                                       std::size_t) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; i += 16) {
+        __m256i value = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(destination + i));
+        value = _mm256_sub_epi16(value, load_threat_row(removed[0] + i));
+        value = _mm256_sub_epi16(value, load_threat_row(removed[1] + i));
+        value = _mm256_add_epi16(value, load_threat_row(added[0] + i));
+        value = _mm256_add_epi16(value, load_threat_row(added[1] + i));
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(destination + i), value);
+    }
+}
+
 void transform_avx2(const std::int16_t* pieces,
                     const std::int16_t* threats,
                     std::uint8_t* output) noexcept {
@@ -174,6 +276,36 @@ void accumulate_add_avx2(std::int16_t* destination, const std::int16_t* weights)
 }
 void accumulate_subtract_avx2(std::int16_t* destination, const std::int16_t* weights) noexcept {
     accumulate_subtract_scalar(destination, weights);
+}
+void accumulate_fused_avx2(std::int16_t* destination, const std::int16_t* const* removed,
+                           std::size_t removed_count, const std::int16_t* const* added,
+                           std::size_t added_count) noexcept {
+    accumulate_fused_scalar(destination, removed, removed_count, added, added_count);
+}
+void accumulate_fused_1_1_avx2(std::int16_t* destination, const std::int16_t* const* removed,
+                               std::size_t removed_count, const std::int16_t* const* added,
+                               std::size_t added_count) noexcept {
+    accumulate_fused_1_1_scalar(destination, removed, removed_count, added, added_count);
+}
+void accumulate_fused_2_1_avx2(std::int16_t* destination, const std::int16_t* const* removed,
+                               std::size_t removed_count, const std::int16_t* const* added,
+                               std::size_t added_count) noexcept {
+    accumulate_fused_2_1_scalar(destination, removed, removed_count, added, added_count);
+}
+void accumulate_fused_2_2_avx2(std::int16_t* destination, const std::int16_t* const* removed,
+                               std::size_t removed_count, const std::int16_t* const* added,
+                               std::size_t added_count) noexcept {
+    accumulate_fused_2_2_scalar(destination, removed, removed_count, added, added_count);
+}
+void accumulate_fused_threats_avx2(std::int16_t* destination, const std::int8_t* const* removed,
+                                   std::size_t removed_count, const std::int8_t* const* added,
+                                   std::size_t added_count) noexcept {
+    accumulate_fused_threats_scalar(destination, removed, removed_count, added, added_count);
+}
+void accumulate_fused_threats_2_2_avx2(std::int16_t* destination, const std::int8_t* const* removed,
+                                       std::size_t removed_count, const std::int8_t* const* added,
+                                       std::size_t added_count) noexcept {
+    accumulate_fused_threats_2_2_scalar(destination, removed, removed_count, added, added_count);
 }
 void transform_avx2(const std::int16_t* pieces, const std::int16_t* threats, std::uint8_t* output) noexcept {
     transform_scalar(pieces, threats, output);

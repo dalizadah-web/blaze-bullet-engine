@@ -68,6 +68,15 @@ struct AtomicBenchmarkStats {
     std::atomic<std::uint64_t> refresh_cache_hit_bytes{0};
     std::array<std::array<std::atomic<std::uint64_t>, 8>, 2> refresh_cache_hits_by_perspective_bucket{};
     std::atomic<std::uint64_t> king_bucket_refreshes{0};
+    std::array<std::atomic<std::uint64_t>, 3> halfka_removed_features{};
+    std::array<std::atomic<std::uint64_t>, 3> halfka_added_features{};
+    std::array<std::atomic<std::uint64_t>, 97> full_threats_removed_features{};
+    std::array<std::atomic<std::uint64_t>, 97> full_threats_added_features{};
+    std::array<std::atomic<std::uint64_t>, 197> total_dirty_rows{};
+    std::array<std::atomic<std::uint64_t>, 7> delta_move_types{};
+    std::atomic<std::uint64_t> accumulator_full_passes{0};
+    std::atomic<std::uint64_t> accumulator_bytes_read{0};
+    std::atomic<std::uint64_t> accumulator_bytes_written{0};
     std::array<AtomicProfileComponent,
                static_cast<std::size_t>(NnueProfileComponent::Count)> components{};
 };
@@ -149,6 +158,51 @@ void record_benchmark_counter(BenchmarkCounter counter) noexcept {
         case BenchmarkCounter::CacheKeyMiss: ++g_benchmark_stats.refresh_cache_key_misses; break;
         case BenchmarkCounter::KingRefresh: ++g_benchmark_stats.king_bucket_refreshes; break;
     }
+}
+
+enum class DeltaMoveType : std::size_t {
+    Normal, Capture, EnPassant, Promotion, Castling, KingMove, Null
+};
+
+DeltaMoveType classify_delta_move(const StateInfo::NnueDelta& delta) noexcept {
+    if (delta.is_null) return DeltaMoveType::Null;
+    if (delta.primary_piece == make_piece(Color::White, PieceType::King) ||
+        delta.primary_piece == make_piece(Color::Black, PieceType::King)) {
+        return delta.removed_piece != Piece::None && delta.added_piece != Piece::None
+            ? DeltaMoveType::Castling : DeltaMoveType::KingMove;
+    }
+    if (delta.added_piece != Piece::None) return DeltaMoveType::Promotion;
+    if (delta.removed_piece != Piece::None) {
+        return delta.removed_square != delta.primary_to ? DeltaMoveType::EnPassant
+                                                        : DeltaMoveType::Capture;
+    }
+    return DeltaMoveType::Normal;
+}
+
+[[maybe_unused]] void record_delta_histogram(const StateInfo::NnueDelta& delta,
+                            std::size_t halfka_removed,
+                            std::size_t halfka_added,
+                            std::size_t threats_removed,
+                            std::size_t threats_added,
+                            std::size_t accumulator_passes) noexcept {
+    constexpr std::uint64_t kAccumulatorBytes = kDimensions * sizeof(std::int16_t);
+    const std::size_t dirty_rows = halfka_removed + halfka_added + threats_removed + threats_added;
+    ++g_benchmark_stats.halfka_removed_features[std::min(halfka_removed,
+        g_benchmark_stats.halfka_removed_features.size() - 1)];
+    ++g_benchmark_stats.halfka_added_features[std::min(halfka_added,
+        g_benchmark_stats.halfka_added_features.size() - 1)];
+    ++g_benchmark_stats.full_threats_removed_features[std::min(threats_removed,
+        g_benchmark_stats.full_threats_removed_features.size() - 1)];
+    ++g_benchmark_stats.full_threats_added_features[std::min(threats_added,
+        g_benchmark_stats.full_threats_added_features.size() - 1)];
+    ++g_benchmark_stats.total_dirty_rows[std::min(dirty_rows,
+        g_benchmark_stats.total_dirty_rows.size() - 1)];
+    ++g_benchmark_stats.delta_move_types[static_cast<std::size_t>(classify_delta_move(delta))];
+    g_benchmark_stats.accumulator_full_passes.fetch_add(accumulator_passes, std::memory_order_relaxed);
+    g_benchmark_stats.accumulator_bytes_read.fetch_add(accumulator_passes * kAccumulatorBytes,
+                                                        std::memory_order_relaxed);
+    g_benchmark_stats.accumulator_bytes_written.fetch_add(accumulator_passes * kAccumulatorBytes,
+                                                           std::memory_order_relaxed);
 }
 #else
 class ProfileScope final {
@@ -274,6 +328,91 @@ void apply_threat_feature(
     }
 }
 
+const std::int16_t* piece_feature_row(const BigFeatureTransformer& transformer,
+                                      Color perspective,
+                                      Square king,
+                                      Piece piece,
+                                      Square square) {
+    const auto index = Stockfish::Eval::NNUE::Features::HalfKAv2_hm::make_index(
+        to_sf_color(perspective), to_sf_square(square), to_sf_piece(piece), to_sf_square(king));
+    return transformer.weights.data() + index * kDimensions;
+}
+
+void apply_piece_psqt(Accumulator& accumulator,
+                      const BigFeatureTransformer& transformer,
+                      Color perspective,
+                      Square king,
+                      Piece piece,
+                      Square square,
+                      int sign) {
+    const auto index = Stockfish::Eval::NNUE::Features::HalfKAv2_hm::make_index(
+        to_sf_color(perspective), to_sf_square(square), to_sf_piece(piece), to_sf_square(king));
+    const std::size_t side = static_cast<std::size_t>(perspective);
+    for (std::size_t bucket = 0; bucket < kBuckets; ++bucket)
+        accumulator.piece_psqt[side][bucket] += sign * transformer.psqtWeights[index * kBuckets + bucket];
+}
+
+const std::int8_t* threat_feature_row(const BigFeatureTransformer& transformer,
+                                     Color perspective,
+                                     Square king,
+                                     const StateInfo::NnueThreatChange& threat) {
+    const auto index = Stockfish::Eval::NNUE::Features::FullThreats::make_index(
+        to_sf_color(perspective), to_sf_piece(threat.attacker), to_sf_square(threat.from),
+        to_sf_square(threat.to), to_sf_piece(threat.attacked), to_sf_square(king));
+    if (index >= Stockfish::Eval::NNUE::Features::FullThreats::Dimensions) return nullptr;
+    return transformer.threatWeights.data() + index * kDimensions;
+}
+
+void apply_threat_psqt(Accumulator& accumulator,
+                       const BigFeatureTransformer& transformer,
+                       Color perspective,
+                       Square king,
+                       const StateInfo::NnueThreatChange& threat,
+                       int sign) {
+    const auto index = Stockfish::Eval::NNUE::Features::FullThreats::make_index(
+        to_sf_color(perspective), to_sf_piece(threat.attacker), to_sf_square(threat.from),
+        to_sf_square(threat.to), to_sf_piece(threat.attacked), to_sf_square(king));
+    if (index >= Stockfish::Eval::NNUE::Features::FullThreats::Dimensions) return;
+    const std::size_t side = static_cast<std::size_t>(perspective);
+    for (std::size_t bucket = 0; bucket < kBuckets; ++bucket)
+        accumulator.threat_psqt[side][bucket] += sign * transformer.threatPsqtWeights[index * kBuckets + bucket];
+}
+
+void apply_fused_rows(std::int16_t* accumulator,
+                      const nnue::KernelSet& kernels,
+                      const std::int16_t* const* removed,
+                      std::size_t removed_count,
+                      const std::int16_t* const* added,
+                      std::size_t added_count) {
+    if (removed_count == 0 && added_count == 0) return;
+    for (std::size_t row = 0; row < removed_count + added_count; ++row)
+        record_kernel_call(kernels.avx2);
+    // The selected function pointer is outside the 1024-wide loop. The three
+    // unrolled distributions are the measured normal, capture, and castling paths.
+    const nnue::FusedAccumulateKernel kernel = removed_count == 1 && added_count == 1
+        ? kernels.fused_1_1
+        : removed_count == 2 && added_count == 1
+        ? kernels.fused_2_1
+        : removed_count == 2 && added_count == 2
+        ? kernels.fused_2_2
+        : kernels.fused;
+    kernel(accumulator, removed, removed_count, added, added_count);
+}
+
+void apply_fused_threat_rows(std::int16_t* accumulator,
+                             const nnue::KernelSet& kernels,
+                             const std::int8_t* const* removed,
+                             std::size_t removed_count,
+                             const std::int8_t* const* added,
+                             std::size_t added_count) {
+    if (removed_count == 0 && added_count == 0) return;
+    for (std::size_t row = 0; row < removed_count + added_count; ++row)
+        record_kernel_call(kernels.avx2);
+    const nnue::FusedThreatAccumulateKernel kernel = removed_count == 2 && added_count == 2
+        ? kernels.fused_threats_2_2 : kernels.fused_threats;
+    kernel(accumulator, removed, removed_count, added, added_count);
+}
+
 void refresh_perspective(Accumulator& accumulator,
                          const DirectWeights& weights,
                          const Position& position,
@@ -336,6 +475,13 @@ void apply_delta(
     const auto& transformer = weights.network.transformer();
     const bool king_move = delta.primary_piece == make_piece(Color::White, PieceType::King) ||
                            delta.primary_piece == make_piece(Color::Black, PieceType::King);
+#if defined(BLAZE_NNUE_BENCHMARK)
+    std::size_t halfka_removed = 0;
+    std::size_t halfka_added = 0;
+    std::size_t threats_removed = 0;
+    std::size_t threats_added = 0;
+    std::size_t accumulator_passes = 0;
+#endif
     for (const Color perspective : {Color::White, Color::Black}) {
         const Square king = king_square(position_after, perspective);
         const bool halfka_stale = king_move && perspective == delta.moving_side;
@@ -353,29 +499,83 @@ void apply_delta(
                                 halfka_stale, threats_stale);
         if (!halfka_stale) {
             ProfileScope timer(NnueProfileComponent::HalfKaIncremental);
-            apply_piece_feature(accumulator, transformer, perspective, king,
-                delta.primary_piece, delta.primary_from, -1, weights.kernels);
+            std::array<const std::int16_t*, 2> removed{};
+            std::array<const std::int16_t*, 2> added{};
+            std::size_t removed_count = 0;
+            std::size_t added_count = 0;
+            removed[removed_count++] = piece_feature_row(transformer, perspective, king,
+                delta.primary_piece, delta.primary_from);
+            apply_piece_psqt(accumulator, transformer, perspective, king,
+                delta.primary_piece, delta.primary_from, -1);
+#if defined(BLAZE_NNUE_BENCHMARK)
+            ++halfka_removed;
+#endif
             if (delta.primary_to != Square::None) {
-                apply_piece_feature(accumulator, transformer, perspective, king,
-                    delta.primary_piece, delta.primary_to, 1, weights.kernels);
+                added[added_count++] = piece_feature_row(transformer, perspective, king,
+                    delta.primary_piece, delta.primary_to);
+                apply_piece_psqt(accumulator, transformer, perspective, king,
+                    delta.primary_piece, delta.primary_to, 1);
+#if defined(BLAZE_NNUE_BENCHMARK)
+                ++halfka_added;
+#endif
             }
             if (delta.removed_piece != Piece::None) {
-                apply_piece_feature(accumulator, transformer, perspective, king,
-                    delta.removed_piece, delta.removed_square, -1, weights.kernels);
+                removed[removed_count++] = piece_feature_row(transformer, perspective, king,
+                    delta.removed_piece, delta.removed_square);
+                apply_piece_psqt(accumulator, transformer, perspective, king,
+                    delta.removed_piece, delta.removed_square, -1);
+#if defined(BLAZE_NNUE_BENCHMARK)
+                ++halfka_removed;
+#endif
             }
             if (delta.added_piece != Piece::None) {
-                apply_piece_feature(accumulator, transformer, perspective, king,
-                    delta.added_piece, delta.added_square, 1, weights.kernels);
+                added[added_count++] = piece_feature_row(transformer, perspective, king,
+                    delta.added_piece, delta.added_square);
+                apply_piece_psqt(accumulator, transformer, perspective, king,
+                    delta.added_piece, delta.added_square, 1);
+#if defined(BLAZE_NNUE_BENCHMARK)
+                ++halfka_added;
+#endif
             }
+            apply_fused_rows(accumulator.pieces[static_cast<std::size_t>(perspective)].data(),
+                             weights.kernels, removed.data(), removed_count, added.data(), added_count);
+#if defined(BLAZE_NNUE_BENCHMARK)
+            ++accumulator_passes;
+#endif
         }
         if (!threats_stale) {
             ProfileScope timer(NnueProfileComponent::FullThreatsIncremental);
+            std::array<const std::int8_t*, StateInfo::NnueDelta::max_threat_changes> removed{};
+            std::array<const std::int8_t*, StateInfo::NnueDelta::max_threat_changes> added{};
+            std::size_t removed_count = 0;
+            std::size_t added_count = 0;
             for (std::size_t i = 0; i < delta.threat_count; ++i) {
-                apply_threat_feature(accumulator, transformer, perspective, king,
-                    delta.threats[i], delta.threats[i].added ? 1 : -1);
+                const auto* const row = threat_feature_row(transformer, perspective, king, delta.threats[i]);
+#if defined(BLAZE_NNUE_BENCHMARK)
+                if (row != nullptr) {
+                    if (delta.threats[i].added) ++threats_added;
+                    else ++threats_removed;
+                }
+#endif
+                if (row == nullptr) continue;
+                apply_threat_psqt(accumulator, transformer, perspective, king, delta.threats[i],
+                                  delta.threats[i].added ? 1 : -1);
+                if (delta.threats[i].added) added[added_count++] = row;
+                else removed[removed_count++] = row;
+            }
+            if (removed_count != 0 || added_count != 0) {
+                apply_fused_threat_rows(accumulator.threats[static_cast<std::size_t>(perspective)].data(),
+                                        weights.kernels, removed.data(), removed_count, added.data(), added_count);
+#if defined(BLAZE_NNUE_BENCHMARK)
+                ++accumulator_passes;
+#endif
             }
         }
     }
+#if defined(BLAZE_NNUE_BENCHMARK)
+    record_delta_histogram(delta, halfka_removed, halfka_added, threats_removed, threats_added,
+                           accumulator_passes);
+#endif
 }
 
 struct RawOutput {
@@ -498,6 +698,15 @@ void reset_nnue_benchmark_stats() {
     for (auto& perspective : g_benchmark_stats.refresh_cache_hits_by_perspective_bucket)
         for (auto& bucket : perspective) bucket.store(0, std::memory_order_relaxed);
     g_benchmark_stats.king_bucket_refreshes.store(0, std::memory_order_relaxed);
+    for (auto& value : g_benchmark_stats.halfka_removed_features) value.store(0, std::memory_order_relaxed);
+    for (auto& value : g_benchmark_stats.halfka_added_features) value.store(0, std::memory_order_relaxed);
+    for (auto& value : g_benchmark_stats.full_threats_removed_features) value.store(0, std::memory_order_relaxed);
+    for (auto& value : g_benchmark_stats.full_threats_added_features) value.store(0, std::memory_order_relaxed);
+    for (auto& value : g_benchmark_stats.total_dirty_rows) value.store(0, std::memory_order_relaxed);
+    for (auto& value : g_benchmark_stats.delta_move_types) value.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.accumulator_full_passes.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.accumulator_bytes_read.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.accumulator_bytes_written.store(0, std::memory_order_relaxed);
     for (AtomicProfileComponent& component : g_benchmark_stats.components) {
         component.calls.store(0, std::memory_order_relaxed);
         component.sampled_calls.store(0, std::memory_order_relaxed);
@@ -531,6 +740,21 @@ NnueBenchmarkStats nnue_benchmark_stats() {
                 g_benchmark_stats.refresh_cache_hits_by_perspective_bucket[perspective][bucket].load(
                     std::memory_order_relaxed);
     result.king_bucket_refreshes = g_benchmark_stats.king_bucket_refreshes.load(std::memory_order_relaxed);
+    for (std::size_t i = 0; i < result.halfka_removed_features.size(); ++i)
+        result.halfka_removed_features[i] = g_benchmark_stats.halfka_removed_features[i].load(std::memory_order_relaxed);
+    for (std::size_t i = 0; i < result.halfka_added_features.size(); ++i)
+        result.halfka_added_features[i] = g_benchmark_stats.halfka_added_features[i].load(std::memory_order_relaxed);
+    for (std::size_t i = 0; i < result.full_threats_removed_features.size(); ++i)
+        result.full_threats_removed_features[i] = g_benchmark_stats.full_threats_removed_features[i].load(std::memory_order_relaxed);
+    for (std::size_t i = 0; i < result.full_threats_added_features.size(); ++i)
+        result.full_threats_added_features[i] = g_benchmark_stats.full_threats_added_features[i].load(std::memory_order_relaxed);
+    for (std::size_t i = 0; i < result.total_dirty_rows.size(); ++i)
+        result.total_dirty_rows[i] = g_benchmark_stats.total_dirty_rows[i].load(std::memory_order_relaxed);
+    for (std::size_t i = 0; i < result.delta_move_types.size(); ++i)
+        result.delta_move_types[i] = g_benchmark_stats.delta_move_types[i].load(std::memory_order_relaxed);
+    result.accumulator_full_passes = g_benchmark_stats.accumulator_full_passes.load(std::memory_order_relaxed);
+    result.accumulator_bytes_read = g_benchmark_stats.accumulator_bytes_read.load(std::memory_order_relaxed);
+    result.accumulator_bytes_written = g_benchmark_stats.accumulator_bytes_written.load(std::memory_order_relaxed);
     for (std::size_t i = 0; i < result.components.size(); ++i) {
         const AtomicProfileComponent& source = g_benchmark_stats.components[i];
         result.components[i] = NnueProfileComponentStats{
