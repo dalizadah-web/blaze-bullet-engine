@@ -723,7 +723,6 @@ TEST_CASE(see_pruning_preserves_promotions) {
     auto root = position(fen);
     MoveList legal;
     generate_legal(root, legal);
-    StateInfo st;
     Move promotion;
     for (const Move m : legal) {
         if (move_to_uci(m) == "a7b8q" || move_to_uci(m) == "a7b8r" ||

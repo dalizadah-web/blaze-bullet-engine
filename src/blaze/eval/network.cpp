@@ -73,7 +73,7 @@ struct AtomicBenchmarkStats {
 };
 
 AtomicBenchmarkStats g_benchmark_stats;
-constexpr std::uint64_t kProfileSampleMask = 63;
+[[maybe_unused]] constexpr std::uint64_t kProfileSampleMask = 63;
 
 bool profile_component_should_sample(NnueProfileComponent component) noexcept {
     const std::size_t index = static_cast<std::size_t>(component);
@@ -117,7 +117,7 @@ public:
 #endif
     }
 private:
-    NnueProfileComponent component_;
+    [[maybe_unused]] NnueProfileComponent component_;
     bool sampled_;
 #if defined(BLAZE_NNUE_BENCHMARK)
     std::chrono::steady_clock::time_point start_{};
