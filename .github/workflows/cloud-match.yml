@@ -63,6 +63,11 @@ on:
         required: false
         default: ''
         type: string
+      baseline_initstr:
+        description: Optional baseline UCI initialization override
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -96,8 +101,11 @@ jobs:
         shell: bash
         run: |
           STOCKFISH_ELO=${{ inputs.stockfish_elo }}
+          BASELINE_INITSTR=${{ inputs.baseline_initstr }}
           BASELINE_INITSTR_FLAG=""
-          if [ -n "$STOCKFISH_ELO" ]; then
+          if [ -n "$BASELINE_INITSTR" ]; then
+            BASELINE_INITSTR_FLAG="--baseline-initstr $BASELINE_INITSTR"
+          elif [ -n "$STOCKFISH_ELO" ]; then
             BASELINE_INITSTR_FLAG="--baseline-initstr UCI_Elo=$STOCKFISH_ELO"
           fi
           python -m tools.cloud_match.prepare \
