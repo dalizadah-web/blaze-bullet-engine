@@ -1,0 +1,99 @@
+#include "blaze/eval/nnue_kernels.h"
+
+#include <algorithm>
+
+namespace blaze::nnue {
+namespace {
+
+constexpr int kWeightScaleBits = 6;
+constexpr int kOutputScale = 16;
+constexpr int kFirstLayerOutputs = 15;
+constexpr int kFirstLayerTotalOutputs = kFirstLayerOutputs + 1;
+constexpr int kHiddenOutputs = 32;
+
+inline std::uint8_t clipped(std::int32_t value) noexcept {
+    return static_cast<std::uint8_t>(std::clamp(value >> kWeightScaleBits, 0, 127));
+}
+
+inline std::uint8_t squared_clipped(std::int32_t value) noexcept {
+    const auto square = static_cast<std::int64_t>(value) * value;
+    return static_cast<std::uint8_t>(std::min<std::int64_t>(127, square >> 19));
+}
+
+void affine(const std::uint8_t* input,
+            std::size_t input_dimensions,
+            std::size_t output_dimensions,
+            const std::int8_t* weights,
+            const std::int32_t* biases,
+            std::int32_t* output) noexcept {
+    for (std::size_t row = 0; row < output_dimensions; ++row) {
+        std::int32_t sum = biases[row];
+        const std::int8_t* const weight_row = weights + row * input_dimensions;
+        for (std::size_t column = 0; column < input_dimensions; ++column)
+            sum += static_cast<std::int32_t>(weight_row[column]) * input[column];
+        output[row] = sum;
+    }
+}
+
+}  // namespace
+
+void accumulate_add_scalar(std::int16_t* destination, const std::int16_t* weights) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; ++i)
+        destination[i] = static_cast<std::int16_t>(destination[i] + weights[i]);
+}
+
+void accumulate_subtract_scalar(std::int16_t* destination, const std::int16_t* weights) noexcept {
+    for (std::size_t i = 0; i < kAccumulatorDimensions; ++i)
+        destination[i] = static_cast<std::int16_t>(destination[i] - weights[i]);
+}
+
+void transform_scalar(const std::int16_t* pieces,
+                      const std::int16_t* threats,
+                      std::uint8_t* output) noexcept {
+    for (std::size_t i = 0; i < kTransformedDimensions / 2; ++i) {
+        const int first = std::clamp<int>(pieces[i] + threats[i], 0, 255);
+        const int second = std::clamp<int>(pieces[i + kTransformedDimensions / 2] +
+                                               threats[i + kTransformedDimensions / 2],
+                                           0, 255);
+        output[i] = static_cast<std::uint8_t>((first * second) / 512);
+    }
+}
+
+std::int32_t propagate_scalar(const std::uint8_t* transformed,
+                              const InferenceWeights& weights,
+                              InferenceScratch& scratch) noexcept {
+    affine(transformed, kTransformedDimensions, kFirstLayerTotalOutputs,
+           weights.fc0_weights, weights.fc0_biases, scratch.fc0.data());
+
+    for (int i = 0; i < kFirstLayerOutputs; ++i) {
+        scratch.hidden[static_cast<std::size_t>(i)] = squared_clipped(scratch.fc0[static_cast<std::size_t>(i)]);
+        scratch.hidden[static_cast<std::size_t>(i + kFirstLayerOutputs)] =
+            clipped(scratch.fc0[static_cast<std::size_t>(i)]);
+    }
+    scratch.hidden[30] = 0;
+    scratch.hidden[31] = 0;
+
+    affine(scratch.hidden.data(), kHiddenOutputs, kHiddenOutputs,
+           weights.fc1_weights, weights.fc1_biases, scratch.fc1.data());
+    for (int i = 0; i < kHiddenOutputs; ++i)
+        scratch.hidden[static_cast<std::size_t>(i)] = clipped(scratch.fc1[static_cast<std::size_t>(i)]);
+
+    std::int32_t output = weights.fc2_biases[0];
+    for (int i = 0; i < kHiddenOutputs; ++i)
+        output += static_cast<std::int32_t>(weights.fc2_weights[i]) * scratch.hidden[static_cast<std::size_t>(i)];
+
+    const std::int32_t forward = scratch.fc0[kFirstLayerOutputs] * (600 * kOutputScale) /
+                                 (127 * (1 << kWeightScaleBits));
+    return output + forward;
+}
+
+KernelSet select_kernels() noexcept {
+    return KernelSet{
+        accumulate_add_scalar,
+        accumulate_subtract_scalar,
+        transform_scalar,
+        propagate_scalar,
+        false};
+}
+
+}  // namespace blaze::nnue

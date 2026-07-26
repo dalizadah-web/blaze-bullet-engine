@@ -247,6 +247,10 @@ class AffineTransformSparseInput {
         return h;
     }
 
+    // Immutable direct-evaluator access. This preserves the serialized layout.
+    const std::int32_t* biases_data() const noexcept { return biases; }
+    const std::int8_t* weights_data() const noexcept { return weights; }
+
     // Forward propagation
     void propagate(const InputType* input, OutputType* output) const {
 

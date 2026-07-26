@@ -2,6 +2,7 @@
 
 #include "blaze/core/attacks.h"
 #include "blaze/eval/classical.h"
+#include "blaze/eval/nnue_kernels.h"
 
 #include "misc.h"
 #include "nnue/features/full_threats.h"
@@ -67,13 +68,15 @@ Stockfish::Piece to_sf_piece(Piece piece) {
 
 struct DirectWeights {
     NetworkBig network;
+    const nnue::KernelSet kernels;
 
     explicit DirectWeights(std::string_view path) :
         network(Stockfish::Eval::NNUE::EvalFile{
                     Stockfish::FixedString<256>(""),
                     Stockfish::FixedString<256>(""),
                     Stockfish::FixedString<256>("")},
-                Stockfish::Eval::NNUE::EmbeddedNNUEType::BIG) {
+                Stockfish::Eval::NNUE::EmbeddedNNUEType::BIG),
+        kernels(nnue::select_kernels()) {
         network.load("", std::string(path));
         if (!network.is_loaded()) {
             throw std::runtime_error("could not load the requested Big NNUE network");
@@ -82,7 +85,7 @@ struct DirectWeights {
     }
 };
 
-struct Accumulator {
+struct alignas(64) Accumulator {
     std::array<std::array<std::int16_t, kDimensions>, 2> pieces{};
     std::array<std::array<std::int16_t, kDimensions>, 2> threats{};
     std::array<std::array<std::int32_t, kBuckets>, 2> piece_psqt{};
@@ -114,14 +117,13 @@ void apply_piece_feature(
     Square king,
     Piece piece,
     Square square,
-    int sign) {
+    int sign,
+    const nnue::KernelSet& kernels) {
     const auto index = Stockfish::Eval::NNUE::Features::HalfKAv2_hm::make_index(
         to_sf_color(perspective), to_sf_square(square), to_sf_piece(piece), to_sf_square(king));
     const std::size_t side = static_cast<std::size_t>(perspective);
-    for (std::size_t i = 0; i < kDimensions; ++i) {
-        accumulator.pieces[side][i] = static_cast<std::int16_t>(
-            accumulator.pieces[side][i] + sign * transformer.weights[index * kDimensions + i]);
-    }
+    const std::int16_t* const feature = transformer.weights.data() + index * kDimensions;
+    (sign > 0 ? kernels.add : kernels.subtract)(accumulator.pieces[side].data(), feature);
     for (std::size_t bucket = 0; bucket < kBuckets; ++bucket) {
         accumulator.piece_psqt[side][bucket] +=
             sign * transformer.psqtWeights[index * kBuckets + bucket];
@@ -153,16 +155,19 @@ void apply_threat_feature(
 void refresh(Accumulator& accumulator, const DirectWeights& weights, const Position& position) {
     record(g_runtime_stats.accumulator_refreshes);
     const auto& transformer = weights.network.transformer();
-    accumulator = {};
     for (const Color perspective : {Color::White, Color::Black}) {
         const std::size_t side = static_cast<std::size_t>(perspective);
         accumulator.pieces[side] = transformer.biases;
+        accumulator.threats[side].fill(0);
+        accumulator.piece_psqt[side].fill(0);
+        accumulator.threat_psqt[side].fill(0);
         const Square king = king_square(position, perspective);
         for (int sq = 0; sq < 64; ++sq) {
             const Square square = static_cast<Square>(sq);
             const Piece piece = position.piece_on(square);
             if (piece != Piece::None) {
-                apply_piece_feature(accumulator, transformer, perspective, king, piece, square, 1);
+                apply_piece_feature(accumulator, transformer, perspective, king, piece, square, 1,
+                                    weights.kernels);
             }
         }
         for (int sq = 0; sq < 64; ++sq) {
@@ -188,26 +193,27 @@ void apply_delta(
     if (delta.is_null) return;
     record(g_runtime_stats.incremental_updates);
     const auto& transformer = weights.network.transformer();
+    if (delta.primary_piece == make_piece(Color::White, PieceType::King) ||
+        delta.primary_piece == make_piece(Color::Black, PieceType::King)) {
+        // HalfKAv2_hm is king-bucketed: a king move invalidates that side.
+        refresh(accumulator, weights, position_after);
+        return;
+    }
     for (const Color perspective : {Color::White, Color::Black}) {
         const Square king = king_square(position_after, perspective);
-        if (delta.primary_piece == make_piece(perspective, PieceType::King)) {
-            // HalfKAv2_hm is king-bucketed: a king move invalidates that side.
-            refresh(accumulator, weights, position_after);
-            return;
-        }
         apply_piece_feature(accumulator, transformer, perspective, king,
-            delta.primary_piece, delta.primary_from, -1);
+            delta.primary_piece, delta.primary_from, -1, weights.kernels);
         if (delta.primary_to != Square::None) {
             apply_piece_feature(accumulator, transformer, perspective, king,
-                delta.primary_piece, delta.primary_to, 1);
+                delta.primary_piece, delta.primary_to, 1, weights.kernels);
         }
         if (delta.removed_piece != Piece::None) {
             apply_piece_feature(accumulator, transformer, perspective, king,
-                delta.removed_piece, delta.removed_square, -1);
+                delta.removed_piece, delta.removed_square, -1, weights.kernels);
         }
         if (delta.added_piece != Piece::None) {
             apply_piece_feature(accumulator, transformer, perspective, king,
-                delta.added_piece, delta.added_square, 1);
+                delta.added_piece, delta.added_square, 1, weights.kernels);
         }
         for (std::size_t i = 0; i < delta.threat_count; ++i) {
             apply_threat_feature(accumulator, transformer, perspective, king,
@@ -226,7 +232,8 @@ RawOutput propagate(
     const Accumulator& accumulator,
     const DirectWeights& weights,
     const Position& position,
-    std::array<std::uint8_t, kDimensions>& transformed) {
+    std::array<std::uint8_t, kDimensions>& transformed,
+    nnue::InferenceScratch& scratch) {
     const std::size_t us = static_cast<std::size_t>(position.side_to_move());
     const std::size_t them = static_cast<std::size_t>(opposite(position.side_to_move()));
     const std::size_t bucket = (std::popcount(position.occupied()) - 1) / 4;
@@ -234,21 +241,21 @@ RawOutput propagate(
     for (std::size_t p = 0; p < 2; ++p) {
         const std::size_t offset = p * (kDimensions / 2);
         const std::size_t side = perspectives[p];
-        for (std::size_t j = 0; j < kDimensions / 2; ++j) {
-            const int first = std::clamp<int>(
-                accumulator.pieces[side][j] + accumulator.threats[side][j], 0, 255);
-            const int second = std::clamp<int>(
-                accumulator.pieces[side][j + kDimensions / 2] +
-                    accumulator.threats[side][j + kDimensions / 2], 0, 255);
-            transformed[offset + j] = static_cast<Stockfish::Eval::NNUE::TransformedFeatureType>(
-                (first * second) / 512);
-        }
+        weights.kernels.transform(accumulator.pieces[side].data(), accumulator.threats[side].data(),
+                                  transformed.data() + offset);
     }
     RawOutput output;
     output.psqt =
         (accumulator.piece_psqt[us][bucket] - accumulator.piece_psqt[them][bucket] +
          accumulator.threat_psqt[us][bucket] - accumulator.threat_psqt[them][bucket]) / 2;
-    output.positional = weights.network.architecture(bucket).propagate(transformed.data());
+    const auto& architecture = weights.network.architecture(bucket);
+    output.positional = weights.kernels.propagate(
+        transformed.data(),
+        nnue::InferenceWeights{
+            architecture.fc_0.biases_data(), architecture.fc_0.weights_data(),
+            architecture.fc_1.biases_data(), architecture.fc_1.weights_data(),
+            architecture.fc_2.biases_data(), architecture.fc_2.weights_data()},
+        scratch);
     // The legacy bridge exposed the two Network::evaluate() components after
     // their internal OutputScale division, then divided their sum once more.
     // Keep that public score contract while the bridge remains the oracle.
@@ -268,7 +275,8 @@ NnueDebugSnapshot make_snapshot(
     snapshot.threats = accumulator.threats;
     snapshot.halfka_psqt = accumulator.piece_psqt;
     snapshot.threat_psqt = accumulator.threat_psqt;
-    const RawOutput output = propagate(accumulator, weights, position, snapshot.transformed);
+    nnue::InferenceScratch scratch;
+    const RawOutput output = propagate(accumulator, weights, position, snapshot.transformed, scratch);
     snapshot.psqt_output = output.psqt;
     snapshot.positional_output = output.positional;
     snapshot.raw_output = output.raw;
@@ -337,6 +345,7 @@ struct NnueThreadState::Impl {
     bool refresh_cache_valid = false;
     std::size_t ply = 0;
     alignas(64) mutable std::array<std::uint8_t, kDimensions> inference_scratch{};
+    mutable nnue::InferenceScratch inference_buffers{};
 };
 
 std::optional<NetworkEvaluator> NetworkEvaluator::create(std::string_view path, std::string& error) {
@@ -350,6 +359,7 @@ std::optional<NetworkEvaluator> NetworkEvaluator::create(std::string_view path, 
         return std::nullopt;
     }
 }
+
 
 NetworkEvaluator::NetworkEvaluator(NetworkEvaluator&& other) noexcept = default;
 NetworkEvaluator& NetworkEvaluator::operator=(NetworkEvaluator&& other) noexcept = default;
@@ -402,7 +412,8 @@ int NnueThreadState::raw_evaluate(const Position& position) const {
         impl_->stack[impl_->ply],
         *impl_->weights,
         position,
-        impl_->inference_scratch).raw;
+        impl_->inference_scratch,
+        impl_->inference_buffers).raw;
 }
 
 NnueDebugSnapshot NnueThreadState::debug_snapshot(const Position& position) const {
