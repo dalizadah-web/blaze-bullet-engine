@@ -10,7 +10,7 @@ build_dir=${BLAZE_SANITIZER_BUILD_DIR:-build/sanitizers}
 mkdir -p "$build_dir"
 
 mapfile -t tests < <(find tests -name '*.cpp' -print | sort)
-mapfile -t engine < <(find src/blaze -name '*.cpp' ! -name 'nnue_kernels_avx2.cpp' -print | sort)
+mapfile -t engine < <(find src/blaze -name '*.cpp' ! -name 'main.cpp' ! -name 'nnue_kernels_avx2.cpp' -print | sort)
 stockfish=(
   vendor/Stockfish-master/src/bitboard.cpp
   vendor/Stockfish-master/src/movegen.cpp
