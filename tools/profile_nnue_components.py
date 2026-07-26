@@ -73,7 +73,11 @@ def aggregate(samples: list[dict]) -> dict:
         components[name] = {"calls": calls, "sampled_calls": sampled,
                             "sampled_nanoseconds": sampled_ns, "average_ns": average_ns,
                             "estimated_nanoseconds": estimated_ns,
-                            "percent_search": 100.0 * estimated_ns / total_search_ns if total_search_ns else 0.0}
+                             "percent_search": 100.0 * estimated_ns / total_search_ns if total_search_ns else 0.0}
+    delta_ns = components.get("nnue_delta", {}).get("estimated_nanoseconds", 0.0)
+    for name, component in components.items():
+        if name.startswith("delta_"):
+            component["percent_delta"] = 100.0 * component["estimated_nanoseconds"] / delta_ns if delta_ns else 0.0
     nodes = sum(sample["nodes"] for sample in samples)
     qnodes = sum(sample["qnodes"] for sample in samples)
     inferences = sum(sample["inferences"] for sample in samples)

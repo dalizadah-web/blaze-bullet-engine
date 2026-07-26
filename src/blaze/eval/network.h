@@ -16,6 +16,18 @@ namespace blaze {
 
 enum class NnueProfileComponent : std::uint8_t {
     DeltaConstruction,
+    DeltaMoveDecode,
+    DeltaCopyIntoState,
+    DeltaCaptureOccupancyBefore,
+    DeltaComputeOccupancyAfter,
+    DeltaChangedSquares,
+    DeltaFixedAttackers,
+    DeltaSliderBefore,
+    DeltaSliderAfter,
+    DeltaPieceSquareLookup,
+    DeltaFeatureGeneration,
+    DeltaEmission,
+    DeltaDebugOracle,
     HalfKaIncremental,
     HalfKaRefresh,
     FullThreatsIncremental,

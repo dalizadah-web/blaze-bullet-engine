@@ -122,4 +122,14 @@ Bitboard Attacks::queen(Square square, Bitboard occupied) {
     return bishop(square, occupied) | rook(square, occupied);
 }
 
+Attacks::FixedAttackerMasks Attacks::fixed_attacker_masks(Color attacker, Square target) {
+    initialize();
+    if (!is_valid_square(target)) return {};
+    const std::size_t index = static_cast<std::size_t>(square_index(target));
+    return FixedAttackerMasks{
+        pawn_attacks_[static_cast<std::size_t>(opposite(attacker))][index],
+        knight_attacks_[index],
+        king_attacks_[index]};
+}
+
 }  // namespace blaze

@@ -25,6 +25,26 @@ namespace {
 using NnueDelta = blaze::StateInfo::NnueDelta;
 using NnueThreatChange = blaze::StateInfo::NnueThreatChange;
 
+#if defined(BLAZE_NNUE_BENCHMARK)
+class DeltaProfileScope final {
+public:
+    explicit DeltaProfileScope(blaze::NnueProfileComponent component) noexcept : component_(component),
+        sampled_(blaze::nnue_benchmark_should_sample_component(component)) {
+        if (sampled_) start_ = std::chrono::steady_clock::now();
+    }
+    ~DeltaProfileScope() {
+        if (!sampled_) return;
+        const auto elapsed = std::chrono::steady_clock::now() - start_;
+        blaze::nnue_benchmark_record_component_sample(component_, static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count()));
+    }
+private:
+    blaze::NnueProfileComponent component_;
+    bool sampled_;
+    std::chrono::steady_clock::time_point start_{};
+};
+#endif
+
 blaze::Square king_square(const blaze::Position& position, blaze::Color color) {
     const blaze::Bitboard kings = position.pieces(color, blaze::PieceType::King);
     return kings == 0 ? blaze::Square::None
@@ -94,21 +114,23 @@ void add_source(std::array<ThreatSource, kMaxAffectedThreatSources>& sources,
 }
 
 void add_fixed_attackers(const blaze::Position& position,
-                         blaze::Square changed,
-                         std::array<ThreatSource, kMaxAffectedThreatSources>& sources,
-                         std::size_t& count) {
+                          blaze::Square changed,
+                          std::array<ThreatSource, kMaxAffectedThreatSources>& sources,
+                          std::size_t& count) {
     for (const blaze::Color color : {blaze::Color::White, blaze::Color::Black}) {
-        blaze::Bitboard pawns = position.pieces(color, blaze::PieceType::Pawn) &
-            blaze::Attacks::pawn(blaze::opposite(color), changed);
-        blaze::Bitboard knights = position.pieces(color, blaze::PieceType::Knight) &
-            blaze::Attacks::knight(changed);
-        blaze::Bitboard kings = position.pieces(color, blaze::PieceType::King) &
-            blaze::Attacks::king(changed);
-        for (blaze::Bitboard pieces : {pawns, knights, kings}) {
+        const blaze::Attacks::FixedAttackerMasks masks =
+            blaze::Attacks::fixed_attacker_masks(color, changed);
+        const std::array<std::pair<blaze::PieceType, blaze::Bitboard>, 3> attackers{{
+            {blaze::PieceType::Pawn, position.pieces(color, blaze::PieceType::Pawn) & masks.pawns},
+            {blaze::PieceType::Knight, position.pieces(color, blaze::PieceType::Knight) & masks.knights},
+            {blaze::PieceType::King, position.pieces(color, blaze::PieceType::King) & masks.kings}}};
+        for (const auto [type, initial_pieces] : attackers) {
+            blaze::Bitboard pieces = initial_pieces;
+            const blaze::Piece piece = blaze::make_piece(color, type);
             while (pieces != 0) {
                 const blaze::Square source = static_cast<blaze::Square>(std::countr_zero(pieces));
                 pieces &= pieces - 1;
-                add_source(sources, count, position.piece_on(source), source);
+                add_source(sources, count, piece, source);
             }
         }
     }
@@ -199,38 +221,75 @@ void diff_threats(const std::array<NnueThreatChange, 128>& before_threats,
 }
 
 void fill_nnue_threat_delta_fast(const blaze::Position& before,
-                                 const blaze::Position& after,
-                                 NnueDelta& delta) {
+                                  const blaze::Position& after,
+                                  NnueDelta& delta) {
     std::array<ThreatSource, kMaxAffectedThreatSources> sources{};
     std::size_t source_count = 0;
     // Occupancy XOR is insufficient for captures: the destination stays
     // occupied while its attacked-piece identity changes. The move delta names
     // every square whose occupancy or occupant can change.
     blaze::Bitboard changed = 0;
-    const auto mark_changed = [&](blaze::Square square) {
-        if (blaze::is_valid_square(square))
-            changed |= blaze::Bitboard{1} << static_cast<unsigned>(blaze::square_index(square));
-    };
-    mark_changed(delta.primary_from);
-    mark_changed(delta.primary_to);
-    mark_changed(delta.removed_square);
-    mark_changed(delta.added_square);
+    {
+#if defined(BLAZE_NNUE_BENCHMARK)
+        DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaChangedSquares);
+#endif
+        const auto mark_changed = [&](blaze::Square square) {
+            if (blaze::is_valid_square(square))
+                changed |= blaze::Bitboard{1} << static_cast<unsigned>(blaze::square_index(square));
+        };
+        mark_changed(delta.primary_from);
+        mark_changed(delta.primary_to);
+        mark_changed(delta.removed_square);
+        mark_changed(delta.added_square);
+    }
     while (changed != 0) {
         const blaze::Square square = static_cast<blaze::Square>(std::countr_zero(changed));
         changed &= changed - 1;
-        add_source(sources, source_count, before.piece_on(square), square);
-        add_source(sources, source_count, after.piece_on(square), square);
-        add_fixed_attackers(before, square, sources, source_count);
-        add_fixed_attackers(after, square, sources, source_count);
-        add_ray_sliders(before, square, sources, source_count);
-        add_ray_sliders(after, square, sources, source_count);
+        {
+#if defined(BLAZE_NNUE_BENCHMARK)
+            DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaPieceSquareLookup);
+#endif
+            add_source(sources, source_count, before.piece_on(square), square);
+            add_source(sources, source_count, after.piece_on(square), square);
+        }
+        {
+#if defined(BLAZE_NNUE_BENCHMARK)
+            DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaFixedAttackers);
+#endif
+            add_fixed_attackers(before, square, sources, source_count);
+            add_fixed_attackers(after, square, sources, source_count);
+        }
+        {
+#if defined(BLAZE_NNUE_BENCHMARK)
+            DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaSliderBefore);
+#endif
+            add_ray_sliders(before, square, sources, source_count);
+        }
+        {
+#if defined(BLAZE_NNUE_BENCHMARK)
+            DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaSliderAfter);
+#endif
+            add_ray_sliders(after, square, sources, source_count);
+        }
     }
 
     std::array<NnueThreatChange, 128> before_threats{};
     std::array<NnueThreatChange, 128> after_threats{};
-    const std::size_t before_count = collect_source_threats(before, sources, source_count, before_threats);
-    const std::size_t after_count = collect_source_threats(after, sources, source_count, after_threats);
-    diff_threats(before_threats, before_count, after_threats, after_count, delta);
+    std::size_t before_count = 0;
+    std::size_t after_count = 0;
+    {
+#if defined(BLAZE_NNUE_BENCHMARK)
+        DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaFeatureGeneration);
+#endif
+        before_count = collect_source_threats(before, sources, source_count, before_threats);
+        after_count = collect_source_threats(after, sources, source_count, after_threats);
+    }
+    {
+#if defined(BLAZE_NNUE_BENCHMARK)
+        DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaEmission);
+#endif
+        diff_threats(before_threats, before_count, after_threats, after_count, delta);
+    }
 }
 
 #if !defined(NDEBUG) || defined(BLAZE_NNUE_DELTA_ORACLE)
@@ -628,11 +687,19 @@ bool Position::make_move(Move move, StateInfo& state, bool collect_nnue_delta) {
         return false;
     }
 
-    const bool is_en_passant = move.has_flag(MoveFlag::EnPassant);
-    const bool is_capture = move.has_flag(MoveFlag::Capture);
-    const bool is_promotion = move.has_flag(MoveFlag::Promotion);
-    const bool is_castle = move.has_flag(MoveFlag::CastleKing) ||
-                           move.has_flag(MoveFlag::CastleQueen);
+    bool is_en_passant = false;
+    bool is_capture = false;
+    bool is_promotion = false;
+    bool is_castle = false;
+    {
+#if defined(BLAZE_NNUE_BENCHMARK)
+        DeltaProfileScope timer(NnueProfileComponent::DeltaMoveDecode);
+#endif
+        is_en_passant = move.has_flag(MoveFlag::EnPassant);
+        is_capture = move.has_flag(MoveFlag::Capture);
+        is_promotion = move.has_flag(MoveFlag::Promotion);
+        is_castle = move.has_flag(MoveFlag::CastleKing) || move.has_flag(MoveFlag::CastleQueen);
+    }
 
     if (is_castle) {
         const bool king_side = move.has_flag(MoveFlag::CastleKing);
@@ -690,6 +757,9 @@ bool Position::make_move(Move move, StateInfo& state, bool collect_nnue_delta) {
 #endif
 #endif
     if (collect_nnue_delta) {
+#if defined(BLAZE_NNUE_BENCHMARK)
+        DeltaProfileScope timer(NnueProfileComponent::DeltaCopyIntoState);
+#endif
         state.nnue = {};
         state.nnue.moving_side = side_to_move_;
         state.nnue.primary_piece = mover;
@@ -763,12 +833,29 @@ bool Position::make_move(Move move, StateInfo& state, bool collect_nnue_delta) {
     }
 
     if (collect_nnue_delta) {
-        state.nnue.white_king_after = king_square(*this, Color::White);
-        state.nnue.black_king_after = king_square(*this, Color::Black);
+        {
+#if defined(BLAZE_NNUE_BENCHMARK)
+            DeltaProfileScope timer(NnueProfileComponent::DeltaComputeOccupancyAfter);
+#endif
+            state.nnue.white_king_after = king_square(*this, Color::White);
+            state.nnue.black_king_after = king_square(*this, Color::Black);
+        }
+#if defined(BLAZE_NNUE_BENCHMARK)
+        Position before;
+        {
+            DeltaProfileScope timer(NnueProfileComponent::DeltaCaptureOccupancyBefore);
+            before = *this;
+            before.unmake_move(move, state);
+        }
+#else
         Position before = *this;
         before.unmake_move(move, state);
+#endif
         fill_nnue_threat_delta_fast(before, *this, state.nnue);
 #if !defined(NDEBUG) || defined(BLAZE_NNUE_DELTA_ORACLE)
+        #if defined(BLAZE_NNUE_BENCHMARK)
+        DeltaProfileScope debug_timer(NnueProfileComponent::DeltaDebugOracle);
+        #endif
         NnueDelta full_delta;
         fill_nnue_threat_delta_full(before, *this, full_delta);
         if (!same_delta_features(state.nnue, full_delta)) {

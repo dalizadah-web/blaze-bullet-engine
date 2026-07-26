@@ -812,7 +812,11 @@ void nnue_benchmark_record_component_sample(NnueProfileComponent component,
 
 const char* nnue_profile_component_name(NnueProfileComponent component) noexcept {
     constexpr std::array names{
-        "nnue_delta", "halfka_incremental", "halfka_refresh", "full_threats_incremental",
+        "nnue_delta", "delta_move_decode", "delta_copy_into_state",
+        "delta_capture_occupancy_before", "delta_compute_occupancy_after",
+        "delta_changed_squares", "delta_fixed_attackers", "delta_slider_before",
+        "delta_slider_after", "delta_piece_square_lookup", "delta_feature_generation",
+        "delta_emission", "delta_debug_oracle", "halfka_incremental", "halfka_refresh", "full_threats_incremental",
         "full_threats_refresh", "refresh_cache_lookup", "feature_transform", "psqt",
         "first_affine", "hidden_affine", "activation", "output_layer", "public_score"};
     const std::size_t index = static_cast<std::size_t>(component);
