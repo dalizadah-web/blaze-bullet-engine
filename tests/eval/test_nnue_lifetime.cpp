@@ -432,7 +432,7 @@ TEST_CASE(nnue_dispatch_diagnostics_prove_scalar_and_avx2_kernel_paths) {
     }
 }
 
-TEST_CASE(direct_big_nnue_avx2_dispatch_matches_the_scalar_oracle_for_100000_legal_plies) {
+TEST_CASE(direct_big_nnue_avx2_dispatch_matches_the_scalar_oracle_for_1_million_legal_plies) {
     Attacks::initialize();
     std::string error;
     auto dispatched = NetworkEvaluator::create(kNetworkPath, error);
@@ -451,7 +451,7 @@ TEST_CASE(direct_big_nnue_avx2_dispatch_matches_the_scalar_oracle_for_100000_leg
     moves.reserve(128);
     states.reserve(128);
 
-    for (int ply = 0; ply < 100000; ++ply) {
+    for (int ply = 0; ply < 1'000'000; ++ply) {
         CHECK_EQ(dispatched_state.raw_evaluate(position), scalar_state.raw_evaluate(position));
         if ((ply % 251) == 0) {
             Position copied = position;
