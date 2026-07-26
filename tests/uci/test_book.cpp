@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 
 namespace blaze {
@@ -34,8 +35,14 @@ std::uint16_t polyglot_move(Square from, Square to, int promotion = 0) {
         (square_index(to) << 6U) | (promotion << 12U));
 }
 
+std::string book_fixture_path(const char* name) {
+    const std::filesystem::path directory{"build/blaze"};
+    std::filesystem::create_directories(directory);
+    return (directory / name).string();
+}
+
 TEST_CASE(polyglot_book_rejects_truncated_records) {
-    const std::string path = "build/blaze/truncated.bin";
+    const std::string path = book_fixture_path("truncated.bin");
     std::ofstream output(path, std::ios::binary);
     output.put('x');
     output.close();
@@ -44,7 +51,7 @@ TEST_CASE(polyglot_book_rejects_truncated_records) {
 }
 
 TEST_CASE(polyglot_book_translates_castling_and_filters_legal_moves) {
-    const std::string path = "build/blaze/castle.bin";
+    const std::string path = book_fixture_path("castle.bin");
     std::ofstream output(path, std::ios::binary);
     write_u64(output, 0x1234);
     write_u16(output, polyglot_move(Square::E1, Square::H1));
@@ -67,7 +74,7 @@ TEST_CASE(polyglot_book_translates_castling_and_filters_legal_moves) {
 }
 
 TEST_CASE(polyglot_book_weighted_selection_is_seeded) {
-    const std::string path = "build/blaze/weighted.bin";
+    const std::string path = book_fixture_path("weighted.bin");
     std::ofstream output(path, std::ios::binary);
     write_u64(output, 9);
     write_u16(output, polyglot_move(Square::E2, Square::E4));
