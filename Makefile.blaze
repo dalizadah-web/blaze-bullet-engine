@@ -27,7 +27,7 @@ $(BUILD_DIR):
 	powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path '$(BUILD_DIR)' | Out-Null"
 
 $(AVX2_OBJECT): $(AVX2_SOURCE) src/blaze/eval/nnue_kernels.h | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -mavx2 -c $(AVX2_SOURCE) -o $(AVX2_OBJECT)
+	$(CXX) $(RELEASE_FLAGS) -mavx2 -c $(AVX2_SOURCE) -o $(AVX2_OBJECT)
 
 $(TEST_BIN): $(TEST_SOURCES) $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_OBJECT) | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -I$(STOCKFISH_DIR) $(TEST_SOURCES) $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_OBJECT) -o $(TEST_BIN)
