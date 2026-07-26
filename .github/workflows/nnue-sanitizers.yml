@@ -1,0 +1,56 @@
+name: NNUE sanitizer validation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  asan-ubsan:
+    name: ASan + UBSan full NNUE suite
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends clang make curl ca-certificates
+      - name: Fetch pinned Big NNUE
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            --output nn-c288c895ea92.nnue \
+            https://tests.stockfishchess.org/api/nn/nn-c288c895ea92.nnue
+          echo 'c288c895ea924429ea9092e3f36b2b3c1f00f2a3a4c759ff7e57e79e3b43e4a7  nn-c288c895ea92.nnue' | sha256sum --check
+      - name: ASan and UBSan (full tests, special moves, 100000-ply oracle)
+        env:
+          CXX: clang++
+          BLAZE_SANITIZER_MODES: asan_ubsan
+        run: bash tools/run_sanitizers.sh
+
+  tsan:
+    name: ThreadSanitizer multithread NNUE suite
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends clang make curl ca-certificates
+      - name: Fetch pinned Big NNUE
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            --output nn-c288c895ea92.nnue \
+            https://tests.stockfishchess.org/api/nn/nn-c288c895ea92.nnue
+          echo 'c288c895ea924429ea9092e3f36b2b3c1f00f2a3a4c759ff7e57e79e3b43e4a7  nn-c288c895ea92.nnue' | sha256sum --check
+      - name: TSan (repeated multithread and scalar-versus-AVX2 oracle)
+        env:
+          CXX: clang++
+          BLAZE_SANITIZER_MODES: tsan
+        run: bash tools/run_sanitizers.sh

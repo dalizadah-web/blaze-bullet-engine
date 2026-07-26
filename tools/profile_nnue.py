@@ -23,7 +23,8 @@ def main() -> int:
     parser.add_argument("--positions", type=int, default=8)
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--seed", type=int, default=20260726)
-    parser.add_argument("--depths", type=int, nargs="+", default=[4, 6, 8])
+    parser.add_argument("--depths", type=int, nargs="*", default=[4, 6, 8],
+                        help="fixed depths; pass --depths with no values for node-only runs")
     parser.add_argument("--nodes", type=int, nargs="*", default=[])
     parser.add_argument("--threads", type=int, nargs="+", default=[1, 2, 4, 8])
     parser.add_argument("--milliseconds", type=int, default=1000)
@@ -33,6 +34,8 @@ def main() -> int:
         parser.error("--runs must be at least five so median and variance are meaningful")
     if args.positions < 1 or any(value < 1 for value in args.threads):
         parser.error("positions and thread counts must be positive")
+    if not args.depths and not args.nodes:
+        parser.error("supply at least one depth or fixed-node budget")
 
     engine = args.engine.resolve()
     fens = positions(args.positions, args.seed)

@@ -39,7 +39,12 @@ run_suite() {
     "$build_dir/blaze_tests_$name"
 }
 
-run_suite asan_ubsan -fsanitize=address,undefined -fno-omit-frame-pointer
+modes=${BLAZE_SANITIZER_MODES:-"asan_ubsan tsan"}
+if [[ " $modes " == *" asan_ubsan "* ]]; then
+  run_suite asan_ubsan -fsanitize=address,undefined -fno-omit-frame-pointer
+fi
 # TSan is deliberately separate: it is incompatible with ASan and reports
 # races only when it owns the instrumentation runtime.
-run_suite tsan -fsanitize=thread -fno-omit-frame-pointer
+if [[ " $modes " == *" tsan "* ]]; then
+  run_suite tsan -fsanitize=thread -fno-omit-frame-pointer
+fi
