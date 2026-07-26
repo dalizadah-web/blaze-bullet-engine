@@ -274,44 +274,56 @@ void apply_threat_feature(
     }
 }
 
-void refresh(Accumulator& accumulator, const DirectWeights& weights, const Position& position) {
-    record(g_runtime_stats.accumulator_refreshes);
-    record_benchmark_counter(BenchmarkCounter::Refresh);
+void refresh_perspective(Accumulator& accumulator,
+                         const DirectWeights& weights,
+                         const Position& position,
+                         Color perspective,
+                         bool refresh_halfka,
+                         bool refresh_threats) {
     const auto& transformer = weights.network.transformer();
-    for (const Color perspective : {Color::White, Color::Black}) {
-        const std::size_t side = static_cast<std::size_t>(perspective);
+    const std::size_t side = static_cast<std::size_t>(perspective);
+    const Square king = king_square(position, perspective);
+    if (refresh_halfka) {
         accumulator.pieces[side] = transformer.biases;
-        accumulator.threats[side].fill(0);
         accumulator.piece_psqt[side].fill(0);
-        accumulator.threat_psqt[side].fill(0);
-        const Square king = king_square(position, perspective);
-        {
-            ProfileScope timer(NnueProfileComponent::HalfKaRefresh);
-            for (int sq = 0; sq < 64; ++sq) {
-                const Square square = static_cast<Square>(sq);
-                const Piece piece = position.piece_on(square);
-                if (piece != Piece::None) {
-                    apply_piece_feature(accumulator, transformer, perspective, king, piece, square, 1,
-                                        weights.kernels);
-                }
-            }
+        ProfileScope timer(NnueProfileComponent::HalfKaRefresh);
+        for (int sq = 0; sq < 64; ++sq) {
+            const Square square = static_cast<Square>(sq);
+            const Piece piece = position.piece_on(square);
+            if (piece != Piece::None)
+                apply_piece_feature(accumulator, transformer, perspective, king, piece, square, 1,
+                                    weights.kernels);
         }
-        {
-            ProfileScope timer(NnueProfileComponent::FullThreatsRefresh);
-            for (int sq = 0; sq < 64; ++sq) {
-                const Square from = static_cast<Square>(sq);
-                const Piece attacker = position.piece_on(from);
-                Bitboard targets = attacker == Piece::None ? 0
-                    : attacks_from(position, attacker, from) & position.occupied();
-                while (targets != 0) {
-                    const Square to = static_cast<Square>(std::countr_zero(targets));
-                    targets &= targets - 1;
-                    apply_threat_feature(accumulator, transformer, perspective, king,
-                        StateInfo::NnueThreatChange{attacker, position.piece_on(to), from, to, true}, 1);
-                }
+    }
+    if (refresh_threats) {
+        accumulator.threats[side].fill(0);
+        accumulator.threat_psqt[side].fill(0);
+        ProfileScope timer(NnueProfileComponent::FullThreatsRefresh);
+        for (int sq = 0; sq < 64; ++sq) {
+            const Square from = static_cast<Square>(sq);
+            const Piece attacker = position.piece_on(from);
+            Bitboard targets = attacker == Piece::None ? 0
+                : attacks_from(position, attacker, from) & position.occupied();
+            while (targets != 0) {
+                const Square to = static_cast<Square>(std::countr_zero(targets));
+                targets &= targets - 1;
+                apply_threat_feature(accumulator, transformer, perspective, king,
+                    StateInfo::NnueThreatChange{attacker, position.piece_on(to), from, to, true}, 1);
             }
         }
     }
+}
+
+void refresh(Accumulator& accumulator, const DirectWeights& weights, const Position& position) {
+    record(g_runtime_stats.accumulator_refreshes);
+    record_benchmark_counter(BenchmarkCounter::Refresh);
+    refresh_perspective(accumulator, weights, position, Color::White, true, true);
+    refresh_perspective(accumulator, weights, position, Color::Black, true, true);
+}
+
+int full_threats_orientation(Color perspective, Square king) {
+    return Stockfish::Eval::NNUE::Features::FullThreats::OrientTBL[to_sf_square(king)] ^
+           (56 * static_cast<int>(to_sf_color(perspective)));
 }
 
 void apply_delta(
@@ -322,16 +334,24 @@ void apply_delta(
     if (delta.is_null) return;
     record(g_runtime_stats.incremental_updates);
     const auto& transformer = weights.network.transformer();
-    if (delta.primary_piece == make_piece(Color::White, PieceType::King) ||
-        delta.primary_piece == make_piece(Color::Black, PieceType::King)) {
-        // HalfKAv2_hm is king-bucketed: a king move invalidates that side.
-        record_benchmark_counter(BenchmarkCounter::KingRefresh);
-        refresh(accumulator, weights, position_after);
-        return;
-    }
+    const bool king_move = delta.primary_piece == make_piece(Color::White, PieceType::King) ||
+                           delta.primary_piece == make_piece(Color::Black, PieceType::King);
     for (const Color perspective : {Color::White, Color::Black}) {
         const Square king = king_square(position_after, perspective);
-        {
+        const bool halfka_stale = king_move && perspective == delta.moving_side;
+        const Square king_before = perspective == Color::White
+            ? delta.white_king_before : delta.black_king_before;
+        // FullThreats indexes only the orientation class of the perspective
+        // king. A king move inside that class remains an ordinary dirty threat
+        // update; crossing classes needs a refresh for this perspective only.
+        const bool threats_stale = halfka_stale &&
+            full_threats_orientation(perspective, king_before) !=
+            full_threats_orientation(perspective, king);
+        if (halfka_stale) record_benchmark_counter(BenchmarkCounter::KingRefresh);
+        if (halfka_stale || threats_stale)
+            refresh_perspective(accumulator, weights, position_after, perspective,
+                                halfka_stale, threats_stale);
+        if (!halfka_stale) {
             ProfileScope timer(NnueProfileComponent::HalfKaIncremental);
             apply_piece_feature(accumulator, transformer, perspective, king,
                 delta.primary_piece, delta.primary_from, -1, weights.kernels);
@@ -348,7 +368,7 @@ void apply_delta(
                     delta.added_piece, delta.added_square, 1, weights.kernels);
             }
         }
-        {
+        if (!threats_stale) {
             ProfileScope timer(NnueProfileComponent::FullThreatsIncremental);
             for (std::size_t i = 0; i < delta.threat_count; ++i) {
                 apply_threat_feature(accumulator, transformer, perspective, king,
