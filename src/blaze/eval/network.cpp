@@ -57,7 +57,16 @@ struct AtomicBenchmarkStats {
     std::atomic<std::uint64_t> incremental_evaluations{0};
     std::atomic<std::uint64_t> full_refreshes{0};
     std::atomic<std::uint64_t> inferences{0};
+    std::atomic<std::uint64_t> refresh_cache_lookups{0};
     std::atomic<std::uint64_t> refresh_cache_hits{0};
+    std::atomic<std::uint64_t> refresh_cache_misses{0};
+    std::atomic<std::uint64_t> refresh_cache_stores{0};
+    std::atomic<std::uint64_t> refresh_cache_replacements{0};
+    std::atomic<std::uint64_t> refresh_cache_invalidations{0};
+    std::atomic<std::uint64_t> refresh_cache_uninitialized_misses{0};
+    std::atomic<std::uint64_t> refresh_cache_key_misses{0};
+    std::atomic<std::uint64_t> refresh_cache_hit_bytes{0};
+    std::array<std::array<std::atomic<std::uint64_t>, 8>, 2> refresh_cache_hits_by_perspective_bucket{};
     std::atomic<std::uint64_t> king_bucket_refreshes{0};
     std::array<AtomicProfileComponent,
                static_cast<std::size_t>(NnueProfileComponent::Count)> components{};
@@ -120,14 +129,24 @@ void record_kernel_call(bool avx2) noexcept {
         .fetch_add(1, std::memory_order_relaxed);
 }
 
-enum class BenchmarkCounter { Fresh, Incremental, Refresh, Inference, CacheHit, KingRefresh };
+enum class BenchmarkCounter {
+    Fresh, Incremental, Refresh, Inference, CacheLookup, CacheHit, CacheMiss,
+    CacheStore, CacheReplacement, CacheInvalidation, CacheUninitializedMiss, CacheKeyMiss, KingRefresh
+};
 void record_benchmark_counter(BenchmarkCounter counter) noexcept {
     switch (counter) {
         case BenchmarkCounter::Fresh: ++g_benchmark_stats.fresh_evaluations; break;
         case BenchmarkCounter::Incremental: ++g_benchmark_stats.incremental_evaluations; break;
         case BenchmarkCounter::Refresh: ++g_benchmark_stats.full_refreshes; break;
         case BenchmarkCounter::Inference: ++g_benchmark_stats.inferences; break;
+        case BenchmarkCounter::CacheLookup: ++g_benchmark_stats.refresh_cache_lookups; break;
         case BenchmarkCounter::CacheHit: ++g_benchmark_stats.refresh_cache_hits; break;
+        case BenchmarkCounter::CacheMiss: ++g_benchmark_stats.refresh_cache_misses; break;
+        case BenchmarkCounter::CacheStore: ++g_benchmark_stats.refresh_cache_stores; break;
+        case BenchmarkCounter::CacheReplacement: ++g_benchmark_stats.refresh_cache_replacements; break;
+        case BenchmarkCounter::CacheInvalidation: ++g_benchmark_stats.refresh_cache_invalidations; break;
+        case BenchmarkCounter::CacheUninitializedMiss: ++g_benchmark_stats.refresh_cache_uninitialized_misses; break;
+        case BenchmarkCounter::CacheKeyMiss: ++g_benchmark_stats.refresh_cache_key_misses; break;
         case BenchmarkCounter::KingRefresh: ++g_benchmark_stats.king_bucket_refreshes; break;
     }
 }
@@ -137,7 +156,10 @@ public:
     explicit ProfileScope(NnueProfileComponent) noexcept {}
 };
 void record_kernel_call(bool) noexcept {}
-enum class BenchmarkCounter { Fresh, Incremental, Refresh, Inference, CacheHit, KingRefresh };
+enum class BenchmarkCounter {
+    Fresh, Incremental, Refresh, Inference, CacheLookup, CacheHit, CacheMiss,
+    CacheStore, CacheReplacement, CacheInvalidation, CacheUninitializedMiss, CacheKeyMiss, KingRefresh
+};
 void record_benchmark_counter(BenchmarkCounter) noexcept {}
 #endif
 
@@ -444,7 +466,17 @@ void reset_nnue_benchmark_stats() {
     g_benchmark_stats.incremental_evaluations.store(0, std::memory_order_relaxed);
     g_benchmark_stats.full_refreshes.store(0, std::memory_order_relaxed);
     g_benchmark_stats.inferences.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.refresh_cache_lookups.store(0, std::memory_order_relaxed);
     g_benchmark_stats.refresh_cache_hits.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.refresh_cache_misses.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.refresh_cache_stores.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.refresh_cache_replacements.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.refresh_cache_invalidations.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.refresh_cache_uninitialized_misses.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.refresh_cache_key_misses.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.refresh_cache_hit_bytes.store(0, std::memory_order_relaxed);
+    for (auto& perspective : g_benchmark_stats.refresh_cache_hits_by_perspective_bucket)
+        for (auto& bucket : perspective) bucket.store(0, std::memory_order_relaxed);
     g_benchmark_stats.king_bucket_refreshes.store(0, std::memory_order_relaxed);
     for (AtomicProfileComponent& component : g_benchmark_stats.components) {
         component.calls.store(0, std::memory_order_relaxed);
@@ -464,7 +496,20 @@ NnueBenchmarkStats nnue_benchmark_stats() {
     result.incremental_evaluations = g_benchmark_stats.incremental_evaluations.load(std::memory_order_relaxed);
     result.full_refreshes = g_benchmark_stats.full_refreshes.load(std::memory_order_relaxed);
     result.inferences = g_benchmark_stats.inferences.load(std::memory_order_relaxed);
+    result.refresh_cache_lookups = g_benchmark_stats.refresh_cache_lookups.load(std::memory_order_relaxed);
     result.refresh_cache_hits = g_benchmark_stats.refresh_cache_hits.load(std::memory_order_relaxed);
+    result.refresh_cache_misses = g_benchmark_stats.refresh_cache_misses.load(std::memory_order_relaxed);
+    result.refresh_cache_stores = g_benchmark_stats.refresh_cache_stores.load(std::memory_order_relaxed);
+    result.refresh_cache_replacements = g_benchmark_stats.refresh_cache_replacements.load(std::memory_order_relaxed);
+    result.refresh_cache_invalidations = g_benchmark_stats.refresh_cache_invalidations.load(std::memory_order_relaxed);
+    result.refresh_cache_uninitialized_misses = g_benchmark_stats.refresh_cache_uninitialized_misses.load(std::memory_order_relaxed);
+    result.refresh_cache_key_misses = g_benchmark_stats.refresh_cache_key_misses.load(std::memory_order_relaxed);
+    result.refresh_cache_hit_bytes = g_benchmark_stats.refresh_cache_hit_bytes.load(std::memory_order_relaxed);
+    for (std::size_t perspective = 0; perspective < 2; ++perspective)
+        for (std::size_t bucket = 0; bucket < 8; ++bucket)
+            result.refresh_cache_hits_by_perspective_bucket[perspective][bucket] =
+                g_benchmark_stats.refresh_cache_hits_by_perspective_bucket[perspective][bucket].load(
+                    std::memory_order_relaxed);
     result.king_bucket_refreshes = g_benchmark_stats.king_bucket_refreshes.load(std::memory_order_relaxed);
     for (std::size_t i = 0; i < result.components.size(); ++i) {
         const AtomicProfileComponent& source = g_benchmark_stats.components[i];
@@ -613,14 +658,20 @@ NnueThreadState NetworkEvaluator::make_thread_state() const {
 void NnueThreadState::reset(const Position& position) {
     impl_->ply = 0;
     ProfileScope timer(NnueProfileComponent::RefreshCacheLookup);
+    record_benchmark_counter(BenchmarkCounter::CacheLookup);
     if (impl_->refresh_cache_valid && impl_->refresh_cache_key == position.key()) {
         record(g_runtime_stats.refresh_cache_hits);
         record_benchmark_counter(BenchmarkCounter::CacheHit);
         return;
     }
+    record_benchmark_counter(BenchmarkCounter::CacheMiss);
+    record_benchmark_counter(impl_->refresh_cache_valid
+        ? BenchmarkCounter::CacheKeyMiss : BenchmarkCounter::CacheUninitializedMiss);
+    if (impl_->refresh_cache_valid) record_benchmark_counter(BenchmarkCounter::CacheReplacement);
     refresh(impl_->stack[0], *impl_->weights, position);
     impl_->refresh_cache_key = position.key();
     impl_->refresh_cache_valid = true;
+    record_benchmark_counter(BenchmarkCounter::CacheStore);
 }
 
 void NnueThreadState::push(const Position& position_after, const StateInfo& move_state) {

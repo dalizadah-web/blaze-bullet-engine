@@ -37,7 +37,15 @@ std::string benchmark_stats_json() {
         << ",\"incremental_evaluations\":" << stats.incremental_evaluations
         << ",\"full_refreshes\":" << stats.full_refreshes
         << ",\"inferences\":" << stats.inferences
+        << ",\"refresh_cache_lookups\":" << stats.refresh_cache_lookups
         << ",\"refresh_cache_hits\":" << stats.refresh_cache_hits
+        << ",\"refresh_cache_misses\":" << stats.refresh_cache_misses
+        << ",\"refresh_cache_stores\":" << stats.refresh_cache_stores
+        << ",\"refresh_cache_replacements\":" << stats.refresh_cache_replacements
+        << ",\"refresh_cache_invalidations\":" << stats.refresh_cache_invalidations
+        << ",\"refresh_cache_uninitialized_misses\":" << stats.refresh_cache_uninitialized_misses
+        << ",\"refresh_cache_key_misses\":" << stats.refresh_cache_key_misses
+        << ",\"refresh_cache_hit_bytes\":" << stats.refresh_cache_hit_bytes
         << ",\"king_bucket_refreshes\":" << stats.king_bucket_refreshes
         << ",\"components\":{";
     for (std::size_t i = 0; i < stats.components.size(); ++i) {

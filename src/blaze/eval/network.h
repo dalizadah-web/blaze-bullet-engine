@@ -45,7 +45,16 @@ struct NnueBenchmarkStats {
     std::uint64_t incremental_evaluations = 0;
     std::uint64_t full_refreshes = 0;
     std::uint64_t inferences = 0;
+    std::uint64_t refresh_cache_lookups = 0;
     std::uint64_t refresh_cache_hits = 0;
+    std::uint64_t refresh_cache_misses = 0;
+    std::uint64_t refresh_cache_stores = 0;
+    std::uint64_t refresh_cache_replacements = 0;
+    std::uint64_t refresh_cache_invalidations = 0;
+    std::uint64_t refresh_cache_uninitialized_misses = 0;
+    std::uint64_t refresh_cache_key_misses = 0;
+    std::uint64_t refresh_cache_hit_bytes = 0;
+    std::array<std::array<std::uint64_t, 8>, 2> refresh_cache_hits_by_perspective_bucket{};
     std::uint64_t king_bucket_refreshes = 0;
     std::array<NnueProfileComponentStats,
                static_cast<std::size_t>(NnueProfileComponent::Count)> components{};
