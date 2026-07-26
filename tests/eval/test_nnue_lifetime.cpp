@@ -399,6 +399,56 @@ TEST_CASE(direct_big_nnue_randomized_incremental_oracle) {
     sf_nnue_destroy();
 }
 
+TEST_CASE(direct_big_nnue_avx2_dispatch_matches_the_scalar_oracle_for_100000_legal_plies) {
+    Attacks::initialize();
+    std::string error;
+    auto dispatched = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(dispatched.has_value());
+    auto scalar = NetworkEvaluator::create_scalar_oracle(kNetworkPath, error);
+    CHECK(scalar.has_value());
+
+    std::mt19937 random{0xA2B2u};
+    Position position = startpos();
+    auto dispatched_state = dispatched->make_thread_state();
+    auto scalar_state = scalar->make_thread_state();
+    dispatched_state.reset(position);
+    scalar_state.reset(position);
+    std::vector<Move> moves;
+    std::vector<StateInfo> states;
+    moves.reserve(128);
+    states.reserve(128);
+
+    for (int ply = 0; ply < 100000; ++ply) {
+        CHECK_EQ(dispatched_state.raw_evaluate(position), scalar_state.raw_evaluate(position));
+        if ((ply % 251) == 0) {
+            Position copied = position;
+            CHECK_EQ(dispatched->raw_evaluate(copied), scalar->raw_evaluate(copied));
+        }
+
+        MoveList legal;
+        generate_legal(position, legal);
+        if (legal.empty() || moves.size() == 96) {
+            while (!moves.empty()) {
+                dispatched_state.pop();
+                scalar_state.pop();
+                position.unmake_move(moves.back(), states.back());
+                moves.pop_back();
+                states.pop_back();
+                CHECK_EQ(dispatched_state.raw_evaluate(position), scalar_state.raw_evaluate(position));
+            }
+            continue;
+        }
+
+        const Move move = legal[static_cast<std::size_t>(random()) % legal.size()];
+        StateInfo state;
+        CHECK(position.make_move(move, state, true));
+        dispatched_state.push(position, state);
+        scalar_state.push(position, state);
+        moves.push_back(move);
+        states.push_back(state);
+    }
+}
+
 TEST_CASE(direct_big_nnue_special_move_oracle) {
     Attacks::initialize();
     std::string error;

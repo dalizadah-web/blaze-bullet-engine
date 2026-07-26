@@ -1,6 +1,7 @@
 #include "blaze/eval/nnue_kernels.h"
 
 #include <algorithm>
+#include <cstdlib>
 
 namespace blaze::nnue {
 namespace {
@@ -87,13 +88,26 @@ std::int32_t propagate_scalar(const std::uint8_t* transformed,
     return output + forward;
 }
 
-KernelSet select_kernels() noexcept {
-    return KernelSet{
+KernelSet select_kernels(bool allow_avx2) noexcept {
+    KernelSet kernels{
         accumulate_add_scalar,
         accumulate_subtract_scalar,
         transform_scalar,
         propagate_scalar,
         false};
+#if (defined(__i386__) || defined(__x86_64__)) && (defined(__GNUC__) || defined(__clang__))
+    const char* const force_scalar = std::getenv("BLAZE_NNUE_FORCE_SCALAR");
+    __builtin_cpu_init();
+    if (allow_avx2 && force_scalar == nullptr && __builtin_cpu_supports("avx2")) {
+        kernels = KernelSet{
+            accumulate_add_avx2,
+            accumulate_subtract_avx2,
+            transform_avx2,
+            propagate_avx2,
+            true};
+    }
+#endif
+    return kernels;
 }
 
 }  // namespace blaze::nnue

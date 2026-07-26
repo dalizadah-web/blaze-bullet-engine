@@ -70,13 +70,13 @@ struct DirectWeights {
     NetworkBig network;
     const nnue::KernelSet kernels;
 
-    explicit DirectWeights(std::string_view path) :
+    explicit DirectWeights(std::string_view path, bool allow_avx2) :
         network(Stockfish::Eval::NNUE::EvalFile{
                     Stockfish::FixedString<256>(""),
                     Stockfish::FixedString<256>(""),
                     Stockfish::FixedString<256>("")},
                 Stockfish::Eval::NNUE::EmbeddedNNUEType::BIG),
-        kernels(nnue::select_kernels()) {
+        kernels(nnue::select_kernels(allow_avx2)) {
         network.load("", std::string(path));
         if (!network.is_loaded()) {
             throw std::runtime_error("could not load the requested Big NNUE network");
@@ -333,7 +333,8 @@ NnueRootTaskScope::~NnueRootTaskScope() {
 }
 
 struct NetworkEvaluator::Impl {
-    explicit Impl(std::string_view path) : weights(std::make_shared<DirectWeights>(path)) {}
+    explicit Impl(std::string_view path, bool allow_avx2) :
+        weights(std::make_shared<DirectWeights>(path, allow_avx2)) {}
     std::shared_ptr<const DirectWeights> weights;
 };
 
@@ -352,7 +353,7 @@ std::optional<NetworkEvaluator> NetworkEvaluator::create(std::string_view path, 
     error.clear();
     try {
         NetworkEvaluator evaluator;
-        evaluator.impl_ = std::make_unique<Impl>(path);
+        evaluator.impl_ = std::make_unique<Impl>(path, true);
         return evaluator;
     } catch (const std::exception& exception) {
         error = exception.what();
@@ -360,6 +361,19 @@ std::optional<NetworkEvaluator> NetworkEvaluator::create(std::string_view path, 
     }
 }
 
+std::optional<NetworkEvaluator> NetworkEvaluator::create_scalar_oracle(
+    std::string_view path,
+    std::string& error) {
+    error.clear();
+    try {
+        NetworkEvaluator evaluator;
+        evaluator.impl_ = std::make_unique<Impl>(path, false);
+        return evaluator;
+    } catch (const std::exception& exception) {
+        error = exception.what();
+        return std::nullopt;
+    }
+}
 
 NetworkEvaluator::NetworkEvaluator(NetworkEvaluator&& other) noexcept = default;
 NetworkEvaluator& NetworkEvaluator::operator=(NetworkEvaluator&& other) noexcept = default;

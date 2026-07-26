@@ -82,6 +82,9 @@ class NetworkEvaluator final {
 public:
     static std::optional<NetworkEvaluator> create(
         std::string_view path, std::string& error);
+    // Test oracle only: retains scalar execution while production auto-dispatches.
+    static std::optional<NetworkEvaluator> create_scalar_oracle(
+        std::string_view path, std::string& error);
 
     NetworkEvaluator(NetworkEvaluator&& other) noexcept;
     NetworkEvaluator& operator=(NetworkEvaluator&& other) noexcept;

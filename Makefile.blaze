@@ -9,6 +9,9 @@ TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp) \
 	$(wildcard tests/eval/*.cpp) $(wildcard tests/search/*.cpp) $(wildcard tests/uci/*.cpp)
 ENGINE_SOURCES := $(wildcard src/blaze/core/*.cpp) $(wildcard src/blaze/eval/*.cpp) \
 	$(wildcard src/blaze/search/*.cpp) $(wildcard src/blaze/uci/*.cpp)
+AVX2_SOURCE := src/blaze/eval/nnue_kernels_avx2.cpp
+ENGINE_SOURCES := $(filter-out $(AVX2_SOURCE),$(ENGINE_SOURCES))
+AVX2_OBJECT := $(BUILD_DIR)/nnue_kernels_avx2.o
 STOCKFISH_DIR := vendor/Stockfish-master/src
 STOCKFISH_SOURCES := $(STOCKFISH_DIR)/bitboard.cpp $(STOCKFISH_DIR)/movegen.cpp \
 	$(STOCKFISH_DIR)/position.cpp $(STOCKFISH_DIR)/misc.cpp \
@@ -23,14 +26,17 @@ all: test blaze
 $(BUILD_DIR):
 	powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path '$(BUILD_DIR)' | Out-Null"
 
-$(TEST_BIN): $(TEST_SOURCES) $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -I$(STOCKFISH_DIR) $(TEST_SOURCES) $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) -o $(TEST_BIN)
+$(AVX2_OBJECT): $(AVX2_SOURCE) src/blaze/eval/nnue_kernels.h | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -mavx2 -c $(AVX2_SOURCE) -o $(AVX2_OBJECT)
+
+$(TEST_BIN): $(TEST_SOURCES) $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_OBJECT) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -I$(STOCKFISH_DIR) $(TEST_SOURCES) $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_OBJECT) -o $(TEST_BIN)
 
 test: $(TEST_BIN)
 	$(TEST_BIN)
 
-$(BLAZE_BIN): src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) | $(BUILD_DIR)
-	$(CXX) $(RELEASE_FLAGS) -I$(STOCKFISH_DIR) src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) -o $(BLAZE_BIN)
+$(BLAZE_BIN): src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_OBJECT) | $(BUILD_DIR)
+	$(CXX) $(RELEASE_FLAGS) -I$(STOCKFISH_DIR) src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_OBJECT) -o $(BLAZE_BIN)
 
 blaze: $(BLAZE_BIN)
 
@@ -55,8 +61,8 @@ repeated-start: $(BLAZE_BIN)
 bullet-latency: $(BLAZE_BIN)
 	python tools/bullet_latency.py --engine $(BLAZE_BIN) --positions 100 --repetitions 1
 
-$(PERFT_BIN): tools/perft_driver.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -I$(STOCKFISH_DIR) tools/perft_driver.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) -o $(PERFT_BIN)
+$(PERFT_BIN): tools/perft_driver.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_OBJECT) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -I$(STOCKFISH_DIR) tools/perft_driver.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_OBJECT) -o $(PERFT_BIN)
 
 perft-driver: $(PERFT_BIN)
 

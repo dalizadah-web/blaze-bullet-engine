@@ -50,7 +50,16 @@ std::int32_t propagate_scalar(const std::uint8_t* transformed,
                               const InferenceWeights& weights,
                               InferenceScratch& scratch) noexcept;
 
-[[nodiscard]] KernelSet select_kernels() noexcept;
+void accumulate_add_avx2(std::int16_t* destination, const std::int16_t* weights) noexcept;
+void accumulate_subtract_avx2(std::int16_t* destination, const std::int16_t* weights) noexcept;
+void transform_avx2(const std::int16_t* pieces,
+                    const std::int16_t* threats,
+                    std::uint8_t* output) noexcept;
+std::int32_t propagate_avx2(const std::uint8_t* transformed,
+                            const InferenceWeights& weights,
+                            InferenceScratch& scratch) noexcept;
+
+[[nodiscard]] KernelSet select_kernels(bool allow_avx2 = true) noexcept;
 
 }  // namespace blaze::nnue
 
