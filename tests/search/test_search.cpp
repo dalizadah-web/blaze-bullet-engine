@@ -236,6 +236,32 @@ TEST_CASE(search_honors_node_and_external_stop_limits) {
     CHECK(parallel_limited.nodes <= 200);
 }
 
+TEST_CASE(parallel_search_consumes_the_requested_shared_node_budget_exactly) {
+    const Position root = position(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    constexpr std::array<std::uint64_t, 6> budgets{
+        1, 1'023, 1'024, 1'025, 10'000, 100'000};
+    constexpr std::array<int, 4> threads{1, 2, 4, 8};
+
+    for (const int thread_count : threads) {
+        for (const std::uint64_t budget : budgets) {
+            TranspositionTable table(4);
+            Searcher searcher(table);
+            SearchLimits limits{.depth = 64, .nodes = budget};
+            limits.threads = thread_count;
+            const SearchResult result = searcher.search(root, limits);
+            CHECK(result.best_move.is_valid());
+            // Shared-budget claims occur per searched node, so parallel search
+            // has no chunk-reservation overshoot (and no lost unused chunk).
+            if (result.nodes != budget) {
+                throw test::Failure("node budget=" + std::to_string(budget) +
+                                    " threads=" + std::to_string(thread_count) +
+                                    " consumed=" + std::to_string(result.nodes));
+            }
+        }
+    }
+}
+
 TEST_CASE(search_finishes_cleanly_between_iterations_at_the_soft_target) {
     Position root = position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     TranspositionTable table(4);

@@ -509,6 +509,13 @@ SearchResult Searcher::search_parallel(
             break;
         }
     }
+    // A root move may be searched twice after an aspiration miss. TaskResult
+    // stores only its final attempt, so summing task-local counters undercounts
+    // the shared budget. The shared counter is the authoritative number of
+    // successful node claims across all workers and all attempts.
+    if (shared_node_budget) {
+        result.nodes = limits.nodes - shared_node_budget->load(std::memory_order_relaxed);
+    }
     return result;
 }
 
@@ -1202,24 +1209,23 @@ bool Searcher::should_stop(Context& context) const {
 
 bool Searcher::consume_node(Context& context) const {
     if (context.limits.shared_node_budget) {
-        if (context.local_node_budget == 0) {
-            constexpr std::uint64_t chunk_size = 1024;
-            std::uint64_t old =
-                context.limits.shared_node_budget->load(std::memory_order_relaxed);
-            while (old != 0) {
-                const std::uint64_t take = old < chunk_size ? old : chunk_size;
-                if (context.limits.shared_node_budget->compare_exchange_weak(
-                        old, old - take, std::memory_order_relaxed, std::memory_order_relaxed)) {
-                    context.local_node_budget = take;
-                    break;
-                }
-            }
-            if (old == 0) {
-                context.stopped = true;
-                return false;
+        // A root task owns a short-lived Context. Reserving a chunk here loses
+        // its unused tail when that task returns, which makes the parallel
+        // search stop far below its requested node limit. Claim each node from
+        // the one shared counter instead: a successful claim is an actual
+        // searched node, so there is no reservation to reclaim or overshoot.
+        std::uint64_t remaining =
+            context.limits.shared_node_budget->load(std::memory_order_relaxed);
+        while (remaining != 0) {
+            if (context.limits.shared_node_budget->compare_exchange_weak(
+                    remaining, remaining - 1, std::memory_order_relaxed,
+                    std::memory_order_relaxed)) {
+                ++context.nodes;
+                return true;
             }
         }
-        --context.local_node_budget;
+        context.stopped = true;
+        return false;
     }
     ++context.nodes;
     return true;
