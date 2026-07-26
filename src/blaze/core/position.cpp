@@ -4,6 +4,10 @@
 #include "blaze/core/attacks.h"
 #include "blaze/core/move.h"
 #include "blaze/core/zobrist.h"
+#if defined(BLAZE_NNUE_BENCHMARK) || !defined(NDEBUG)
+#include "blaze/eval/network.h"
+#include <chrono>
+#endif
 
 #include <cassert>
 #include <bit>
@@ -530,6 +534,14 @@ bool Position::make_move(Move move, StateInfo& state, bool collect_nnue_delta) {
     state.key = key_;
     state.captured_piece = captured;
     state.captured_square = captured == Piece::None ? Square::None : captured_square;
+#if defined(BLAZE_NNUE_BENCHMARK) || !defined(NDEBUG)
+    [[maybe_unused]] const bool sample_nnue_delta =
+        collect_nnue_delta && nnue_benchmark_should_sample_delta();
+#if defined(BLAZE_NNUE_BENCHMARK)
+    const auto nnue_delta_start = sample_nnue_delta ? std::chrono::steady_clock::now()
+                                                     : std::chrono::steady_clock::time_point{};
+#endif
+#endif
     if (collect_nnue_delta) {
         state.nnue = {};
         state.nnue.moving_side = side_to_move_;
@@ -610,6 +622,13 @@ bool Position::make_move(Move move, StateInfo& state, bool collect_nnue_delta) {
         before.unmake_move(move, state);
         fill_nnue_threat_delta(before, *this, state.nnue);
     }
+#if defined(BLAZE_NNUE_BENCHMARK)
+    if (sample_nnue_delta) {
+        const auto elapsed = std::chrono::steady_clock::now() - nnue_delta_start;
+        nnue_benchmark_record_delta_construction(static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count()));
+    }
+#endif
 
     assert(is_consistent());
     return true;

@@ -26,6 +26,32 @@ std::vector<std::string> split(std::string_view text) {
     return result;
 }
 
+#if defined(BLAZE_NNUE_BENCHMARK)
+std::string benchmark_stats_json() {
+    const NnueBenchmarkStats stats = nnue_benchmark_stats();
+    std::ostringstream out;
+    out << "{\"avx2_supported\":" << (stats.avx2_supported ? "true" : "false")
+        << ",\"scalar_kernel_calls\":" << stats.scalar_kernel_calls
+        << ",\"avx2_kernel_calls\":" << stats.avx2_kernel_calls
+        << ",\"fresh_evaluations\":" << stats.fresh_evaluations
+        << ",\"incremental_evaluations\":" << stats.incremental_evaluations
+        << ",\"full_refreshes\":" << stats.full_refreshes
+        << ",\"inferences\":" << stats.inferences
+        << ",\"refresh_cache_hits\":" << stats.refresh_cache_hits
+        << ",\"king_bucket_refreshes\":" << stats.king_bucket_refreshes
+        << ",\"components\":{";
+    for (std::size_t i = 0; i < stats.components.size(); ++i) {
+        if (i != 0) out << ',';
+        const NnueProfileComponent component = static_cast<NnueProfileComponent>(i);
+        const NnueProfileComponentStats& value = stats.components[i];
+        out << '"' << nnue_profile_component_name(component) << "\":{\"calls\":"
+            << value.calls << ",\"sampled_calls\":" << value.sampled_calls
+            << ",\"sampled_nanoseconds\":" << value.sampled_nanoseconds << '}';
+    }
+    return out.str() + "}}";
+}
+#endif
+
 std::string trim(std::string_view line) {
     const std::size_t begin = line.find_first_not_of(" \t\r\n");
     if (begin == std::string_view::npos) return {};
@@ -86,6 +112,17 @@ bool UciSession::process_line(std::string_view raw_line) {
         write_line("readyok");
         return true;
     }
+#if defined(BLAZE_NNUE_BENCHMARK)
+    if (command == "bench_nnue_reset") {
+        reset_nnue_benchmark_stats();
+        write_line("info string nnue_benchmark_reset");
+        return true;
+    }
+    if (command == "bench_nnue_stats") {
+        write_line("info string nnue_benchmark " + benchmark_stats_json());
+        return true;
+    }
+#endif
     if (command == "ucinewgame") {
         stop_search();
         table_.clear();
@@ -334,6 +371,9 @@ bool UciSession::start_search(std::string_view arguments) {
         const auto elapsed_ms = std::max<std::int64_t>(elapsed.count(), 1);
         info << (result.nodes * 1000U) / static_cast<std::uint64_t>(elapsed_ms);
         info << " hashfull " << table_.hashfull() << " time " << elapsed.count();
+#if defined(BLAZE_NNUE_BENCHMARK)
+        info << " qnodes " << result.picker_stats.qnodes;
+#endif
         if (!result.pv.empty()) {
             info << " pv";
             for (const Move move : result.pv) info << ' ' << move_to_uci(move);

@@ -399,6 +399,39 @@ TEST_CASE(direct_big_nnue_randomized_incremental_oracle) {
     sf_nnue_destroy();
 }
 
+TEST_CASE(nnue_dispatch_diagnostics_prove_scalar_and_avx2_kernel_paths) {
+    Attacks::initialize();
+    std::string error;
+    auto scalar = NetworkEvaluator::create_scalar_oracle(kNetworkPath, error);
+    CHECK(scalar.has_value());
+    auto dispatched = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(dispatched.has_value());
+    CHECK(!scalar->uses_avx2());
+    CHECK_EQ(dispatched->uses_avx2(), nnue_avx2_supported());
+
+    reset_nnue_benchmark_stats();
+    auto scalar_state = scalar->make_thread_state();
+    scalar_state.reset(startpos());
+    const int scalar_score = scalar_state.evaluate(startpos());
+    const NnueBenchmarkStats scalar_stats = nnue_benchmark_stats();
+    CHECK(scalar_stats.scalar_kernel_calls > 0);
+    CHECK_EQ(scalar_stats.avx2_kernel_calls, 0U);
+
+    reset_nnue_benchmark_stats();
+    auto dispatched_state = dispatched->make_thread_state();
+    dispatched_state.reset(startpos());
+    const int dispatched_score = dispatched_state.evaluate(startpos());
+    const NnueBenchmarkStats dispatched_stats = nnue_benchmark_stats();
+    CHECK_EQ(dispatched_score, scalar_score);
+    if (nnue_avx2_supported()) {
+        CHECK(dispatched_stats.avx2_kernel_calls > 0);
+        CHECK_EQ(dispatched_stats.scalar_kernel_calls, 0U);
+    } else {
+        CHECK(dispatched_stats.scalar_kernel_calls > 0);
+        CHECK_EQ(dispatched_stats.avx2_kernel_calls, 0U);
+    }
+}
+
 TEST_CASE(direct_big_nnue_avx2_dispatch_matches_the_scalar_oracle_for_100000_legal_plies) {
     Attacks::initialize();
     std::string error;

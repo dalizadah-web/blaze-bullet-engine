@@ -5,6 +5,9 @@ BUILD_DIR := build/blaze
 TEST_BIN := $(BUILD_DIR)/blaze_tests.exe
 PERFT_BIN := $(BUILD_DIR)/perft_driver.exe
 BLAZE_BIN := $(BUILD_DIR)/blaze.exe
+BLAZE_PROFILE_BIN := $(BUILD_DIR)/blaze_profile.exe
+PROFILE_AVX2_OBJECT := $(BUILD_DIR)/nnue_kernels_avx2_profile.o
+PROFILE_FLAGS := $(RELEASE_FLAGS) -DBLAZE_NNUE_BENCHMARK
 TEST_SOURCES := $(wildcard tests/*.cpp) $(wildcard tests/core/*.cpp) \
 	$(wildcard tests/eval/*.cpp) $(wildcard tests/search/*.cpp) $(wildcard tests/uci/*.cpp)
 ENGINE_SOURCES := $(wildcard src/blaze/core/*.cpp) $(wildcard src/blaze/eval/*.cpp) \
@@ -19,7 +22,7 @@ STOCKFISH_SOURCES := $(STOCKFISH_DIR)/bitboard.cpp $(STOCKFISH_DIR)/movegen.cpp 
 	$(STOCKFISH_DIR)/nnue/features/half_ka_v2_hm.cpp \
 	$(STOCKFISH_DIR)/nnue/features/full_threats.cpp
 
-.PHONY: all test blaze perft-driver train-network experiment-test cloud-test search-signature-test uci-stress repeated-start bullet-latency verify-clean-room clean
+.PHONY: all test blaze profile perft-driver train-network experiment-test cloud-test search-signature-test uci-stress repeated-start bullet-latency verify-clean-room clean
 
 all: test blaze
 
@@ -39,6 +42,14 @@ $(BLAZE_BIN): src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_O
 	$(CXX) $(RELEASE_FLAGS) -I$(STOCKFISH_DIR) src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(AVX2_OBJECT) -o $(BLAZE_BIN)
 
 blaze: $(BLAZE_BIN)
+
+$(PROFILE_AVX2_OBJECT): $(AVX2_SOURCE) src/blaze/eval/nnue_kernels.h | $(BUILD_DIR)
+	$(CXX) $(PROFILE_FLAGS) -mavx2 -c $(AVX2_SOURCE) -o $(PROFILE_AVX2_OBJECT)
+
+$(BLAZE_PROFILE_BIN): src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(PROFILE_AVX2_OBJECT) | $(BUILD_DIR)
+	$(CXX) $(PROFILE_FLAGS) -I$(STOCKFISH_DIR) src/blaze/main.cpp $(ENGINE_SOURCES) $(STOCKFISH_SOURCES) $(PROFILE_AVX2_OBJECT) -o $(BLAZE_PROFILE_BIN)
+
+profile: $(BLAZE_PROFILE_BIN)
 
 train-network:
 	python tools/train_network.py --output $(BUILD_DIR)/trained.blaze-net

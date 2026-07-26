@@ -14,6 +14,43 @@ namespace blaze {
 
 [[nodiscard]] int sf_nnue_public_score(int raw_network_output);
 
+enum class NnueProfileComponent : std::uint8_t {
+    DeltaConstruction,
+    HalfKaIncremental,
+    HalfKaRefresh,
+    FullThreatsIncremental,
+    FullThreatsRefresh,
+    RefreshCacheLookup,
+    FeatureTransform,
+    Psqt,
+    FirstAffine,
+    HiddenAffine,
+    Activation,
+    OutputLayer,
+    PublicScore,
+    Count,
+};
+
+struct NnueProfileComponentStats {
+    std::uint64_t calls = 0;
+    std::uint64_t sampled_calls = 0;
+    std::uint64_t sampled_nanoseconds = 0;
+};
+
+struct NnueBenchmarkStats {
+    bool avx2_supported = false;
+    std::uint64_t scalar_kernel_calls = 0;
+    std::uint64_t avx2_kernel_calls = 0;
+    std::uint64_t fresh_evaluations = 0;
+    std::uint64_t incremental_evaluations = 0;
+    std::uint64_t full_refreshes = 0;
+    std::uint64_t inferences = 0;
+    std::uint64_t refresh_cache_hits = 0;
+    std::uint64_t king_bucket_refreshes = 0;
+    std::array<NnueProfileComponentStats,
+               static_cast<std::size_t>(NnueProfileComponent::Count)> components{};
+};
+
 struct NnueRuntimeStats {
     std::uint64_t network_loads = 0;
     std::uint64_t thread_state_constructions = 0;
@@ -31,6 +68,18 @@ struct NnueRuntimeStats {
 void reset_nnue_runtime_stats();
 [[nodiscard]] NnueRuntimeStats nnue_runtime_stats();
 void note_legacy_nnue_bridge_evaluation();
+
+// Profiling is compiled into test and benchmark binaries only. Normal release
+// builds retain no counters or clock reads in NNUE hot paths.
+void reset_nnue_benchmark_stats();
+[[nodiscard]] NnueBenchmarkStats nnue_benchmark_stats();
+[[nodiscard]] bool nnue_avx2_supported() noexcept;
+void nnue_benchmark_record_delta_construction(std::uint64_t nanoseconds);
+[[nodiscard]] bool nnue_benchmark_should_sample_delta();
+[[nodiscard]] bool nnue_benchmark_should_sample_component(NnueProfileComponent component);
+void nnue_benchmark_record_component_sample(NnueProfileComponent component,
+                                            std::uint64_t nanoseconds);
+[[nodiscard]] const char* nnue_profile_component_name(NnueProfileComponent component) noexcept;
 
 class NnueRootTaskScope final {
 public:
@@ -94,6 +143,7 @@ public:
     [[nodiscard]] int raw_evaluate(const Position& position) const;
     [[nodiscard]] NnueThreadState make_thread_state() const;
     [[nodiscard]] NnueDebugSnapshot debug_snapshot(const Position& position) const;
+    [[nodiscard]] bool uses_avx2() const noexcept;
 
 private:
     struct Impl;

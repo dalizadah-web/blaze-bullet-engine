@@ -13,6 +13,7 @@
 #include <array>
 #include <atomic>
 #include <bit>
+#include <chrono>
 #include <memory>
 #include <stdexcept>
 
@@ -41,6 +42,104 @@ struct AtomicNnueRuntimeStats {
 
 AtomicNnueRuntimeStats g_runtime_stats;
 thread_local unsigned g_root_task_depth = 0;
+
+#if defined(BLAZE_NNUE_BENCHMARK) || !defined(NDEBUG)
+struct AtomicProfileComponent {
+    std::atomic<std::uint64_t> calls{0};
+    std::atomic<std::uint64_t> sampled_calls{0};
+    std::atomic<std::uint64_t> sampled_nanoseconds{0};
+};
+
+struct AtomicBenchmarkStats {
+    std::atomic<std::uint64_t> scalar_kernel_calls{0};
+    std::atomic<std::uint64_t> avx2_kernel_calls{0};
+    std::atomic<std::uint64_t> fresh_evaluations{0};
+    std::atomic<std::uint64_t> incremental_evaluations{0};
+    std::atomic<std::uint64_t> full_refreshes{0};
+    std::atomic<std::uint64_t> inferences{0};
+    std::atomic<std::uint64_t> refresh_cache_hits{0};
+    std::atomic<std::uint64_t> king_bucket_refreshes{0};
+    std::array<AtomicProfileComponent,
+               static_cast<std::size_t>(NnueProfileComponent::Count)> components{};
+};
+
+AtomicBenchmarkStats g_benchmark_stats;
+constexpr std::uint64_t kProfileSampleMask = 63;
+
+bool profile_component_should_sample(NnueProfileComponent component) noexcept {
+    const std::size_t index = static_cast<std::size_t>(component);
+    const std::uint64_t ticket = g_benchmark_stats.components[index].calls.fetch_add(
+        1, std::memory_order_relaxed);
+#if defined(BLAZE_NNUE_BENCHMARK)
+    return (ticket & kProfileSampleMask) == 0;
+#else
+    static_cast<void>(ticket);
+    return false;
+#endif
+}
+
+void profile_component_sample(NnueProfileComponent component, std::uint64_t nanoseconds) noexcept {
+#if defined(BLAZE_NNUE_BENCHMARK)
+    AtomicProfileComponent& entry =
+        g_benchmark_stats.components[static_cast<std::size_t>(component)];
+    entry.sampled_calls.fetch_add(1, std::memory_order_relaxed);
+    entry.sampled_nanoseconds.fetch_add(nanoseconds, std::memory_order_relaxed);
+#else
+    static_cast<void>(component);
+    static_cast<void>(nanoseconds);
+#endif
+}
+
+class ProfileScope final {
+public:
+    explicit ProfileScope(NnueProfileComponent component) noexcept : component_(component),
+        sampled_(profile_component_should_sample(component)) {
+#if defined(BLAZE_NNUE_BENCHMARK)
+        if (sampled_) start_ = std::chrono::steady_clock::now();
+#endif
+    }
+    ~ProfileScope() {
+#if defined(BLAZE_NNUE_BENCHMARK)
+        if (sampled_) {
+            const auto elapsed = std::chrono::steady_clock::now() - start_;
+            profile_component_sample(component_, static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count()));
+        }
+#endif
+    }
+private:
+    NnueProfileComponent component_;
+    bool sampled_;
+#if defined(BLAZE_NNUE_BENCHMARK)
+    std::chrono::steady_clock::time_point start_{};
+#endif
+};
+
+void record_kernel_call(bool avx2) noexcept {
+    (avx2 ? g_benchmark_stats.avx2_kernel_calls : g_benchmark_stats.scalar_kernel_calls)
+        .fetch_add(1, std::memory_order_relaxed);
+}
+
+enum class BenchmarkCounter { Fresh, Incremental, Refresh, Inference, CacheHit, KingRefresh };
+void record_benchmark_counter(BenchmarkCounter counter) noexcept {
+    switch (counter) {
+        case BenchmarkCounter::Fresh: ++g_benchmark_stats.fresh_evaluations; break;
+        case BenchmarkCounter::Incremental: ++g_benchmark_stats.incremental_evaluations; break;
+        case BenchmarkCounter::Refresh: ++g_benchmark_stats.full_refreshes; break;
+        case BenchmarkCounter::Inference: ++g_benchmark_stats.inferences; break;
+        case BenchmarkCounter::CacheHit: ++g_benchmark_stats.refresh_cache_hits; break;
+        case BenchmarkCounter::KingRefresh: ++g_benchmark_stats.king_bucket_refreshes; break;
+    }
+}
+#else
+class ProfileScope final {
+public:
+    explicit ProfileScope(NnueProfileComponent) noexcept {}
+};
+void record_kernel_call(bool) noexcept {}
+enum class BenchmarkCounter { Fresh, Incremental, Refresh, Inference, CacheHit, KingRefresh };
+void record_benchmark_counter(BenchmarkCounter) noexcept {}
+#endif
 
 template <typename Atomic>
 void record(Atomic& counter) {
@@ -123,6 +222,7 @@ void apply_piece_feature(
         to_sf_color(perspective), to_sf_square(square), to_sf_piece(piece), to_sf_square(king));
     const std::size_t side = static_cast<std::size_t>(perspective);
     const std::int16_t* const feature = transformer.weights.data() + index * kDimensions;
+    record_kernel_call(kernels.avx2);
     (sign > 0 ? kernels.add : kernels.subtract)(accumulator.pieces[side].data(), feature);
     for (std::size_t bucket = 0; bucket < kBuckets; ++bucket) {
         accumulator.piece_psqt[side][bucket] +=
@@ -154,6 +254,7 @@ void apply_threat_feature(
 
 void refresh(Accumulator& accumulator, const DirectWeights& weights, const Position& position) {
     record(g_runtime_stats.accumulator_refreshes);
+    record_benchmark_counter(BenchmarkCounter::Refresh);
     const auto& transformer = weights.network.transformer();
     for (const Color perspective : {Color::White, Color::Black}) {
         const std::size_t side = static_cast<std::size_t>(perspective);
@@ -162,24 +263,30 @@ void refresh(Accumulator& accumulator, const DirectWeights& weights, const Posit
         accumulator.piece_psqt[side].fill(0);
         accumulator.threat_psqt[side].fill(0);
         const Square king = king_square(position, perspective);
-        for (int sq = 0; sq < 64; ++sq) {
-            const Square square = static_cast<Square>(sq);
-            const Piece piece = position.piece_on(square);
-            if (piece != Piece::None) {
-                apply_piece_feature(accumulator, transformer, perspective, king, piece, square, 1,
-                                    weights.kernels);
+        {
+            ProfileScope timer(NnueProfileComponent::HalfKaRefresh);
+            for (int sq = 0; sq < 64; ++sq) {
+                const Square square = static_cast<Square>(sq);
+                const Piece piece = position.piece_on(square);
+                if (piece != Piece::None) {
+                    apply_piece_feature(accumulator, transformer, perspective, king, piece, square, 1,
+                                        weights.kernels);
+                }
             }
         }
-        for (int sq = 0; sq < 64; ++sq) {
-            const Square from = static_cast<Square>(sq);
-            const Piece attacker = position.piece_on(from);
-            Bitboard targets = attacker == Piece::None ? 0
-                : attacks_from(position, attacker, from) & position.occupied();
-            while (targets != 0) {
-                const Square to = static_cast<Square>(std::countr_zero(targets));
-                targets &= targets - 1;
-                apply_threat_feature(accumulator, transformer, perspective, king,
-                    StateInfo::NnueThreatChange{attacker, position.piece_on(to), from, to, true}, 1);
+        {
+            ProfileScope timer(NnueProfileComponent::FullThreatsRefresh);
+            for (int sq = 0; sq < 64; ++sq) {
+                const Square from = static_cast<Square>(sq);
+                const Piece attacker = position.piece_on(from);
+                Bitboard targets = attacker == Piece::None ? 0
+                    : attacks_from(position, attacker, from) & position.occupied();
+                while (targets != 0) {
+                    const Square to = static_cast<Square>(std::countr_zero(targets));
+                    targets &= targets - 1;
+                    apply_threat_feature(accumulator, transformer, perspective, king,
+                        StateInfo::NnueThreatChange{attacker, position.piece_on(to), from, to, true}, 1);
+                }
             }
         }
     }
@@ -196,28 +303,35 @@ void apply_delta(
     if (delta.primary_piece == make_piece(Color::White, PieceType::King) ||
         delta.primary_piece == make_piece(Color::Black, PieceType::King)) {
         // HalfKAv2_hm is king-bucketed: a king move invalidates that side.
+        record_benchmark_counter(BenchmarkCounter::KingRefresh);
         refresh(accumulator, weights, position_after);
         return;
     }
     for (const Color perspective : {Color::White, Color::Black}) {
         const Square king = king_square(position_after, perspective);
-        apply_piece_feature(accumulator, transformer, perspective, king,
-            delta.primary_piece, delta.primary_from, -1, weights.kernels);
-        if (delta.primary_to != Square::None) {
+        {
+            ProfileScope timer(NnueProfileComponent::HalfKaIncremental);
             apply_piece_feature(accumulator, transformer, perspective, king,
-                delta.primary_piece, delta.primary_to, 1, weights.kernels);
+                delta.primary_piece, delta.primary_from, -1, weights.kernels);
+            if (delta.primary_to != Square::None) {
+                apply_piece_feature(accumulator, transformer, perspective, king,
+                    delta.primary_piece, delta.primary_to, 1, weights.kernels);
+            }
+            if (delta.removed_piece != Piece::None) {
+                apply_piece_feature(accumulator, transformer, perspective, king,
+                    delta.removed_piece, delta.removed_square, -1, weights.kernels);
+            }
+            if (delta.added_piece != Piece::None) {
+                apply_piece_feature(accumulator, transformer, perspective, king,
+                    delta.added_piece, delta.added_square, 1, weights.kernels);
+            }
         }
-        if (delta.removed_piece != Piece::None) {
-            apply_piece_feature(accumulator, transformer, perspective, king,
-                delta.removed_piece, delta.removed_square, -1, weights.kernels);
-        }
-        if (delta.added_piece != Piece::None) {
-            apply_piece_feature(accumulator, transformer, perspective, king,
-                delta.added_piece, delta.added_square, 1, weights.kernels);
-        }
-        for (std::size_t i = 0; i < delta.threat_count; ++i) {
-            apply_threat_feature(accumulator, transformer, perspective, king,
-                delta.threats[i], delta.threats[i].added ? 1 : -1);
+        {
+            ProfileScope timer(NnueProfileComponent::FullThreatsIncremental);
+            for (std::size_t i = 0; i < delta.threat_count; ++i) {
+                apply_threat_feature(accumulator, transformer, perspective, king,
+                    delta.threats[i], delta.threats[i].added ? 1 : -1);
+            }
         }
     }
 }
@@ -241,14 +355,22 @@ RawOutput propagate(
     for (std::size_t p = 0; p < 2; ++p) {
         const std::size_t offset = p * (kDimensions / 2);
         const std::size_t side = perspectives[p];
+        ProfileScope timer(NnueProfileComponent::FeatureTransform);
+        record_kernel_call(weights.kernels.avx2);
         weights.kernels.transform(accumulator.pieces[side].data(), accumulator.threats[side].data(),
                                   transformed.data() + offset);
     }
     RawOutput output;
-    output.psqt =
-        (accumulator.piece_psqt[us][bucket] - accumulator.piece_psqt[them][bucket] +
-         accumulator.threat_psqt[us][bucket] - accumulator.threat_psqt[them][bucket]) / 2;
+    {
+        ProfileScope timer(NnueProfileComponent::Psqt);
+        output.psqt =
+            (accumulator.piece_psqt[us][bucket] - accumulator.piece_psqt[them][bucket] +
+             accumulator.threat_psqt[us][bucket] - accumulator.threat_psqt[them][bucket]) / 2;
+    }
     const auto& architecture = weights.network.architecture(bucket);
+    // The kernel emits its affine/activation subcomponent timings in the
+    // benchmark build; this call is still one dispatch-free function pointer.
+    record_kernel_call(weights.kernels.avx2);
     output.positional = weights.kernels.propagate(
         transformed.data(),
         nnue::InferenceWeights{
@@ -314,6 +436,100 @@ NnueRuntimeStats nnue_runtime_stats() {
         g_runtime_stats.evaluations.load(std::memory_order_relaxed)};
 }
 
+void reset_nnue_benchmark_stats() {
+#if defined(BLAZE_NNUE_BENCHMARK) || !defined(NDEBUG)
+    g_benchmark_stats.scalar_kernel_calls.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.avx2_kernel_calls.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.fresh_evaluations.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.incremental_evaluations.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.full_refreshes.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.inferences.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.refresh_cache_hits.store(0, std::memory_order_relaxed);
+    g_benchmark_stats.king_bucket_refreshes.store(0, std::memory_order_relaxed);
+    for (AtomicProfileComponent& component : g_benchmark_stats.components) {
+        component.calls.store(0, std::memory_order_relaxed);
+        component.sampled_calls.store(0, std::memory_order_relaxed);
+        component.sampled_nanoseconds.store(0, std::memory_order_relaxed);
+    }
+#endif
+}
+
+NnueBenchmarkStats nnue_benchmark_stats() {
+    NnueBenchmarkStats result;
+    result.avx2_supported = nnue_avx2_supported();
+#if defined(BLAZE_NNUE_BENCHMARK) || !defined(NDEBUG)
+    result.scalar_kernel_calls = g_benchmark_stats.scalar_kernel_calls.load(std::memory_order_relaxed);
+    result.avx2_kernel_calls = g_benchmark_stats.avx2_kernel_calls.load(std::memory_order_relaxed);
+    result.fresh_evaluations = g_benchmark_stats.fresh_evaluations.load(std::memory_order_relaxed);
+    result.incremental_evaluations = g_benchmark_stats.incremental_evaluations.load(std::memory_order_relaxed);
+    result.full_refreshes = g_benchmark_stats.full_refreshes.load(std::memory_order_relaxed);
+    result.inferences = g_benchmark_stats.inferences.load(std::memory_order_relaxed);
+    result.refresh_cache_hits = g_benchmark_stats.refresh_cache_hits.load(std::memory_order_relaxed);
+    result.king_bucket_refreshes = g_benchmark_stats.king_bucket_refreshes.load(std::memory_order_relaxed);
+    for (std::size_t i = 0; i < result.components.size(); ++i) {
+        const AtomicProfileComponent& source = g_benchmark_stats.components[i];
+        result.components[i] = NnueProfileComponentStats{
+            source.calls.load(std::memory_order_relaxed),
+            source.sampled_calls.load(std::memory_order_relaxed),
+            source.sampled_nanoseconds.load(std::memory_order_relaxed)};
+    }
+#endif
+    return result;
+}
+
+bool nnue_avx2_supported() noexcept {
+#if (defined(__i386__) || defined(__x86_64__)) && (defined(__GNUC__) || defined(__clang__))
+    __builtin_cpu_init();
+    return __builtin_cpu_supports("avx2");
+#else
+    return false;
+#endif
+}
+
+bool nnue_benchmark_should_sample_delta() {
+#if defined(BLAZE_NNUE_BENCHMARK) || !defined(NDEBUG)
+    return profile_component_should_sample(NnueProfileComponent::DeltaConstruction);
+#else
+    return false;
+#endif
+}
+
+void nnue_benchmark_record_delta_construction(std::uint64_t nanoseconds) {
+#if defined(BLAZE_NNUE_BENCHMARK) || !defined(NDEBUG)
+    profile_component_sample(NnueProfileComponent::DeltaConstruction, nanoseconds);
+#else
+    static_cast<void>(nanoseconds);
+#endif
+}
+
+bool nnue_benchmark_should_sample_component(NnueProfileComponent component) {
+#if defined(BLAZE_NNUE_BENCHMARK) || !defined(NDEBUG)
+    return profile_component_should_sample(component);
+#else
+    static_cast<void>(component);
+    return false;
+#endif
+}
+
+void nnue_benchmark_record_component_sample(NnueProfileComponent component,
+                                            std::uint64_t nanoseconds) {
+#if defined(BLAZE_NNUE_BENCHMARK) || !defined(NDEBUG)
+    profile_component_sample(component, nanoseconds);
+#else
+    static_cast<void>(component);
+    static_cast<void>(nanoseconds);
+#endif
+}
+
+const char* nnue_profile_component_name(NnueProfileComponent component) noexcept {
+    constexpr std::array names{
+        "nnue_delta", "halfka_incremental", "halfka_refresh", "full_threats_incremental",
+        "full_threats_refresh", "refresh_cache_lookup", "feature_transform", "psqt",
+        "first_affine", "hidden_affine", "activation", "output_layer", "public_score"};
+    const std::size_t index = static_cast<std::size_t>(component);
+    return index < names.size() ? names[index] : "unknown";
+}
+
 void note_legacy_nnue_bridge_evaluation() {
     record(g_runtime_stats.fen_serializations);
     record(g_runtime_stats.stockfish_position_constructions);
@@ -345,6 +561,7 @@ struct NnueThreadState::Impl {
     std::uint64_t refresh_cache_key = 0;
     bool refresh_cache_valid = false;
     std::size_t ply = 0;
+    bool fresh_evaluation = false;
     alignas(64) mutable std::array<std::uint8_t, kDimensions> inference_scratch{};
     mutable nnue::InferenceScratch inference_buffers{};
 };
@@ -395,8 +612,10 @@ NnueThreadState NetworkEvaluator::make_thread_state() const {
 
 void NnueThreadState::reset(const Position& position) {
     impl_->ply = 0;
+    ProfileScope timer(NnueProfileComponent::RefreshCacheLookup);
     if (impl_->refresh_cache_valid && impl_->refresh_cache_key == position.key()) {
         record(g_runtime_stats.refresh_cache_hits);
+        record_benchmark_counter(BenchmarkCounter::CacheHit);
         return;
     }
     refresh(impl_->stack[0], *impl_->weights, position);
@@ -416,12 +635,16 @@ void NnueThreadState::pop() {
 }
 
 int sf_nnue_public_score(int raw_network_output) {
+    ProfileScope timer(NnueProfileComponent::PublicScore);
     return std::clamp(raw_network_output / Stockfish::Eval::NNUE::OutputScale,
         -search_mate_threshold + 1, search_mate_threshold - 1);
 }
 
 int NnueThreadState::raw_evaluate(const Position& position) const {
     record(g_runtime_stats.evaluations);
+    record_benchmark_counter(impl_->fresh_evaluation
+        ? BenchmarkCounter::Fresh : BenchmarkCounter::Incremental);
+    record_benchmark_counter(BenchmarkCounter::Inference);
     return propagate(
         impl_->stack[impl_->ply],
         *impl_->weights,
@@ -444,8 +667,13 @@ int NetworkEvaluator::evaluate(const Position& position) const {
 
 int NetworkEvaluator::raw_evaluate(const Position& position) const {
     auto state = make_thread_state();
+    state.impl_->fresh_evaluation = true;
     state.reset(position);
     return state.raw_evaluate(position);
+}
+
+bool NetworkEvaluator::uses_avx2() const noexcept {
+    return impl_ != nullptr && impl_->weights->kernels.avx2;
 }
 
 NnueDebugSnapshot NetworkEvaluator::debug_snapshot(const Position& position) const {
