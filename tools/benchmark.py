@@ -90,6 +90,7 @@ def run_one(
     milliseconds: int,
     threads: int,
     depth_limit: int,
+    node_limit: int,
     nnue: Path | None,
 ) -> tuple[int, int, str, int]:
     process = subprocess.Popen(
@@ -138,6 +139,9 @@ def run_one(
         if depth_limit > 0:
             send(f"go depth {depth_limit}")
             output = wait_for("bestmove ", 60)
+        elif node_limit > 0:
+            send(f"go nodes {node_limit}")
+            output = wait_for("bestmove ", 60)
         else:
             send(f"go movetime {milliseconds}")
             output = wait_for("bestmove ", milliseconds / 1000 + 5)
@@ -167,12 +171,16 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=20260716)
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--depth", type=int, default=0)
+    parser.add_argument("--nodes", type=int, default=0,
+                        help="fixed node budget; mutually exclusive with --depth")
     parser.add_argument("--nnue", type=Path, default=None)
     parser.add_argument("--repetitions", type=int, default=3)
     parser.add_argument("--compiler-flags", default=DEFAULT_COMPILER_FLAGS)
     args = parser.parse_args()
     if args.positions < 1 or args.repetitions < 1:
         parser.error("positions and repetitions must be positive")
+    if args.depth > 0 and args.nodes > 0:
+        parser.error("--depth and --nodes are mutually exclusive")
     fens = positions(args.positions, args.seed)
     for engine in args.engine:
         engine = engine.resolve()
@@ -186,6 +194,7 @@ def main() -> int:
             "repetitions": args.repetitions,
             "milliseconds": args.milliseconds,
             "depth": args.depth,
+            "nodes": args.nodes,
             "threads": args.threads,
             "seed": args.seed,
         }
@@ -195,7 +204,7 @@ def main() -> int:
         for repetition in range(1, args.repetitions + 1):
             for index, fen in enumerate(fens, start=1):
                 depth, nodes, best, elapsed = run_one(
-                    engine, fen, args.milliseconds, args.threads, args.depth, args.nnue)
+                    engine, fen, args.milliseconds, args.threads, args.depth, args.nodes, args.nnue)
                 if chess.Move.from_uci(best) not in chess.Board(fen).legal_moves:
                     raise RuntimeError(
                         f"{engine} returned illegal move {best} on position {index}")
