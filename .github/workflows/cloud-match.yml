@@ -143,13 +143,15 @@ jobs:
       - name: Checkout candidate
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare.outputs.candidate_commit }}
+          # Fetch the submitted ref, then verify its resolved commit below.
+          # GitHub may reject direct SHA fetches for commits in a shallow history.
+          ref: ${{ inputs.candidate_ref }}
           path: candidate-src
           submodules: recursive
       - name: Checkout baseline
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare.outputs.baseline_commit }}
+          ref: ${{ inputs.baseline_ref }}
           path: baseline-src
           submodules: recursive
       - uses: actions/download-artifact@v4
@@ -250,6 +252,9 @@ jobs:
               echo "ERROR: $key is empty in spec" >&2
               exit 1
             fi
+            if ! grep -qx 'UseNNUE=true' <<< "$val"; then
+              continue
+            fi
             file="$(echo "$val" | sed -n 's/.*EvalFile=\(\S\+\).*/\1/p')"
             if [[ -z "$file" ]]; then
               file="$(echo "$val" | grep -oP 'EvalFile=\K\S+' || true)"
@@ -273,11 +278,18 @@ jobs:
           done
           for name in candidate baseline; do
             binary="bundle/$name"
-            uci_file="$(jq -r ".${name}_initstr" "$spec" | grep -oP 'EvalFile=\K\S+')"
-            echo "Smoke-testing $name ($uci_file) …"
-            output=$(echo -e "uci\nsetoption name EvalFile value $uci_file\nsetoption name UseNNUE value true\nisready\nucinewgame\nposition startpos\ngo movetime 500\nquit" | timeout 15 "$binary" 2>/dev/null || true)
+            initstr="$(jq -r ".${name}_initstr" "$spec")"
+            echo "Smoke-testing $name …"
+            output=$({
+              printf 'uci\n'
+              while IFS= read -r setting; do
+                [[ -z "$setting" ]] && continue
+                printf 'setoption name %s value %s\n' "${setting%%=*}" "${setting#*=}"
+              done <<< "$initstr"
+              printf 'isready\nucinewgame\nposition startpos\ngo movetime 500\nquit\n'
+            } | timeout 15 "$binary" 2>/dev/null || true)
             if echo "$output" | grep -q 'bestmove 0000'; then
-              echo "ERROR: $name returned bestmove 0000 (NNUE load failed)" >&2
+              echo "ERROR: $name returned bestmove 0000" >&2
               echo "$output" | tail -5
               exit 1
             fi
@@ -286,9 +298,9 @@ jobs:
               echo "$output" | tail -5
               exit 1
             fi
-            echo "$name NNUE smoke-test PASSED"
+            echo "$name smoke-test PASSED"
           done
-          echo "All NNUE preflight checks passed"
+          echo "All engine preflight checks passed"
           tar -czf frozen-match.tar.gz -C bundle .
       - name: Verify frozen artifact hashes
         run: sha256sum bundle/candidate bundle/baseline bundle/cutechess-cli bundle/*.nnue bundle/nnue-sha256.txt frozen-match.tar.gz
