@@ -124,7 +124,7 @@ void add_fixed_attackers(const blaze::Position& position,
             {blaze::PieceType::Pawn, position.pieces(color, blaze::PieceType::Pawn) & masks.pawns},
             {blaze::PieceType::Knight, position.pieces(color, blaze::PieceType::Knight) & masks.knights},
             {blaze::PieceType::King, position.pieces(color, blaze::PieceType::King) & masks.kings}}};
-        for (const auto [type, initial_pieces] : attackers) {
+        for (const auto& [type, initial_pieces] : attackers) {
             blaze::Bitboard pieces = initial_pieces;
             const blaze::Piece piece = blaze::make_piece(color, type);
             while (pieces != 0) {
@@ -150,7 +150,7 @@ void add_ray_sliders(const blaze::Position& position,
                      std::size_t& count) {
     constexpr std::array<std::pair<int, int>, 8> directions{{
         {-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}}};
-    for (const auto [file_delta, rank_delta] : directions) {
+    for (const auto& [file_delta, rank_delta] : directions) {
         int file = blaze::file_of(changed) + file_delta;
         int rank = blaze::rank_of(changed) + rank_delta;
         while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
