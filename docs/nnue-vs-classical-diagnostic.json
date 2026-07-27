@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "workflow_run": "https://github.com/dalizadah-web/blaze-bullet-engine/actions/runs/30262507351",
+  "result_artifact": {
+    "name": "result-45d68617545f6c885e714461",
+    "sha256": "bd8b1144ca1711817a76a0006fe3efe723dac6db3289397505f6c87289521fa6"
+  },
+  "source_commit": "b280d552f96eb837cbed7aea4d330f083c635ba8",
+  "candidate": {
+    "binary_sha256": "3748f668b3b1693ce6caab3def2af0aaa1f0214111ec3a1c24a8a40d01ad4665",
+    "initstr": "UseNNUE=true\nEvalFile=nn-c288c895ea92.nnue"
+  },
+  "baseline": {
+    "binary_sha256": "3748f668b3b1693ce6caab3def2af0aaa1f0214111ec3a1c24a8a40d01ad4665",
+    "initstr": "UseNNUE=false"
+  },
+  "configuration": {
+    "games": 2000,
+    "color_swapped_pairs": 1000,
+    "time_control": "0.5+0",
+    "threads": 1,
+    "hash_mb": 16,
+    "opening_repeats": 10,
+    "openings_sha256": "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc",
+    "shards": 20
+  },
+  "result": {
+    "clean_games": 2000,
+    "quarantined_games": 0,
+    "wdl": {
+      "wins": 765,
+      "draws": 500,
+      "losses": 735
+    },
+    "pentanomial": {
+      "wins2": 116,
+      "wins1_draw1": 174,
+      "draws2": 436,
+      "losses1_draw1": 172,
+      "losses2": 102
+    },
+    "llr": 0.36857776250917595,
+    "sprt_decision": "continue",
+    "abnormal_games": []
+  }
+}
