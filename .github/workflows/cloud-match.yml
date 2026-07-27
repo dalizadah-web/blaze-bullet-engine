@@ -276,6 +276,8 @@ jobs:
             fi
             echo "$got  bundle/$file" >> bundle/nnue-sha256.txt
           done
+          # EvalFile is a bare filename, so engines resolve it from the job root.
+          cp bundle/*.nnue .
           for name in candidate baseline; do
             binary="bundle/$name"
             initstr="$(jq -r ".${name}_initstr" "$spec")"
@@ -341,6 +343,7 @@ jobs:
           mkdir bundle
           tar -xzf frozen/frozen-match.tar.gz -C bundle
           chmod +x bundle/candidate bundle/baseline bundle/cutechess-cli
+          cp bundle/*.nnue .
       - name: Run shard ${{ matrix.shard }}
         shell: bash
         run: |
