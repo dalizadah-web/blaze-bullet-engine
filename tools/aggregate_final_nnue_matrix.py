@@ -113,7 +113,7 @@ def main() -> int:
         "",
         "## Search Matrix",
         "",
-        "| Evaluator | Limit | T | Median NPS | IQR NPS | Scaling | Scalar/AVX2 | Direct/classical | Direct/legacy |",
+        "| Evaluator | Limit | T | Median NPS | IQR NPS | Scaling | AVX2/scalar | Direct/classical | Direct/legacy |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:

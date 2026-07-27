@@ -13,7 +13,7 @@ Eight deterministic positions, five runs each, seed `20260726`, Ryzen 7 7700, Mi
 
 ## Search Matrix
 
-| Evaluator | Limit | T | Median NPS | IQR NPS | Scaling | Scalar/AVX2 | Direct/classical | Direct/legacy |
+| Evaluator | Limit | T | Median NPS | IQR NPS | Scaling | AVX2/scalar | Direct/classical | Direct/legacy |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | avx2 | depth 4 | 1 | 37149.5 | 16590.9 | 1.000 | 1.193 | 0.084 | 1.149 |
 | classical | depth 4 | 1 | 444615.4 | 66615.4 | 1.000 | - | - | - |
