@@ -1487,6 +1487,7 @@ int Searcher::quiescence(
     bool pruned_this_node = false;
     for (std::size_t i = 0; i < legal_moves.size(); ++i) {
         const Move m = legal_moves[i];
+        if (!m.is_valid()) continue;
         if (tt_used && m == tt_move) continue;
         if (!checked && !m.has_flag(MoveFlag::Capture) &&
             !m.has_flag(MoveFlag::EnPassant) && !m.has_flag(MoveFlag::Promotion)) {
