@@ -54,10 +54,27 @@ MoveBudget BulletTimeManager::allocate(
         ? clock.moves_to_go
         : default_moves_left(clock.game_ply);
 
-    // Pure-increment bullet must bank clock before buying deeper searches. With
-    // an existing bankroll we can spend a little more of each increment.
-    const double increment_fraction = clock.remaining > Milliseconds(0) ? 0.45 : 0.30;
-    Milliseconds base = usable / moves + scaled(clock.increment, increment_fraction);
+    Milliseconds base;
+    if (clock.moves_to_go == 0 && clock.remaining > Milliseconds(3000)) {
+        // Project a full game rather than treating the current bank as only a
+        // dozen moves. Future increments help when present, but every future
+        // move also pays the submission reserve.
+        constexpr int horizon = 50;
+        const Milliseconds future_increment = scaled(clock.increment, horizon - 1);
+        const Milliseconds future_reserve = scaled(result.submit_reserve, horizon + 1);
+        const Milliseconds projected = std::max(
+            usable, usable + std::max(future_increment - future_reserve, Milliseconds(0)));
+        const int divisor = horizon + (clock.game_ply < 20 ? 8 : clock.game_ply < 60 ? 5 : 2);
+        // Spend only part of the projected equal share. The remainder absorbs
+        // an overlong iterative-deepening pass and preserves clock for later
+        // tactical decisions.
+        base = scaled(projected / divisor, 0.65);
+    } else {
+        // Pure-increment bullet must bank clock before buying deeper searches.
+        // With an existing small bankroll we can spend a little more of each increment.
+        const double increment_fraction = clock.remaining > Milliseconds(0) ? 0.45 : 0.30;
+        base = usable / moves + scaled(clock.increment, increment_fraction);
+    }
     base = std::max(base, Milliseconds(1));
 
     // The hard limit is deliberately independent of position complexity. A

@@ -362,8 +362,8 @@ bool UciSession::start_search(std::string_view arguments) {
     MoveList complexity_moves;
     generate_pseudo_legal(root, complexity_moves);
     const double complexity = std::clamp(
-        0.75 + static_cast<double>(complexity_moves.size()) / 28.0 +
-            (in_check(root) ? 0.25 : 0.0),
+        0.55 + static_cast<double>(complexity_moves.size()) / 44.0 +
+            (in_check(root) ? 0.20 : 0.0),
         0.75,
         2.0);
     SearchLimits limits = to_search_limits(

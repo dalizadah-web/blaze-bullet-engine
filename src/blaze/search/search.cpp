@@ -322,13 +322,24 @@ SearchResult Searcher::search_single(
                 }
             }
         }
+        const int score_delta = std::abs(score - result.score);
         result.score = score;
         result.depth = depth;
         if (score >= search_mate_threshold || score <= -search_mate_threshold) {
             break;
         }
         if (limits.target_time.count() > 0 &&
-            std::chrono::steady_clock::now() - context.start >= limits.target_time) {
+            [&] {
+                double soft_scale = root_stability_ >= 4 ? 0.65
+                    : root_stability_ >= 2 ? 0.80
+                    : 1.0;
+                if (score_delta >= 50) soft_scale *= 1.20;
+                const auto soft_limit = std::min(
+                    limits.move_time,
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        limits.target_time * soft_scale));
+                return std::chrono::steady_clock::now() - context.start >= soft_limit;
+            }()) {
             break;
         }
     }
