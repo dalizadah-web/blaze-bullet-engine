@@ -9,8 +9,8 @@ Use the repository's GitHub Actions match farm for high-throughput candidate-ver
 - Add `-CloudOnly` only when the local PC must remain free.
 - To use all available compute, launch `powershell -File tools/hybrid_match.ps1`; this combines 20 four-vCPU GitHub runners with 8 concurrent local games on the 16-thread PC.
 - Inspect with `-Action Status`, wait with `-Action Watch`, and fetch evidence with `-Action Download`.
-- Use complete color-swapped pairs. Games must be even and `(games / 2)` must divide evenly by 1-20 shards.
-- Default to `threads=1`, `hash_mb=16`, and 20 shards for bullet throughput.
+- Use complete color-swapped pairs. Games must be even; pairs are assigned round-robin and shards may differ by one pair.
+- Default to `threads=1`, `hash_mb=16`, and 40 shards for up to 80 concurrent cloud games.
 - Candidate and baseline must be immutable pushed refs. Never test uncommitted source.
 - Never report a result from partial shards. `tools.cloud_match.aggregate` is the authority and must validate every shard.
 - Preserve PGN, shard manifests, frozen hashes, `summary.json`, and `summary.md` for every accepted tuning claim.

@@ -7,9 +7,11 @@ param(
     [string]$CandidateRef = "codex/bullet-beast",
     [string]$BaselineRef = "4d25363fef79ff2025670e248ed07b3d81747d3a",
     [ValidateRange(2, 1000000)][int]$Games = 10000,
-    [ValidateRange(1, 20)][int]$Shards = 20,
+    [ValidateRange(1, 40)][int]$Shards = 40,
+    [ValidateRange(1, 4)][int]$Concurrency = 2,
     [ValidateRange(1, 1000000)][int]$OpeningStart = 1,
     [ValidateRange(1, 1000000)][int]$OpeningRepeats = 10,
+    [ValidateRange(1, 1000000)][int]$OpeningSuitePositions = 100,
     [string]$TimeControl = "0.5+0",
     [ValidateRange(1, 2)][int]$Threads = 1,
     [ValidateRange(1, 65536)][int]$HashMb = 16,
@@ -25,10 +27,6 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $DefaultCloudConfig = Join-Path $ProjectRoot "config/cloud/default-match.json"
 if (-not (Test-Path -LiteralPath $DefaultCloudConfig -PathType Leaf)) {
     throw "Cloud default config not found: $DefaultCloudConfig"
-}
-$OpeningSuitePositions = [int]((Get-Content -LiteralPath $DefaultCloudConfig -Raw | ConvertFrom-Json).opening_suite_positions)
-if ($OpeningSuitePositions -le 0) {
-    throw "Cloud default config opening_suite_positions must be positive."
 }
 
 if ($Action -eq "Run" -and -not $CloudOnly) {
@@ -89,9 +87,6 @@ $repository = Resolve-Repo $Repo
 switch ($Action) {
     "Run" {
         if (($Games % 2) -ne 0) { throw "Games must be even." }
-        if ((($Games / 2) % $Shards) -ne 0) {
-            throw "The number of game pairs must divide evenly across shards."
-        }
         if (($Games / 2) -ne ($OpeningSuitePositions * $OpeningRepeats)) {
             throw "Games/2 must equal $OpeningSuitePositions opening positions times OpeningRepeats."
         }
@@ -100,8 +95,10 @@ switch ($Action) {
             -f "baseline_ref=$BaselineRef" `
             -f "games=$Games" `
             -f "shards=$Shards" `
+            -f "concurrency=$Concurrency" `
             -f "opening_start=$OpeningStart" `
             -f "opening_repeats=$OpeningRepeats" `
+            -f "opening_suite_positions=$OpeningSuitePositions" `
             -f "time_control=$TimeControl" `
             -f "threads=$Threads" `
             -f "hash_mb=$HashMb" `

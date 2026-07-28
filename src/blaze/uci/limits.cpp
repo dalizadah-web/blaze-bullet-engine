@@ -125,8 +125,10 @@ SearchLimits to_search_limits(
     const GoParameters& go,
     Color side_to_move,
     LatencyBudget latency,
-    int game_ply) {
+    int game_ply,
+    SearchTelemetry telemetry) {
     SearchLimits limits;
+    limits.telemetry = telemetry;
     limits.depth = go.depth;
     limits.nodes = go.nodes;
     limits.mate = go.mate;
@@ -167,7 +169,7 @@ SearchLimits to_search_limits(
     const MoveBudget budget = BulletTimeManager::allocate(
         ClockState{remaining, increment, go.moves_to_go, game_ply},
         latency,
-        SearchTelemetry{});
+        telemetry);
     limits.target_time = budget.target;
     limits.move_time = budget.hard;
     limits.regime = budget.regime;

@@ -17,6 +17,9 @@
 #include <charconv>
 #include <sstream>
 #include <string>
+#if !defined(NDEBUG) || defined(BLAZE_NNUE_DELTA_ORACLE)
+#include <vector>
+#endif
 
 namespace blaze {
 
@@ -65,35 +68,6 @@ blaze::Bitboard attacks_from(const blaze::Position& position, blaze::Piece piece
     return 0;
 }
 
-template <std::size_t Capacity>
-std::size_t collect_threats(
-    const blaze::Position& position,
-    std::array<NnueThreatChange, Capacity>& output) {
-    std::size_t count = 0;
-    for (const blaze::Color color : {blaze::Color::White, blaze::Color::Black}) {
-        for (int type_value = static_cast<int>(blaze::PieceType::Pawn);
-             type_value <= static_cast<int>(blaze::PieceType::King);
-             ++type_value) {
-            const blaze::PieceType type = static_cast<blaze::PieceType>(type_value);
-            blaze::Bitboard pieces = position.pieces(color, type);
-            while (pieces != 0) {
-                const blaze::Square from = static_cast<blaze::Square>(std::countr_zero(pieces));
-                pieces &= pieces - 1;
-                const blaze::Piece attacker = position.piece_on(from);
-                blaze::Bitboard targets = attacks_from(position, attacker, from) & position.occupied();
-                while (targets != 0) {
-                    const blaze::Square to = static_cast<blaze::Square>(std::countr_zero(targets));
-                    targets &= targets - 1;
-                    assert(count < Capacity);
-                    output[count++] = NnueThreatChange{
-                        attacker, position.piece_on(to), from, to, false};
-                }
-            }
-        }
-    }
-    return count;
-}
-
 struct ThreatSource {
     blaze::Piece piece = blaze::Piece::None;
     blaze::Square square = blaze::Square::None;
@@ -101,22 +75,23 @@ struct ThreatSource {
 
 constexpr std::size_t kMaxAffectedThreatSources = 32;
 
-void add_source(std::array<ThreatSource, kMaxAffectedThreatSources>& sources,
+bool add_source(std::array<ThreatSource, kMaxAffectedThreatSources>& sources,
                 std::size_t& count,
                 blaze::Piece piece,
                 blaze::Square square) {
-    if (piece == blaze::Piece::None || square == blaze::Square::None) return;
+    if (piece == blaze::Piece::None || square == blaze::Square::None) return true;
     for (std::size_t i = 0; i < count; ++i) {
-        if (sources[i].piece == piece && sources[i].square == square) return;
+        if (sources[i].piece == piece && sources[i].square == square) return true;
     }
-    assert(count < sources.size());
+    if (count == sources.size()) return false;
     sources[count++] = ThreatSource{piece, square};
+    return true;
 }
 
-void add_fixed_attackers(const blaze::Position& position,
-                          blaze::Square changed,
-                          std::array<ThreatSource, kMaxAffectedThreatSources>& sources,
-                          std::size_t& count) {
+bool add_fixed_attackers(const blaze::Position& position,
+                         blaze::Square changed,
+                         std::array<ThreatSource, kMaxAffectedThreatSources>& sources,
+                         std::size_t& count) {
     for (const blaze::Color color : {blaze::Color::White, blaze::Color::Black}) {
         const blaze::Attacks::FixedAttackerMasks masks =
             blaze::Attacks::fixed_attacker_masks(color, changed);
@@ -130,10 +105,11 @@ void add_fixed_attackers(const blaze::Position& position,
             while (pieces != 0) {
                 const blaze::Square source = static_cast<blaze::Square>(std::countr_zero(pieces));
                 pieces &= pieces - 1;
-                add_source(sources, count, piece, source);
+                if (!add_source(sources, count, piece, source)) return false;
             }
         }
     }
+    return true;
 }
 
 bool slider_matches_direction(blaze::Piece piece, int file_delta, int rank_delta) {
@@ -144,7 +120,7 @@ bool slider_matches_direction(blaze::Piece piece, int file_delta, int rank_delta
            (!diagonal && type == blaze::PieceType::Rook);
 }
 
-void add_ray_sliders(const blaze::Position& position,
+bool add_ray_sliders(const blaze::Position& position,
                      blaze::Square changed,
                      std::array<ThreatSource, kMaxAffectedThreatSources>& sources,
                      std::size_t& count) {
@@ -158,71 +134,96 @@ void add_ray_sliders(const blaze::Position& position,
             const blaze::Piece piece = position.piece_on(square);
             if (piece != blaze::Piece::None) {
                 if (slider_matches_direction(piece, file_delta, rank_delta))
-                    add_source(sources, count, piece, square);
+                    if (!add_source(sources, count, piece, square)) return false;
                 break;
             }
             file += file_delta;
             rank += rank_delta;
         }
     }
+    return true;
 }
 
-template <std::size_t Capacity>
-std::size_t collect_source_threats(const blaze::Position& position,
-                                   const std::array<ThreatSource, kMaxAffectedThreatSources>& sources,
-                                   std::size_t source_count,
-                                   std::array<NnueThreatChange, Capacity>& output) {
-    std::size_t count = 0;
-    for (std::size_t i = 0; i < source_count; ++i) {
-        const ThreatSource source = sources[i];
-        // A source is shared by the before/after source set. It only belongs
-        // to this position when the same piece still occupies that square.
-        if (position.piece_on(source.square) != source.piece) continue;
-        blaze::Bitboard targets = attacks_from(position, source.piece, source.square) & position.occupied();
-        while (targets != 0) {
-            const blaze::Square target = static_cast<blaze::Square>(std::countr_zero(targets));
-            targets &= targets - 1;
-            assert(count < Capacity);
-            output[count++] = NnueThreatChange{
-                source.piece, position.piece_on(target), source.square, target, false};
-        }
-    }
-    return count;
-}
-
-void diff_threats(const std::array<NnueThreatChange, 128>& before_threats,
-                  std::size_t before_count,
-                  const std::array<NnueThreatChange, 128>& after_threats,
-                  std::size_t after_count,
-                  NnueDelta& delta) {
+void require_full_threats_refresh(NnueDelta& delta) {
     delta.threat_count = 0;
-    auto append = [&](NnueThreatChange change) {
-        assert(delta.threat_count < delta.threats.size());
-        delta.threats[delta.threat_count++] = change;
-    };
-    for (std::size_t i = 0; i < before_count; ++i) {
-        bool present = false;
-        for (std::size_t j = 0; j < after_count; ++j) {
-            if (before_threats[i].same_feature(after_threats[j])) { present = true; break; }
-        }
-        if (!present) append(before_threats[i]);
+    delta.full_threats_refresh = true;
+}
+
+bool append_threat_change(NnueDelta& delta,
+                          blaze::Piece attacker,
+                          blaze::Piece attacked,
+                          blaze::Square from,
+                          blaze::Square to,
+                          bool added) {
+    if (delta.threat_count == delta.threats.size()) {
+        require_full_threats_refresh(delta);
+        return false;
     }
-    for (std::size_t i = 0; i < after_count; ++i) {
-        bool present = false;
-        for (std::size_t j = 0; j < before_count; ++j) {
-            if (after_threats[i].same_feature(before_threats[j])) { present = true; break; }
-        }
-        if (!present) {
-            NnueThreatChange added = after_threats[i];
-            added.added = true;
-            append(added);
-        }
+    delta.threats[delta.threat_count++] = NnueThreatChange{attacker, attacked, from, to, added};
+    return true;
+}
+
+bool append_source_threats(const blaze::Position& position,
+                           ThreatSource source,
+                           bool added,
+                           NnueDelta& delta) {
+    blaze::Bitboard targets = attacks_from(position, source.piece, source.square) & position.occupied();
+    while (targets != 0) {
+        const blaze::Square target = static_cast<blaze::Square>(std::countr_zero(targets));
+        targets &= targets - 1;
+        if (!append_threat_change(delta, source.piece, position.piece_on(target), source.square,
+                                  target, added)) return false;
     }
+    return true;
+}
+
+bool append_source_delta(const blaze::Position& before,
+                         const blaze::Position& after,
+                         ThreatSource source,
+                         NnueDelta& delta) {
+    const bool exists_before = before.piece_on(source.square) == source.piece;
+    const bool exists_after = after.piece_on(source.square) == source.piece;
+    if (!exists_before)
+        return !exists_after || append_source_threats(after, source, true, delta);
+    if (!exists_after) return append_source_threats(before, source, false, delta);
+
+    const blaze::Bitboard before_targets =
+        attacks_from(before, source.piece, source.square) & before.occupied();
+    const blaze::Bitboard after_targets =
+        attacks_from(after, source.piece, source.square) & after.occupied();
+    blaze::Bitboard removed = before_targets & ~after_targets;
+    blaze::Bitboard added = after_targets & ~before_targets;
+    blaze::Bitboard shared = before_targets & after_targets;
+    while (removed != 0) {
+        const blaze::Square target = static_cast<blaze::Square>(std::countr_zero(removed));
+        removed &= removed - 1;
+        if (!append_threat_change(delta, source.piece, before.piece_on(target), source.square,
+                                  target, false)) return false;
+    }
+    while (added != 0) {
+        const blaze::Square target = static_cast<blaze::Square>(std::countr_zero(added));
+        added &= added - 1;
+        if (!append_threat_change(delta, source.piece, after.piece_on(target), source.square,
+                                  target, true)) return false;
+    }
+    while (shared != 0) {
+        const blaze::Square target = static_cast<blaze::Square>(std::countr_zero(shared));
+        shared &= shared - 1;
+        const blaze::Piece before_piece = before.piece_on(target);
+        const blaze::Piece after_piece = after.piece_on(target);
+        if (before_piece == after_piece) continue;
+        if (!append_threat_change(delta, source.piece, before_piece, source.square, target, false) ||
+            !append_threat_change(delta, source.piece, after_piece, source.square, target, true))
+            return false;
+    }
+    return true;
 }
 
 void fill_nnue_threat_delta_fast(const blaze::Position& before,
-                                  const blaze::Position& after,
-                                  NnueDelta& delta) {
+                                   const blaze::Position& after,
+                                   NnueDelta& delta) {
+    delta.threat_count = 0;
+    delta.full_threats_refresh = false;
     std::array<ThreatSource, kMaxAffectedThreatSources> sources{};
     std::size_t source_count = 0;
     // Occupancy XOR is insufficient for captures: the destination stays
@@ -249,67 +250,102 @@ void fill_nnue_threat_delta_fast(const blaze::Position& before,
 #if defined(BLAZE_NNUE_BENCHMARK)
             DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaPieceSquareLookup);
 #endif
-            add_source(sources, source_count, before.piece_on(square), square);
-            add_source(sources, source_count, after.piece_on(square), square);
+            if (!add_source(sources, source_count, before.piece_on(square), square) ||
+                !add_source(sources, source_count, after.piece_on(square), square)) {
+                require_full_threats_refresh(delta);
+                return;
+            }
         }
         {
 #if defined(BLAZE_NNUE_BENCHMARK)
             DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaFixedAttackers);
 #endif
-            add_fixed_attackers(before, square, sources, source_count);
-            add_fixed_attackers(after, square, sources, source_count);
+            if (!add_fixed_attackers(before, square, sources, source_count) ||
+                !add_fixed_attackers(after, square, sources, source_count)) {
+                require_full_threats_refresh(delta);
+                return;
+            }
         }
         {
 #if defined(BLAZE_NNUE_BENCHMARK)
             DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaSliderBefore);
 #endif
-            add_ray_sliders(before, square, sources, source_count);
+            if (!add_ray_sliders(before, square, sources, source_count)) {
+                require_full_threats_refresh(delta);
+                return;
+            }
         }
         {
 #if defined(BLAZE_NNUE_BENCHMARK)
             DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaSliderAfter);
 #endif
-            add_ray_sliders(after, square, sources, source_count);
+            if (!add_ray_sliders(after, square, sources, source_count)) {
+                require_full_threats_refresh(delta);
+                return;
+            }
         }
     }
 
-    std::array<NnueThreatChange, 128> before_threats{};
-    std::array<NnueThreatChange, 128> after_threats{};
-    std::size_t before_count = 0;
-    std::size_t after_count = 0;
     {
 #if defined(BLAZE_NNUE_BENCHMARK)
         DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaFeatureGeneration);
 #endif
-        before_count = collect_source_threats(before, sources, source_count, before_threats);
-        after_count = collect_source_threats(after, sources, source_count, after_threats);
-    }
-    {
-#if defined(BLAZE_NNUE_BENCHMARK)
-        DeltaProfileScope timer(blaze::NnueProfileComponent::DeltaEmission);
-#endif
-        diff_threats(before_threats, before_count, after_threats, after_count, delta);
+        for (std::size_t i = 0; i < source_count; ++i) {
+            if (!append_source_delta(before, after, sources[i], delta)) return;
+        }
     }
 }
 
 #if !defined(NDEBUG) || defined(BLAZE_NNUE_DELTA_ORACLE)
-void fill_nnue_threat_delta_full(const blaze::Position& before,
-                                 const blaze::Position& after,
-                                 NnueDelta& delta) {
-    std::array<NnueThreatChange, 128> before_threats{};
-    std::array<NnueThreatChange, 128> after_threats{};
-    const std::size_t before_count = collect_threats(before, before_threats);
-    const std::size_t after_count = collect_threats(after, after_threats);
-    diff_threats(before_threats, before_count, after_threats, after_count, delta);
+std::vector<NnueThreatChange> collect_full_threats(const blaze::Position& position) {
+    std::vector<NnueThreatChange> threats;
+    for (int square_index = 0; square_index < 64; ++square_index) {
+        const blaze::Square from = static_cast<blaze::Square>(square_index);
+        const blaze::Piece attacker = position.piece_on(from);
+        if (attacker == blaze::Piece::None) continue;
+        blaze::Bitboard targets = attacks_from(position, attacker, from) & position.occupied();
+        while (targets != 0) {
+            const blaze::Square to = static_cast<blaze::Square>(std::countr_zero(targets));
+            targets &= targets - 1;
+            threats.push_back(NnueThreatChange{attacker, position.piece_on(to), from, to, false});
+        }
+    }
+    return threats;
 }
 
-bool same_delta_features(const NnueDelta& left, const NnueDelta& right) {
-    if (left.threat_count != right.threat_count) return false;
+std::vector<NnueThreatChange> full_threat_delta(const blaze::Position& before,
+                                                 const blaze::Position& after) {
+    const std::vector<NnueThreatChange> before_threats = collect_full_threats(before);
+    const std::vector<NnueThreatChange> after_threats = collect_full_threats(after);
+    std::vector<NnueThreatChange> delta;
+    for (const NnueThreatChange& threat : before_threats) {
+        bool present = false;
+        for (const NnueThreatChange& after_threat : after_threats) {
+            if (threat.same_feature(after_threat)) { present = true; break; }
+        }
+        if (!present) delta.push_back(threat);
+    }
+    for (const NnueThreatChange& threat : after_threats) {
+        bool present = false;
+        for (const NnueThreatChange& before_threat : before_threats) {
+            if (threat.same_feature(before_threat)) { present = true; break; }
+        }
+        if (!present) {
+            NnueThreatChange added = threat;
+            added.added = true;
+            delta.push_back(added);
+        }
+    }
+    return delta;
+}
+
+bool same_delta_features(const NnueDelta& left, const std::vector<NnueThreatChange>& right) {
+    if (left.threat_count != right.size()) return false;
     for (std::size_t i = 0; i < left.threat_count; ++i) {
         bool present = false;
-        for (std::size_t j = 0; j < right.threat_count; ++j) {
-            if (left.threats[i].added == right.threats[j].added &&
-                left.threats[i].same_feature(right.threats[j])) { present = true; break; }
+        for (const NnueThreatChange& threat : right) {
+            if (left.threats[i].added == threat.added &&
+                left.threats[i].same_feature(threat)) { present = true; break; }
         }
         if (!present) return false;
     }
@@ -856,20 +892,19 @@ bool Position::make_move(Move move, StateInfo& state, bool collect_nnue_delta) {
         #if defined(BLAZE_NNUE_BENCHMARK)
         DeltaProfileScope debug_timer(NnueProfileComponent::DeltaDebugOracle);
         #endif
-        NnueDelta full_delta;
-        fill_nnue_threat_delta_full(before, *this, full_delta);
-        if (!same_delta_features(state.nnue, full_delta)) {
+        const std::vector<NnueThreatChange> full_delta = full_threat_delta(before, *this);
+        if (!state.nnue.full_threats_refresh && !same_delta_features(state.nnue, full_delta)) {
             std::fprintf(stderr, "NNUE threat delta mismatch move=%u fast=%u full=%u before=%s after=%s\n",
-                         static_cast<unsigned>(move.raw()), state.nnue.threat_count,
-                         full_delta.threat_count, before.to_fen().c_str(), to_fen().c_str());
+                          static_cast<unsigned>(move.raw()), state.nnue.threat_count,
+                          static_cast<unsigned>(full_delta.size()), before.to_fen().c_str(), to_fen().c_str());
             for (std::size_t i = 0; i < state.nnue.threat_count; ++i) {
                 const auto& t = state.nnue.threats[i];
                 std::fprintf(stderr, " fast %d %d %d %d %d\n", static_cast<int>(t.attacker),
                              static_cast<int>(t.attacked), static_cast<int>(t.from),
                              static_cast<int>(t.to), t.added);
             }
-            for (std::size_t i = 0; i < full_delta.threat_count; ++i) {
-                const auto& t = full_delta.threats[i];
+            for (std::size_t i = 0; i < full_delta.size(); ++i) {
+                const auto& t = full_delta[i];
                 std::fprintf(stderr, " full %d %d %d %d %d\n", static_cast<int>(t.attacker),
                              static_cast<int>(t.attacked), static_cast<int>(t.from),
                              static_cast<int>(t.to), t.added);

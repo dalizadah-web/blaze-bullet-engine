@@ -28,10 +28,20 @@ on:
         required: true
         default: 10
         type: number
+      opening_suite_positions:
+        description: Number of consecutive opening positions in each complete cycle
+        required: true
+        default: 100
+        type: number
       shards:
         description: Parallel runners (1-40)
         required: true
         default: 40
+        type: number
+      concurrency:
+        description: Concurrent games per runner (1-4; engines remain single-threaded)
+        required: true
+        default: 2
         type: number
       time_control:
         description: CuteChess base+increment in seconds
@@ -116,7 +126,9 @@ jobs:
             --games '${{ inputs.games }}' \
             --opening-start '${{ inputs.opening_start }}' \
             --opening-repeats '${{ inputs.opening_repeats }}' \
+            --opening-suite-positions '${{ inputs.opening_suite_positions }}' \
             --shards '${{ inputs.shards }}' \
+            --concurrency '${{ inputs.concurrency }}' \
             --time-control '${{ inputs.time_control }}' \
             --threads '${{ inputs.threads }}' \
             --hash-mb '${{ inputs.hash_mb }}' \

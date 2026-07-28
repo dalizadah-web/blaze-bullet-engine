@@ -9,7 +9,7 @@ namespace blaze {
 
 struct SearchStackEntry {
     Move current_move;
-    int static_evaluation = 0;
+    int static_evaluation = -32768;
     int extension_count = 0;
     std::array<Move, 2> killers{};
     Move excluded_move;

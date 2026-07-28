@@ -20,11 +20,12 @@ int default_moves_left(int game_ply) {
     return 9;
 }
 
-int recommended_workers(Milliseconds hard) {
+int recommended_workers(Milliseconds hard, double complexity) {
     if (hard < Milliseconds(8)) return 1;
     if (hard < Milliseconds(25)) return 2;
     if (hard < Milliseconds(80)) return 4;
-    return 8;
+    if (hard < Milliseconds(250)) return 8;
+    return complexity > 1.30 ? 16 : 8;
 }
 
 }  // namespace
@@ -83,7 +84,8 @@ MoveBudget BulletTimeManager::allocate(
         : (bankroll <= Milliseconds(10000) || clock.increment > Milliseconds(0)
             ? SearchRegime::Bullet
             : SearchRegime::Standard);
-    result.workers = recommended_workers(result.hard);
+    result.workers = recommended_workers(
+        result.hard, std::clamp(telemetry.complexity, 0.75, 2.0));
     return result;
 }
 

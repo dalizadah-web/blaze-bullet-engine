@@ -11,6 +11,13 @@ class ShardTests(unittest.TestCase):
         self.assertEqual(len(flattened), len(set(flattened)))
         self.assertTrue(all(len(shard) == 10 for shard in assignments))
 
+    def test_distributes_an_uneven_pair_count_without_losing_pairs(self) -> None:
+        assignments = [pair_indexes(500, shard, 40) for shard in range(40)]
+        flattened = [pair_index for shard in assignments for pair_index in shard]
+        self.assertEqual(sorted(flattened), list(range(250)))
+        self.assertEqual(len(flattened), len(set(flattened)))
+        self.assertEqual({len(shard) for shard in assignments}, {6, 7})
+
     def test_rejects_invalid_pair_geometry(self) -> None:
         with self.assertRaises(ValueError):
             pair_indexes(3, 0, 1)

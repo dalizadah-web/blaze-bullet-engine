@@ -209,19 +209,21 @@ void transform_avx2(const std::int16_t* pieces,
                     std::uint8_t* output) noexcept {
     const __m256i zero = _mm256_setzero_si256();
     const __m256i maximum = _mm256_set1_epi16(255);
-    alignas(32) std::array<std::uint16_t, 16> products{};
     for (std::size_t i = 0; i < kTransformedDimensions / 2; i += 16) {
-        __m256i first = _mm256_add_epi16(
+        // Signed saturation is equivalent to scalar's widened addition followed by
+        // clamping to [0, 255]: any saturated value is still outside that interval.
+        __m256i first = _mm256_adds_epi16(
             _mm256_loadu_si256(reinterpret_cast<const __m256i*>(pieces + i)),
             _mm256_loadu_si256(reinterpret_cast<const __m256i*>(threats + i)));
-        __m256i second = _mm256_add_epi16(
+        __m256i second = _mm256_adds_epi16(
             _mm256_loadu_si256(reinterpret_cast<const __m256i*>(pieces + i + kTransformedDimensions / 2)),
             _mm256_loadu_si256(reinterpret_cast<const __m256i*>(threats + i + kTransformedDimensions / 2)));
         first = _mm256_min_epi16(_mm256_max_epi16(first, zero), maximum);
         second = _mm256_min_epi16(_mm256_max_epi16(second, zero), maximum);
-        _mm256_store_si256(reinterpret_cast<__m256i*>(products.data()), _mm256_mullo_epi16(first, second));
-        for (std::size_t lane = 0; lane < products.size(); ++lane)
-            output[i + lane] = static_cast<std::uint8_t>(products[lane] >> 9);
+        const __m256i products = _mm256_srli_epi16(_mm256_mullo_epi16(first, second), 9);
+        const __m128i packed = _mm_packus_epi16(_mm256_castsi256_si128(products),
+                                                 _mm256_extracti128_si256(products, 1));
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(output + i), packed);
     }
 }
 

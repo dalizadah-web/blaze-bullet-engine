@@ -69,6 +69,7 @@ TEST_CASE(nnue_delta_records_piece_changes_without_board_serialization) {
     CHECK_EQ(state.nnue.white_king_after, blaze::Square::E1);
     CHECK_EQ(state.nnue.black_king_before, blaze::Square::E8);
     CHECK_EQ(state.nnue.black_king_after, blaze::Square::E8);
+    CHECK(!state.nnue.full_threats_refresh);
 }
 
 TEST_CASE(nnue_delta_encodes_en_passant_promotion_and_castling_piece_changes) {

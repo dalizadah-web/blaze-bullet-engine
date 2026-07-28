@@ -75,6 +75,9 @@ struct StateInfo {
         Square black_king_after = Square::None;
         std::array<NnueThreatChange, max_threat_changes> threats{};
         std::uint8_t threat_count = 0;
+        // A bounded delta could not represent every changed threat. Rebuild
+        // FullThreats exactly instead of applying a partial update.
+        bool full_threats_refresh = false;
         bool is_null = false;
     } nnue{};
 };

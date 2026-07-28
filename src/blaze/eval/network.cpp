@@ -490,9 +490,9 @@ void apply_delta(
         // FullThreats indexes only the orientation class of the perspective
         // king. A king move inside that class remains an ordinary dirty threat
         // update; crossing classes needs a refresh for this perspective only.
-        const bool threats_stale = halfka_stale &&
+        const bool threats_stale = delta.full_threats_refresh || (halfka_stale &&
             full_threats_orientation(perspective, king_before) !=
-            full_threats_orientation(perspective, king);
+            full_threats_orientation(perspective, king));
         if (halfka_stale) record_benchmark_counter(BenchmarkCounter::KingRefresh);
         if (halfka_stale || threats_stale)
             refresh_perspective(accumulator, weights, position_after, perspective,
@@ -849,8 +849,29 @@ struct NetworkEvaluator::Impl {
 
 struct NnueThreadState::Impl {
     explicit Impl(std::shared_ptr<const DirectWeights> network) : weights(std::move(network)) {}
+
+    struct AccumulatorFrame {
+        StateInfo::NnueDelta delta{};
+        std::optional<Position> position_after{};
+        bool materialized = false;
+    };
+
+    Accumulator& materialize(std::size_t frame_index) const {
+        if (frame_index == 0) return accumulators[0];
+        AccumulatorFrame& frame = frames[frame_index];
+        if (!frame.materialized) {
+            accumulators[frame_index] = materialize(frame_index - 1);
+            apply_delta(accumulators[frame_index], *weights, *frame.position_after, frame.delta);
+            frame.materialized = true;
+        }
+        return accumulators[frame_index];
+    }
+
     std::shared_ptr<const DirectWeights> weights;
-    std::array<Accumulator, kPlyCapacity> stack{};
+    // A pushed frame inherits its parent until it is read. This avoids copying
+    // the accumulator for branches that are popped before NNUE is consulted.
+    mutable std::array<Accumulator, kPlyCapacity> accumulators{};
+    mutable std::array<AccumulatorFrame, kPlyCapacity> frames{};
     std::uint64_t refresh_cache_key = 0;
     bool refresh_cache_valid = false;
     std::size_t ply = 0;
@@ -905,6 +926,8 @@ NnueThreadState NetworkEvaluator::make_thread_state() const {
 
 void NnueThreadState::reset(const Position& position) {
     impl_->ply = 0;
+    impl_->frames[0].position_after.reset();
+    impl_->frames[0].materialized = true;
     ProfileScope timer(NnueProfileComponent::RefreshCacheLookup);
     record_benchmark_counter(BenchmarkCounter::CacheLookup);
     if (impl_->refresh_cache_valid && impl_->refresh_cache_key == position.key()) {
@@ -916,17 +939,19 @@ void NnueThreadState::reset(const Position& position) {
     record_benchmark_counter(impl_->refresh_cache_valid
         ? BenchmarkCounter::CacheKeyMiss : BenchmarkCounter::CacheUninitializedMiss);
     if (impl_->refresh_cache_valid) record_benchmark_counter(BenchmarkCounter::CacheReplacement);
-    refresh(impl_->stack[0], *impl_->weights, position);
+    refresh(impl_->accumulators[0], *impl_->weights, position);
     impl_->refresh_cache_key = position.key();
     impl_->refresh_cache_valid = true;
     record_benchmark_counter(BenchmarkCounter::CacheStore);
 }
 
 void NnueThreadState::push(const Position& position_after, const StateInfo& move_state) {
-    if (impl_->ply + 1 >= impl_->stack.size()) return;
-    impl_->stack[impl_->ply + 1] = impl_->stack[impl_->ply];
+    if (impl_->ply + 1 >= impl_->frames.size()) return;
     ++impl_->ply;
-    apply_delta(impl_->stack[impl_->ply], *impl_->weights, position_after, move_state.nnue);
+    auto& frame = impl_->frames[impl_->ply];
+    frame.delta = move_state.nnue;
+    frame.position_after = position_after;
+    frame.materialized = false;
 }
 
 void NnueThreadState::pop() {
@@ -945,7 +970,7 @@ int NnueThreadState::raw_evaluate(const Position& position) const {
         ? BenchmarkCounter::Fresh : BenchmarkCounter::Incremental);
     record_benchmark_counter(BenchmarkCounter::Inference);
     return propagate(
-        impl_->stack[impl_->ply],
+        impl_->materialize(impl_->ply),
         *impl_->weights,
         position,
         impl_->inference_scratch,
@@ -953,7 +978,7 @@ int NnueThreadState::raw_evaluate(const Position& position) const {
 }
 
 NnueDebugSnapshot NnueThreadState::debug_snapshot(const Position& position) const {
-    return make_snapshot(impl_->stack[impl_->ply], *impl_->weights, position);
+    return make_snapshot(impl_->materialize(impl_->ply), *impl_->weights, position);
 }
 
 int NnueThreadState::evaluate(const Position& position) const {

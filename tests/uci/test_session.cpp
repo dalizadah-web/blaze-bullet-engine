@@ -30,7 +30,8 @@ TEST_CASE(uci_handshake_and_readiness_are_reported) {
     const std::string transcript = output.str();
     CHECK(transcript.find("id name Blaze") != std::string::npos);
     CHECK(transcript.find("option name Hash type spin") != std::string::npos);
-    CHECK(transcript.find("option name Threads type spin default 1 min 1 max 8") != std::string::npos);
+    CHECK(transcript.find("option name Threads type spin default 1 min 1 max 64") !=
+          std::string::npos);
     CHECK(transcript.find("option name Move Overhead type spin default 30 min 0 max 1000") != std::string::npos);
     CHECK(transcript.find("option name UseNNUE type check default false") != std::string::npos);
     CHECK(transcript.find("uciok") != std::string::npos);

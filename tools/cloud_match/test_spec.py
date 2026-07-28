@@ -84,7 +84,7 @@ class CloudMatchSpecTests(unittest.TestCase):
             ("games", 399),
             ("shards", 0),
             ("shards", 41),
-            ("concurrency", 3),
+            ("concurrency", 5),
             ("threads", 3),
             ("opening_sha256", "bad"),
             ("opening_start", 0),

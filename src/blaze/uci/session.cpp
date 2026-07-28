@@ -141,7 +141,7 @@ bool UciSession::process_line(std::string_view raw_line) {
         write_line("id name Blaze 0.1 clean-room");
         write_line("id author Blaze project");
         write_line("option name Hash type spin default 16 min 1 max 65536");
-        write_line("option name Threads type spin default 1 min 1 max 8");
+        write_line("option name Threads type spin default 1 min 1 max 64");
         write_line("option name Move Overhead type spin default 30 min 0 max 1000");
         write_line("option name Ponder type check default false");
         write_line("option name UseNNUE type check default false");
@@ -288,8 +288,8 @@ bool UciSession::set_option(std::string_view arguments) {
         int threads = 0;
         const auto parsed = std::from_chars(tokens[3].data(), tokens[3].data() + tokens[3].size(), threads);
         if (parsed.ec != std::errc{} || parsed.ptr != tokens[3].data() + tokens[3].size() ||
-            threads < 1 || threads > 8) {
-            write_line("info string Threads must be between 1 and 8");
+            threads < 1 || threads > 64) {
+            write_line("info string Threads must be between 1 and 64");
             return false;
         }
         stop_search();
@@ -359,12 +359,22 @@ bool UciSession::start_search(std::string_view arguments) {
     } else if (!use_nnue_) {
         network_evaluator_.reset();
     }
+    MoveList complexity_moves;
+    generate_pseudo_legal(root, complexity_moves);
+    const double complexity = std::clamp(
+        0.75 + static_cast<double>(complexity_moves.size()) / 28.0 +
+            (in_check(root) ? 0.25 : 0.0),
+        0.75,
+        2.0);
     SearchLimits limits = to_search_limits(
         *go,
         root.side_to_move(),
         LatencyBudget{move_overhead_, std::chrono::milliseconds(0)},
-        static_cast<int>(history_.empty() ? 0 : history_.size() - 1));
-    limits.threads = threads_;
+        static_cast<int>(history_.empty() ? 0 : history_.size() - 1),
+        SearchTelemetry{complexity});
+    limits.threads = limits.recommended_threads > 0
+        ? std::min(threads_, limits.recommended_threads)
+        : threads_;
     if (!limits.search_moves.empty()) {
         MoveList legal;
         Position validation = root;

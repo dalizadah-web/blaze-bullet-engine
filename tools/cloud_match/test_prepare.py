@@ -47,18 +47,22 @@ class PrepareSpecTests(unittest.TestCase):
                 baseline_ref="main",
                 games=12,
                 shards=3,
+                concurrency=4,
                 time_control="0.5+0.01",
                 threads=1,
                 hash_mb=32,
                 opening_start=101,
+                opening_suite_positions=6,
             )
 
             payload = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(matrix, {"shard": [0, 1, 2]})
             self.assertEqual(payload["candidate_ref"], "feature")
             self.assertEqual(payload["games"], 12)
+            self.assertEqual(payload["concurrency"], 4)
             self.assertEqual(payload["time_control"], "0.5+0.01")
             self.assertEqual(payload["opening_start"], 101)
+            self.assertEqual(payload["opening_suite_positions"], 6)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 #include "blaze/eval/network.h"
+#include "blaze/eval/nnue_kernels.h"
 #include "blaze/eval/stockfish_bridge.h"
 #include "blaze/core/position.h"
 #include "blaze/core/attacks.h"
@@ -9,6 +10,7 @@
 #include <optional>
 #include <initializer_list>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <thread>
 #include <random>
@@ -303,6 +305,81 @@ TEST_CASE(nnue_thread_state_matches_a_fresh_direct_refresh_after_a_move) {
     CHECK_EQ(state.evaluate(position), evaluator->evaluate(position));
 }
 
+TEST_CASE(nnue_thread_state_refreshes_full_threats_when_a_delta_exceeds_capacity) {
+    std::string error;
+    auto evaluator = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(evaluator.has_value());
+
+    Position position = startpos();
+    auto state = evaluator->make_thread_state();
+    state.reset(position);
+    StateInfo move_state;
+    CHECK(position.make_move(
+        Move{Square::E2, Square::E4, MoveFlag::DoublePush}, move_state, true));
+
+    // Simulate the bounded delta builder exhausting its output capacity.
+    move_state.nnue.threat_count = 0;
+    move_state.nnue.full_threats_refresh = true;
+    state.push(position, move_state);
+    CHECK_EQ(state.evaluate(position), evaluator->evaluate(position));
+}
+
+TEST_CASE(direct_big_nnue_branching_sibling_push_pop_oracle) {
+    Attacks::initialize();
+    std::string error;
+    auto evaluator = NetworkEvaluator::create(kNetworkPath, error);
+    CHECK(evaluator.has_value());
+    CHECK(sf_nnue_init(kNetworkPath, error));
+
+    Position position = startpos();
+    auto incremental = evaluator->make_thread_state();
+    incremental.reset(position);
+    std::vector<Move> history;
+    const auto verify = [&] {
+        const NnueDebugSnapshot fresh = evaluator->debug_snapshot(position);
+        require_snapshot_equal(fresh, incremental.debug_snapshot(position), position, history,
+                               static_cast<int>(history.size()), "branch_incremental");
+        require_snapshot_equal(sf_nnue_debug_snapshot(position.to_fen()), fresh, position, history,
+                               static_cast<int>(history.size()), "branch_legacy");
+    };
+
+    verify();
+    MoveList root_moves;
+    generate_legal(position, root_moves);
+    const std::size_t root_count = root_moves.size() < 8 ? root_moves.size() : 8;
+    for (std::size_t root_index = 0; root_index < root_count; ++root_index) {
+        const Move root_move = root_moves[root_index];
+        StateInfo root_state;
+        CHECK(position.make_move(root_move, root_state, true));
+        incremental.push(position, root_state);
+        history.push_back(root_move);
+        verify();
+
+        MoveList child_moves;
+        generate_legal(position, child_moves);
+        const std::size_t child_count = child_moves.size() < 3 ? child_moves.size() : 3;
+        for (std::size_t child_index = 0; child_index < child_count; ++child_index) {
+            const Move child_move = child_moves[child_index];
+            StateInfo child_state;
+            CHECK(position.make_move(child_move, child_state, true));
+            incremental.push(position, child_state);
+            history.push_back(child_move);
+            verify();
+
+            incremental.pop();
+            position.unmake_move(child_move, child_state);
+            history.pop_back();
+            verify();
+        }
+
+        incremental.pop();
+        position.unmake_move(root_move, root_state);
+        history.pop_back();
+        verify();
+    }
+    sf_nnue_destroy();
+}
+
 TEST_CASE(direct_big_nnue_matches_the_legacy_bridge_oracle) {
     Attacks::initialize();
     std::string error;
@@ -430,6 +507,35 @@ TEST_CASE(nnue_dispatch_diagnostics_prove_scalar_and_avx2_kernel_paths) {
         CHECK(dispatched_stats.scalar_kernel_calls > 0);
         CHECK_EQ(dispatched_stats.avx2_kernel_calls, 0U);
     }
+}
+
+TEST_CASE(nnue_avx2_transform_matches_scalar_at_int16_overflow_boundaries) {
+    constexpr std::size_t kHalfDimensions = nnue::kTransformedDimensions / 2;
+    constexpr std::int16_t kInt16Max = std::numeric_limits<std::int16_t>::max();
+    constexpr std::int16_t kInt16Min = std::numeric_limits<std::int16_t>::min();
+    const std::array<std::pair<std::int16_t, std::int16_t>, 8> first_values{{
+        {kInt16Max, 1}, {kInt16Min, -1}, {kInt16Max, kInt16Max}, {kInt16Min, kInt16Min},
+        {128, 127}, {255, 0}, {-1, 1}, {100, 155}}};
+    const std::array<std::pair<std::int16_t, std::int16_t>, 8> second_values{{
+        {kInt16Max, 1}, {kInt16Max, 1}, {kInt16Max, kInt16Max}, {255, 0},
+        {256, 0}, {255, 0}, {255, 0}, {100, 155}}};
+    std::array<std::int16_t, nnue::kTransformedDimensions> pieces{};
+    std::array<std::int16_t, nnue::kTransformedDimensions> threats{};
+    std::array<std::uint8_t, kHalfDimensions> scalar{};
+    std::array<std::uint8_t, kHalfDimensions> avx2{};
+
+    for (std::size_t i = 0; i < kHalfDimensions; ++i) {
+        const std::size_t pattern = i % first_values.size();
+        pieces[i] = first_values[pattern].first;
+        threats[i] = first_values[pattern].second;
+        pieces[i + kHalfDimensions] = second_values[pattern].first;
+        threats[i + kHalfDimensions] = second_values[pattern].second;
+    }
+
+    nnue::transform_scalar(pieces.data(), threats.data(), scalar.data());
+    nnue::transform_avx2(pieces.data(), threats.data(), avx2.data());
+    for (std::size_t i = 0; i < kHalfDimensions; ++i)
+        CHECK_EQ(avx2[i], scalar[i]);
 }
 
 TEST_CASE(direct_big_nnue_avx2_dispatch_matches_the_scalar_oracle_for_1_million_legal_plies) {

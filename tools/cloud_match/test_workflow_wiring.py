@@ -29,17 +29,20 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertIn("opening_repeats:", workflow)
         self.assertIn("default: 10", workflow)
         self.assertIn("--opening-start '${{ inputs.opening_start }}'", workflow)
+        self.assertIn("opening_suite_positions:", workflow)
+        self.assertIn("--opening-suite-positions '${{ inputs.opening_suite_positions }}'", workflow)
 
     def test_cloud_launcher_defaults_to_10k_full_suite_cycles(self) -> None:
         hybrid = HYBRID.read_text(encoding="utf-8")
         cloud = CLOUD.read_text(encoding="utf-8")
 
         self.assertIn("[int]$Games = 10000", cloud)
-        self.assertIn("[int]$Shards = 20", cloud)
+        self.assertIn("[int]$Shards = 40", cloud)
         self.assertIn("[int]$OpeningStart = 1", cloud)
         self.assertIn("[int]$OpeningRepeats = 10", cloud)
         self.assertIn('"opening_start=$OpeningStart"', cloud)
         self.assertIn('"opening_repeats=$OpeningRepeats"', cloud)
+        self.assertIn('"concurrency=$Concurrency"', cloud)
         self.assertIn("default-match.json", cloud)
         self.assertIn("OpeningSuitePositions", cloud)
         self.assertNotIn("500 * $OpeningRepeats", cloud)

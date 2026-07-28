@@ -40,7 +40,8 @@ struct GoParameters {
     Color side_to_move,
     LatencyBudget latency = LatencyBudget{std::chrono::milliseconds(30),
                                           std::chrono::milliseconds(0)},
-    int game_ply = 0);
+    int game_ply = 0,
+    SearchTelemetry telemetry = SearchTelemetry{});
 
 }  // namespace blaze
 
