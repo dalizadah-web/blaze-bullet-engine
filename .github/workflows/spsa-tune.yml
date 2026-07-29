@@ -1,0 +1,284 @@
+name: Constrained SPSA search tuning
+run-name: SPSA ${{ inputs.campaign_id }} controller
+
+on:
+  workflow_dispatch:
+    inputs:
+      campaign_id:
+        description: Stable campaign identifier
+        required: true
+        default: search-v1-1plus0
+        type: string
+      engine_ref:
+        description: Immutable engine commit used by both sides
+        required: true
+        type: string
+      config_path:
+        description: Trusted SPSA configuration in this revision
+        required: true
+        default: config/spsa/search-v1.json
+        type: string
+      state_run_id:
+        description: Previous controller run containing the latest state artifact
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: spsa-controller-${{ inputs.campaign_id }}
+  cancel-in-progress: false
+
+jobs:
+  iterate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CAMPAIGN_ID: ${{ inputs.campaign_id }}
+      ENGINE_REF: ${{ inputs.engine_ref }}
+      CONFIG_PATH: ${{ inputs.config_path }}
+      STATE_RUN_ID: ${{ inputs.state_run_id }}
+      WORKFLOW_REF: ${{ github.ref_name }}
+      CONTROLLER_COMMIT: ${{ github.sha }}
+      CONTROLLER_REF_TYPE: ${{ github.ref_type }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tools/cloud_match/requirements.txt
+      - run: pip install -r tools/cloud_match/requirements.txt
+      - name: Validate immutable campaign inputs and artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$CONTROLLER_REF_TYPE" = tag
+          test "$(git rev-parse "$WORKFLOW_REF^{commit}")" = "$CONTROLLER_COMMIT"
+          test "$CAMPAIGN_ID" = "$(jq -r .campaign_id "$CONFIG_PATH")"
+          commit="$(git rev-parse "$ENGINE_REF^{commit}")"
+          test "$commit" = "$ENGINE_REF"
+          test "$commit" = "$CONTROLLER_COMMIT"
+          for section in match qualification; do
+            base="$(jq -r ".$section.base_config" "$CONFIG_PATH")"
+            base_hash="$(jq -r ".$section.base_config_sha256" "$CONFIG_PATH")"
+            opening="$(jq -r ".$section.openings" "$CONFIG_PATH")"
+            opening_hash="$(jq -r ".$section.opening_sha256" "$CONFIG_PATH")"
+            echo "$base_hash  $base" | sha256sum --check --strict
+            echo "$opening_hash  $opening" | sha256sum --check --strict
+            test "$(jq -r .opening_sha256 "$base")" = "$opening_hash"
+          done
+      - name: Restore previous campaign state
+        if: ${{ inputs.state_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: spsa-state-${{ inputs.campaign_id }}
+          path: campaign
+          run-id: ${{ inputs.state_run_id }}
+          github-token: ${{ github.token }}
+      - name: Initialize or plan deterministic trial
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p campaign/records campaign/evidence campaign/dispatches
+          if [ ! -f campaign/state.json ]; then
+            python -m tools.cloud_match.spsa init \
+              --config "$CONFIG_PATH" \
+              --engine-commit "$ENGINE_REF" \
+              --controller-commit "$CONTROLLER_COMMIT" \
+              --output campaign/state.json
+          fi
+          test "$(jq -r .engine_commit campaign/state.json)" = "$ENGINE_REF"
+          test "$(jq -r .controller_commit campaign/state.json)" = "$CONTROLLER_COMMIT"
+          python -m tools.cloud_match.spsa plan \
+            --config "$CONFIG_PATH" \
+            --state campaign/state.json \
+            --output campaign/plan.json
+          echo "trial_id=$(jq -r .trial_id campaign/plan.json)" >> "$GITHUB_OUTPUT"
+          echo "iteration=$(jq -r .iteration campaign/plan.json)" >> "$GITHUB_OUTPUT"
+      - name: Resolve exactly one same-binary child run
+        id: child
+        shell: bash
+        run: |
+          set -euo pipefail
+          trial_id='${{ steps.plan.outputs.trial_id }}'
+          runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 1000 \
+            --json attempt,databaseId,displayTitle,headSha,url)"
+          matches="$(jq -c --arg title "$trial_id" --arg sha "$CONTROLLER_COMMIT" \
+            '[.[] | select(.displayTitle == $title and .headSha == $sha)]' <<< "$runs")"
+          count="$(jq length <<< "$matches")"
+          if [ "$count" -gt 1 ]; then
+            echo "ERROR: multiple child runs exist for immutable trial $trial_id" >&2
+            exit 1
+          fi
+          existing=false
+          if [ "$count" -eq 1 ]; then
+            existing=true
+            child_run_id="$(jq -r '.[0].databaseId' <<< "$matches")"
+            child_url="$(jq -r '.[0].url' <<< "$matches")"
+          else
+            candidate_initstr="$(jq -r .candidate_initstr campaign/plan.json)"
+            baseline_initstr="$(jq -r .baseline_initstr campaign/plan.json)"
+            opening_start="$(jq -r .opening_start campaign/plan.json)"
+            opening_count="$(jq -r .opening_suite_positions campaign/plan.json)"
+            games="$(jq -r .match.games "$CONFIG_PATH")"
+            shards="$(jq -r .match.shards "$CONFIG_PATH")"
+            concurrency="$(jq -r .match.concurrency "$CONFIG_PATH")"
+            threads="$(jq -r .match.threads "$CONFIG_PATH")"
+            hash_mb="$(jq -r .match.hash_mb "$CONFIG_PATH")"
+            time_control="$(jq -r .match.time_control "$CONFIG_PATH")"
+            base_config="$(jq -r .match.base_config "$CONFIG_PATH")"
+            dispatch_output="$(gh workflow run cloud-match.yml \
+              --ref "$WORKFLOW_REF" \
+              -f "candidate_ref=$ENGINE_REF" \
+              -f "baseline_ref=$ENGINE_REF" \
+              -f "games=$games" \
+              -f "opening_start=$opening_start" \
+              -f opening_repeats=1 \
+              -f "opening_suite_positions=$opening_count" \
+              -f "shards=$shards" \
+              -f "concurrency=$concurrency" \
+              -f "time_control=$time_control" \
+              -f "threads=$threads" \
+              -f "hash_mb=$hash_mb" \
+              -f elo0=0 -f elo1=5 \
+              -f "candidate_initstr=$candidate_initstr" \
+              -f "baseline_initstr=$baseline_initstr" \
+              -f "match_config=$base_config" \
+              -f "trial_id=$trial_id" \
+              -f callback_workflow=spsa-tune.yml \
+              -f "callback_ref=$WORKFLOW_REF" \
+              -f "callback_campaign_id=$CAMPAIGN_ID" \
+              -f "callback_engine_ref=$ENGINE_REF" \
+              -f "callback_config_path=$CONFIG_PATH" \
+              -f "callback_state_run_id=$GITHUB_RUN_ID")"
+            child_url="$(grep -Eo 'https://github.com/[^[:space:]]+/actions/runs/[0-9]+' <<< "$dispatch_output" | tail -1 || true)"
+            for _ in {1..30}; do
+              [ -n "$child_url" ] && break
+              sleep 2
+              runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
+                --json databaseId,displayTitle,headSha,url)"
+              child_url="$(jq -r --arg title "$trial_id" --arg sha "$CONTROLLER_COMMIT" \
+                '[.[] | select(.displayTitle == $title and .headSha == $sha)] | if length == 1 then .[0].url else empty end' <<< "$runs")"
+            done
+            test -n "$child_url"
+            child_run_id="${child_url##*/}"
+          fi
+          [[ "$child_run_id" =~ ^[0-9]+$ ]]
+          if [ "$existing" = true ]; then
+            for _ in {1..60}; do
+              child_status="$(gh run view "$child_run_id" --json status --jq .status)"
+              [ "$child_status" = completed ] && break
+              sleep 5
+            done
+          fi
+          metadata="$(gh run view "$child_run_id" --json attempt,conclusion,databaseId,displayTitle,headSha,status,url)"
+          test "$(jq -r .displayTitle <<< "$metadata")" = "$trial_id"
+          test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
+          test "$(jq -r .attempt <<< "$metadata")" = 1
+          child_status="$(jq -r .status <<< "$metadata")"
+          if [ "$child_status" = completed ]; then
+            test "$(jq -r .conclusion <<< "$metadata")" = success
+          fi
+          iteration='${{ steps.plan.outputs.iteration }}'
+          receipt="campaign/dispatches/$(printf '%04d' "$iteration").json"
+          jq -n --arg trial_id "$trial_id" --argjson iteration "$iteration" \
+            --argjson child_run_id "$child_run_id" --arg child_run_url "$child_url" \
+            --arg controller_commit "$CONTROLLER_COMMIT" \
+            '{schema_version: 1, trial_id: $trial_id, iteration: $iteration,
+              child_run_id: $child_run_id, child_run_attempt: 1, child_run_url: $child_run_url,
+              controller_commit: $controller_commit}' > "$receipt"
+          echo "run_id=$child_run_id" >> "$GITHUB_OUTPUT"
+          echo "url=$child_url" >> "$GITHUB_OUTPUT"
+          echo "status=$child_status" >> "$GITHUB_OUTPUT"
+      - name: Upload durable dispatch receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: spsa-dispatch-${{ inputs.campaign_id }}-${{ steps.plan.outputs.trial_id }}
+          path: |
+            campaign/plan.json
+            campaign/dispatches
+          retention-days: 90
+          if-no-files-found: error
+      - name: Upload resumable state while child runs asynchronously
+        if: ${{ steps.child.outputs.status != 'completed' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: spsa-state-${{ inputs.campaign_id }}
+          path: campaign
+          retention-days: 90
+          if-no-files-found: error
+      - name: Download exact child result
+        if: ${{ steps.child.outputs.status == 'completed' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p child-result
+          gh run download '${{ steps.child.outputs.run_id }}' -p 'result-*' -D child-result
+          summary="$(find child-result -name summary.json -type f -print -quit)"
+          test -n "$summary"
+          iteration='${{ steps.plan.outputs.iteration }}'
+          cp "$summary" "campaign/evidence/$(printf '%04d' "$iteration").json"
+      - name: Validate evidence and apply one update
+        if: ${{ steps.child.outputs.status == 'completed' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          iteration='${{ steps.plan.outputs.iteration }}'
+          run_id='${{ steps.child.outputs.run_id }}'
+          metadata="$(gh run view "$run_id" --json attempt,conclusion,displayTitle,headSha)"
+          test "$(jq -r .attempt <<< "$metadata")" = 1
+          test "$(jq -r .conclusion <<< "$metadata")" = success
+          test "$(jq -r .displayTitle <<< "$metadata")" = '${{ steps.plan.outputs.trial_id }}'
+          test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
+          matches="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 1000 \
+            --json attempt,databaseId,displayTitle,headSha | jq -c \
+            --arg title '${{ steps.plan.outputs.trial_id }}' --arg sha "$CONTROLLER_COMMIT" \
+            '[.[] | select(.displayTitle == $title and .headSha == $sha)]')"
+          test "$(jq length <<< "$matches")" = 1
+          test "$(jq -r '.[0].databaseId' <<< "$matches")" = "$run_id"
+          test "$(jq -r '.[0].attempt' <<< "$matches")" = 1
+          summary="campaign/evidence/$(printf '%04d' "$iteration").json"
+          python -m tools.cloud_match.spsa apply \
+            --config "$CONFIG_PATH" \
+            --state campaign/state.json \
+            --plan campaign/plan.json \
+            --dispatch "campaign/dispatches/$(printf '%04d' "$iteration").json" \
+            --summary "$summary" \
+            --output campaign/state.next.json \
+            --record "campaign/records/$(printf '%04d' "$iteration").json"
+          mv campaign/state.next.json campaign/state.json
+          if [ "$(jq -r .status campaign/state.json)" = "training-complete" ]; then
+            python -m tools.cloud_match.spsa final \
+              --config "$CONFIG_PATH" \
+              --state campaign/state.json \
+              --output campaign/final-vector.json
+          fi
+      - name: Upload immutable next state
+        if: ${{ steps.child.outputs.status == 'completed' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: spsa-state-${{ inputs.campaign_id }}
+          path: campaign
+          retention-days: 90
+          if-no-files-found: error
+      - name: Continue campaign after state is durable
+        if: ${{ success() && steps.child.outputs.status == 'completed' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$(jq -r .status campaign/state.json)" = "running" ]; then
+            gh workflow run spsa-tune.yml \
+              --ref "$WORKFLOW_REF" \
+              -f "campaign_id=$CAMPAIGN_ID" \
+              -f "engine_ref=$ENGINE_REF" \
+              -f "config_path=$CONFIG_PATH" \
+              -f "state_run_id=$GITHUB_RUN_ID"
+          fi

@@ -34,6 +34,8 @@ TEST_CASE(uci_handshake_and_readiness_are_reported) {
           std::string::npos);
     CHECK(transcript.find("option name Move Overhead type spin default 30 min 0 max 1000") != std::string::npos);
     CHECK(transcript.find("option name UseNNUE type check default false") != std::string::npos);
+    CHECK(transcript.find("option name SPSA Params type string default <empty>") !=
+          std::string::npos);
     CHECK(transcript.find("uciok") != std::string::npos);
     CHECK(transcript.find("readyok") != std::string::npos);
 }
@@ -44,6 +46,29 @@ TEST_CASE(move_overhead_option_is_validated_for_clock_safety) {
     CHECK(session.process_line("setoption name Move Overhead value 75"));
     CHECK(!session.process_line("setoption name Move Overhead value 1001"));
     CHECK(output.str().find("Move Overhead must be between 0 and 1000 ms") != std::string::npos);
+}
+
+TEST_CASE(spsa_parameters_are_applied_atomically_and_invalid_payloads_block_search) {
+    std::ostringstream output;
+    UciSession session(output);
+    CHECK(session.process_line("setoption name SPSA Params value rfp_base=80,lmr_divisor_hundredths=250"));
+    CHECK(!session.process_line("setoption name SPSA Params value rfp_base=999"));
+    CHECK(session.process_line("position startpos"));
+    CHECK(!session.process_line("go depth 1"));
+    CHECK(output.str().find("critical invalid SPSA parameter configuration") !=
+          std::string::npos);
+    CHECK(output.str().find("bestmove 0000") != std::string::npos);
+
+    CHECK(session.process_line("setoption name SPSA Params value rfp_base=80"));
+    CHECK(session.process_line("go depth 1"));
+    CHECK(session.process_line("stop"));
+    CHECK_EQ(occurrences(output.str(), "bestmove "), 2U);
+
+    CHECK(!session.process_line("setoption name SPSA Params value"));
+    CHECK(!session.process_line("go depth 1"));
+    CHECK(!session.process_line("setoption name SPSA Params value rfp_base=80 extra"));
+    CHECK(output.str().find("expected name SPSA Params value <payload>") !=
+          std::string::npos);
 }
 
 TEST_CASE(required_nnue_reports_critical_failure_instead_of_playing_fallback) {

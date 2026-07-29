@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import asdict
+from datetime import datetime
 import json
 from pathlib import Path
 import re
@@ -59,6 +60,7 @@ def aggregate_shards(
     termination_counts: dict[str, dict[str, int]] | None = None
     abnormal_games: list[dict[str, Any]] = []
     environments: list[dict[str, Any]] = []
+    game_timing_events: list[tuple[datetime, int]] = []
 
     for path in paths:
         raw = _load_manifest(path)
@@ -106,6 +108,20 @@ def aggregate_shards(
         expected_games = len(assigned_pairs) * 2
         if raw.get("expected_games") != expected_games:
             raise ValueError(f"game count mismatch in {path}")
+        intervals = raw.get("game_intervals")
+        if not isinstance(intervals, list) or len(intervals) != expected_games:
+            raise ValueError(f"game timing count mismatch in {path}")
+        for interval in intervals:
+            if not isinstance(interval, dict) or set(interval) != {"start", "end"}:
+                raise ValueError(f"invalid game timing evidence in {path}")
+            try:
+                started = datetime.fromisoformat(interval["start"])
+                completed = datetime.fromisoformat(interval["end"])
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"invalid game timing evidence in {path}") from exc
+            if started.tzinfo is None or completed.tzinfo is None or completed <= started:
+                raise ValueError(f"invalid game timing interval in {path}")
+            game_timing_events.extend(((started, 1), (completed, -1)))
 
         expected_ids = game_ids_for_slots(
             experiment_id,
@@ -193,6 +209,10 @@ def aggregate_shards(
         raise ValueError("incomplete pair slot coverage")
 
     counts = Pentanomial(*totals)
+    concurrent_games = peak_concurrent_games = 0
+    for _, delta in sorted(game_timing_events, key=lambda event: (event[0], event[1])):
+        concurrent_games += delta
+        peak_concurrent_games = max(peak_concurrent_games, concurrent_games)
     if clean_pairs == 0:
         llr = 0.0
         decision = "no_clean_pairs"
@@ -222,6 +242,7 @@ def aggregate_shards(
         "raw_wdl": raw_wdl,
         "clean_wdl": clean_wdl,
         "shards": spec.shards,
+        "peak_concurrent_games": peak_concurrent_games,
         "counts": dict(zip(_COUNT_KEYS, counts.as_tuple(), strict=True)),
         "termination_counts": termination_counts,
         "abnormal_games": abnormal_games,
@@ -243,6 +264,7 @@ def summary_markdown(result: dict[str, Any]) -> str:
         f"- Expected/completed games: {result['expected_games']}/{result['completed_games']}\n"
         f"- Clean evidence: {result['clean_games']} games ({result['clean_pairs']} color-swapped pairs)\n"
         f"- Quarantined: {result['quarantined_games']} games ({result['quarantined_pairs']} pairs)\n"
+        f"- Peak measured concurrent games: {result['peak_concurrent_games']}\n"
         f"- Raw candidate W/D/L: {result['raw_wdl']['wins']}/"
         f"{result['raw_wdl']['draws']}/{result['raw_wdl']['losses']}\n"
         f"- Clean candidate W/D/L: {result['clean_wdl']['wins']}/"
@@ -286,9 +308,15 @@ def main() -> int:
     parser.add_argument("--spec", type=Path, required=True)
     parser.add_argument("--shards", type=Path, nargs="+", required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--source-run-id", type=int, required=True)
+    parser.add_argument("--source-run-attempt", type=int, required=True)
     args = parser.parse_args()
+    if args.source_run_id <= 0 or args.source_run_attempt <= 0:
+        raise ValueError("source run identity must be positive")
 
     result = aggregate_shards(args.shards, CloudMatchSpec.from_json(args.spec))
+    result["source_run_id"] = args.source_run_id
+    result["source_run_attempt"] = args.source_run_attempt
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output / "summary.json").write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"

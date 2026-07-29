@@ -96,6 +96,10 @@ class DefaultConfigIntegrationTests(unittest.TestCase):
                         f"{frozen.experiment_id()}-c{pair // 100:04d}-p{pair % 100:06d}-b",
                         )
                     ],
+                    "game_intervals": [
+                        {"start": "2026-01-01T00:00:00+00:00", "end": "2026-01-01T00:00:10+00:00"}
+                        for _ in range(len(pair_indexes) * 2)
+                    ],
                     "counts": {
                         "wins2": pair_count, "wins1_draw1": 0, "draws2": 0,
                         "losses1_draw1": 0, "losses2": 0,

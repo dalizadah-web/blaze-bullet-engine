@@ -91,6 +91,10 @@ def _shard_manifest(spec: CloudMatchSpec, index: int, commit: str,
                 f"{spec.experiment_id()}-p{pair:06d}-b",
             )
         ],
+        "game_intervals": [
+            {"start": "2026-01-01T00:00:00+00:00", "end": "2026-01-01T00:00:10+00:00"}
+            for _ in range(4)
+        ],
         "counts": {
             "wins2": 1, "wins1_draw1": 0, "draws2": 1,
             "losses1_draw1": 0, "losses2": 0,

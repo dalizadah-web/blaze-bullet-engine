@@ -5,6 +5,7 @@
 #include "blaze/eval/classical.h"
 #include "blaze/eval/network.h"
 #include "blaze/search/move_picker.h"
+#include "blaze/search/parameters.h"
 #include "blaze/search/pv_line.h"
 #include "blaze/search/stack.h"
 #include "blaze/search/time_manager.h"
@@ -61,8 +62,10 @@ struct SearchResult {
 
 class Searcher {
 public:
-    explicit Searcher(TranspositionTable& table, const NetworkEvaluator* network = nullptr)
-        : table_(table), network_(network) {}
+    explicit Searcher(TranspositionTable& table,
+                      const NetworkEvaluator* network = nullptr,
+                      SearchParameters parameters = {})
+        : table_(table), network_(network), parameters_(parameters) {}
 
     [[nodiscard]] SearchResult search(
         Position position,
@@ -130,6 +133,7 @@ private:
 
     TranspositionTable& table_;
     const NetworkEvaluator* network_ = nullptr;
+    SearchParameters parameters_{};
     mutable std::array<EvalCacheEntry, 4096> eval_cache_{};
     std::array<std::array<Move, 64>, 64> countermoves_{};
     std::array<std::array<std::array<int, 64>, 64>, 2> history_{};

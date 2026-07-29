@@ -219,10 +219,18 @@ class ConfirmationSelectorTests(unittest.TestCase):
         for path in sorted(config_root.rglob("*.json")):
             with self.subTest(path=path.relative_to(ROOT)):
                 payload = json.loads(path.read_text(encoding="utf-8"))
-                self.assertNotIn("smoke-v1", str(payload.get("openings", "")))
-                self.assertEqual(payload.get("opening_sha256"), "5a53816436fe460d788fe1334fc9be27c89ee9bc1d0bdb1ab9745e3081d404bc")
+                openings = payload.get("openings")
+                if not isinstance(openings, str):
+                    continue
+                self.assertNotIn("smoke-v1", openings)
+                opening_path = ROOT / openings
+                self.assertTrue(opening_path.is_file())
+                self.assertEqual(
+                    payload.get("opening_sha256"),
+                    hashlib.sha256(opening_path.read_bytes()).hexdigest(),
+                )
                 self.assertIsInstance(payload.get("opening_start"), int)
-                self.assertEqual(payload.get("opening_suite_positions"), 500)
+                self.assertIsInstance(payload.get("opening_suite_positions"), int)
                 if "opening_repeats" in payload:
                     self.assertEqual(
                         payload["games"] // 2,
@@ -230,12 +238,27 @@ class ConfirmationSelectorTests(unittest.TestCase):
                     )
                 self.assertLessEqual(
                     payload["opening_start"] + payload["opening_suite_positions"] - 1,
-                    500,
+                    len(opening_path.read_bytes().splitlines()),
                 )
 
     def test_opening_artifacts_are_checked_out_with_hash_stable_lf_bytes(self) -> None:
         attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
         self.assertIn("testdata/openings/*.epd text eol=lf", attributes.splitlines())
+
+    def test_spsa_training_qualification_and_confirmation_suites_are_disjoint(self) -> None:
+        suites = {
+            name: set((ROOT / "testdata" / "openings" / name).read_bytes().splitlines())
+            for name in (
+                "spsa-train-v1.epd",
+                "spsa-qualification-v1.epd",
+                "uho-lichess-500-v1.epd",
+            )
+        }
+        self.assertEqual(len(suites["spsa-train-v1.epd"]), 32000)
+        self.assertEqual(len(suites["spsa-qualification-v1.epd"]), 8000)
+        self.assertFalse(suites["spsa-train-v1.epd"] & suites["spsa-qualification-v1.epd"])
+        self.assertFalse(suites["spsa-train-v1.epd"] & suites["uho-lichess-500-v1.epd"])
+        self.assertFalse(suites["spsa-qualification-v1.epd"] & suites["uho-lichess-500-v1.epd"])
 
 
 if __name__ == "__main__":

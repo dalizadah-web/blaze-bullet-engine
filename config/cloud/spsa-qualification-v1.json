@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "name": "blaze-spsa-search-qualification-v1",
+  "candidate_ref": "dc30592a8422234b8fc486bb49f5fe80402567c6",
+  "baseline_ref": "dc30592a8422234b8fc486bb49f5fe80402567c6",
+  "candidate_commit": "dc30592a8422234b8fc486bb49f5fe80402567c6",
+  "baseline_commit": "dc30592a8422234b8fc486bb49f5fe80402567c6",
+  "candidate_sha256": "",
+  "baseline_sha256": "",
+  "candidate_initstr": "UseNNUE=true\nEvalFile=nn-c288c895ea92.nnue",
+  "baseline_initstr": "UseNNUE=true\nEvalFile=nn-c288c895ea92.nnue",
+  "games": 16000,
+  "shards": 40,
+  "concurrency": 2,
+  "time_control": "1+0",
+  "threads": 1,
+  "hash_mb": 16,
+  "openings": "testdata/openings/spsa-qualification-v1.epd",
+  "opening_sha256": "41b3254dc4ca558818d97cb209d6f57918c9d2b761ceb0aae5a37c4866762c2a",
+  "opening_start": 1,
+  "opening_suite_positions": 8000,
+  "opening_repeats": 1,
+  "sprt": {
+    "elo0": 0.0,
+    "elo1": 5.0,
+    "alpha": 0.05,
+    "beta": 0.05
+  }
+}

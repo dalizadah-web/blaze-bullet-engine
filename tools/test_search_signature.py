@@ -449,9 +449,8 @@ class CorpusTests(unittest.TestCase):
         self.assertEqual(entry["position_count"], len(positions))
         self.assertEqual(entry["license"], "CC0-1.0")
         self.assertFalse(entry["stockfish_derived"])
-        self.assertEqual(
-            entry["sha256"], hashlib.sha256(corpus_path.read_bytes()).hexdigest()
-        )
+        corpus_bytes = corpus_path.read_bytes().replace(b"\r\n", b"\n")
+        self.assertEqual(entry["sha256"], hashlib.sha256(corpus_bytes).hexdigest())
         prefixes = {position.identifier.split("-", 1)[0] for position in positions}
         self.assertTrue(
             {

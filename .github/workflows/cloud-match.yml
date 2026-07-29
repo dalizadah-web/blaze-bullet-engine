@@ -1,4 +1,5 @@
 name: Distributed bullet match
+run-name: ${{ inputs.trial_id || 'Distributed bullet match' }}
 
 on:
   workflow_dispatch:
@@ -78,12 +79,54 @@ on:
         required: false
         default: ''
         type: string
+      candidate_initstr:
+        description: Optional candidate UCI initialization override
+        required: false
+        default: ''
+        type: string
+      match_config:
+        description: Trusted repository-relative base match configuration
+        required: false
+        default: config/cloud/default-match.json
+        type: string
+      trial_id:
+        description: Optional immutable tuning trial identity
+        required: false
+        default: ''
+        type: string
+      callback_workflow:
+        description: Optional trusted SPSA workflow to resume after aggregation
+        required: false
+        default: ''
+        type: string
+      callback_ref:
+        description: Immutable tag containing the callback workflow
+        required: false
+        default: ''
+        type: string
+      callback_campaign_id:
+        required: false
+        default: ''
+        type: string
+      callback_engine_ref:
+        required: false
+        default: ''
+        type: string
+      callback_config_path:
+        required: false
+        default: ''
+        type: string
+      callback_state_run_id:
+        required: false
+        default: ''
+        type: string
 
 permissions:
+  actions: write
   contents: read
 
 concurrency:
-  group: cloud-match-${{ github.ref }}-${{ inputs.candidate_ref }}-${{ inputs.baseline_ref }}
+  group: cloud-match-${{ github.ref }}-${{ inputs.trial_id }}-${{ inputs.candidate_ref }}-${{ inputs.baseline_ref }}
   cancel-in-progress: false
 
 jobs:
@@ -106,37 +149,73 @@ jobs:
       - run: pip install -r tools/cloud_match/requirements.txt
       - name: Validate cloud tooling
         run: python -m unittest discover -s tools/cloud_match -p "test_*.py" -v
+      - name: Validate optional controller callback
+        shell: bash
+        env:
+          CALLBACK_WORKFLOW: ${{ inputs.callback_workflow }}
+          CALLBACK_REF: ${{ inputs.callback_ref }}
+          CALLBACK_CAMPAIGN_ID: ${{ inputs.callback_campaign_id }}
+          CALLBACK_ENGINE_REF: ${{ inputs.callback_engine_ref }}
+          CALLBACK_CONFIG_PATH: ${{ inputs.callback_config_path }}
+          CALLBACK_STATE_RUN_ID: ${{ inputs.callback_state_run_id }}
+        run: |
+          set -euo pipefail
+          values=("$CALLBACK_WORKFLOW" "$CALLBACK_REF" "$CALLBACK_CAMPAIGN_ID" \
+            "$CALLBACK_ENGINE_REF" "$CALLBACK_CONFIG_PATH" "$CALLBACK_STATE_RUN_ID")
+          populated=0
+          for value in "${values[@]}"; do
+            [ -n "$value" ] && populated=$((populated + 1))
+          done
+          if [ "$populated" -ne 0 ]; then
+            test "$populated" -eq "${#values[@]}"
+            [[ "$CALLBACK_WORKFLOW" =~ ^spsa-(tune|qualify)\.yml$ ]]
+            [[ "$CALLBACK_REF" =~ ^[A-Za-z0-9._/-]+$ ]]
+            [[ "$CALLBACK_CAMPAIGN_ID" =~ ^[a-z0-9][a-z0-9._-]{0,63}$ ]]
+            [[ "$CALLBACK_ENGINE_REF" =~ ^[0-9a-f]{40}$ ]]
+            [[ "$CALLBACK_CONFIG_PATH" =~ ^config/spsa/[A-Za-z0-9._/-]+\.json$ ]]
+            [[ "$CALLBACK_STATE_RUN_ID" =~ ^[0-9]+$ ]]
+          fi
       - name: Freeze match specification
         id: spec
         shell: bash
+        env:
+          BASE_CONFIG: ${{ inputs.match_config }}
+          CANDIDATE_REF: ${{ inputs.candidate_ref }}
+          BASELINE_REF: ${{ inputs.baseline_ref }}
+          CANDIDATE_INITSTR: ${{ inputs.candidate_initstr }}
+          BASELINE_INITSTR: ${{ inputs.baseline_initstr }}
+          STOCKFISH_ELO: ${{ inputs.stockfish_elo }}
+          TIME_CONTROL: ${{ inputs.time_control }}
         run: |
-          STOCKFISH_ELO=${{ inputs.stockfish_elo }}
-          BASELINE_INITSTR=${{ inputs.baseline_initstr }}
-          BASELINE_INITSTR_FLAG=""
-          if [ -n "$BASELINE_INITSTR" ]; then
-            BASELINE_INITSTR_FLAG="--baseline-initstr $BASELINE_INITSTR"
-          elif [ -n "$STOCKFISH_ELO" ]; then
-            BASELINE_INITSTR_FLAG="--baseline-initstr UCI_Elo=$STOCKFISH_ELO"
-          fi
-          python -m tools.cloud_match.prepare \
-            --base config/cloud/default-match.json \
-            --output prepared/spec.json \
-            --candidate-ref '${{ inputs.candidate_ref }}' \
-            --baseline-ref '${{ inputs.baseline_ref }}' \
-            --games '${{ inputs.games }}' \
-            --opening-start '${{ inputs.opening_start }}' \
-            --opening-repeats '${{ inputs.opening_repeats }}' \
-            --opening-suite-positions '${{ inputs.opening_suite_positions }}' \
-            --shards '${{ inputs.shards }}' \
-            --concurrency '${{ inputs.concurrency }}' \
-            --time-control '${{ inputs.time_control }}' \
-            --threads '${{ inputs.threads }}' \
-            --hash-mb '${{ inputs.hash_mb }}' \
-            --repo-root . \
-            --elo0 '${{ inputs.elo0 }}' \
-            --elo1 '${{ inputs.elo1 }}' \
-            $BASELINE_INITSTR_FLAG \
+          set -euo pipefail
+          args=(
+            --base "$BASE_CONFIG"
+            --output prepared/spec.json
+            --candidate-ref "$CANDIDATE_REF"
+            --baseline-ref "$BASELINE_REF"
+            --games '${{ inputs.games }}'
+            --opening-start '${{ inputs.opening_start }}'
+            --opening-repeats '${{ inputs.opening_repeats }}'
+            --opening-suite-positions '${{ inputs.opening_suite_positions }}'
+            --shards '${{ inputs.shards }}'
+            --concurrency '${{ inputs.concurrency }}'
+            --time-control "$TIME_CONTROL"
+            --threads '${{ inputs.threads }}'
+            --hash-mb '${{ inputs.hash_mb }}'
+            --repo-root .
+            --elo0 '${{ inputs.elo0 }}'
+            --elo1 '${{ inputs.elo1 }}'
             --github-output "$GITHUB_OUTPUT"
+          )
+          if [ -n "$CANDIDATE_INITSTR" ]; then
+            args+=(--candidate-initstr "$CANDIDATE_INITSTR")
+          fi
+          if [ -n "$BASELINE_INITSTR" ]; then
+            args+=(--baseline-initstr "$BASELINE_INITSTR")
+          elif [ -n "$STOCKFISH_ELO" ]; then
+            args+=(--baseline-initstr "UCI_Elo=$STOCKFISH_ELO")
+          fi
+          python -m tools.cloud_match.prepare "${args[@]}"
       - uses: actions/upload-artifact@v4
         with:
           name: match-spec-${{ steps.spec.outputs.experiment_id }}
@@ -207,6 +286,8 @@ jobs:
             stockfish_bin="$(find stockfish -type f -name 'stockfish-*' | head -1)"
             cp "$stockfish_bin" bundle/baseline
             chmod +x bundle/baseline
+          elif [ "$(git -C candidate-src rev-parse HEAD)" = "$(git -C baseline-src rev-parse HEAD)" ]; then
+            cp bundle/candidate bundle/baseline
           else
             mkdir -p baseline-src/build/blaze
             make -C baseline-src -f Makefile.blaze blaze -j2 \
@@ -232,6 +313,11 @@ jobs:
           baseline_sha256="$(sha256sum bundle/baseline | awk '{print $1}')"
           candidate_commit="$(cat bundle/candidate-commit.txt)"
           baseline_commit="$(cat bundle/baseline-commit.txt)"
+          if [ -z "$STOCKFISH_ELO" ] && [ "$candidate_commit" = "$baseline_commit" ] && \
+             [ "$candidate_sha256" != "$baseline_sha256" ]; then
+            echo "ERROR: same-commit SPSA engines are not byte-identical" >&2
+            exit 1
+          fi
           CANDIDATE_SHA256="$candidate_sha256" BASELINE_SHA256="$baseline_sha256" \
             CANDIDATE_COMMIT="$candidate_commit" BASELINE_COMMIT="$baseline_commit" \
             PYTHONPATH=farm-src python - <<'PY'
@@ -356,6 +442,43 @@ jobs:
           tar -xzf frozen/frozen-match.tar.gz -C bundle
           chmod +x bundle/candidate bundle/baseline bundle/cutechess-cli
           cp bundle/*.nnue .
+      - name: Publish shard readiness
+        shell: bash
+        run: |
+          mkdir readiness
+          printf '%s\n' '${{ matrix.shard }}' > 'readiness/${{ matrix.shard }}.txt'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ready-${{ needs.prepare.outputs.experiment_id }}-${{ matrix.shard }}
+          path: readiness
+          retention-days: 1
+          if-no-files-found: error
+      - name: Synchronize all shard runners
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          READY_PREFIX: ready-${{ needs.prepare.outputs.experiment_id }}-
+          EXPECTED_SHARDS: ${{ inputs.shards }}
+        run: |
+          set -euo pipefail
+          latest=''
+          for _ in {1..300}; do
+            artifacts="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100")"
+            count="$(jq -r --arg prefix "$READY_PREFIX" \
+              '[.artifacts[] | select(.name | startswith($prefix))] | length' <<< "$artifacts")"
+            if [ "$count" -eq "$EXPECTED_SHARDS" ]; then
+              latest="$(jq -r --arg prefix "$READY_PREFIX" \
+                '[.artifacts[] | select(.name | startswith($prefix)) | .created_at] | max' <<< "$artifacts")"
+              break
+            fi
+            sleep 2
+          done
+          test -n "$latest"
+          gate=$(( $(date --date="$latest" +%s) + 30 ))
+          now="$(date +%s)"
+          if [ "$gate" -gt "$now" ]; then
+            sleep "$((gate - now))"
+          fi
       - name: Run shard ${{ matrix.shard }}
         shell: bash
         run: |
@@ -401,11 +524,39 @@ jobs:
           python -m tools.cloud_match.aggregate \
             --spec finalized/spec.json \
             --shards "${manifests[@]}" \
-            --output summary
+            --output summary \
+            --source-run-id "$GITHUB_RUN_ID" \
+            --source-run-attempt "$GITHUB_RUN_ATTEMPT"
           cat summary/summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: result-${{ needs.prepare.outputs.experiment_id }}
           path: summary
-          retention-days: 30
+          retention-days: 90
           if-no-files-found: error
+      - name: Resume SPSA controller after evidence is durable
+        if: ${{ inputs.callback_workflow != '' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CALLBACK_WORKFLOW: ${{ inputs.callback_workflow }}
+          CALLBACK_REF: ${{ inputs.callback_ref }}
+          CALLBACK_CAMPAIGN_ID: ${{ inputs.callback_campaign_id }}
+          CALLBACK_ENGINE_REF: ${{ inputs.callback_engine_ref }}
+          CALLBACK_CONFIG_PATH: ${{ inputs.callback_config_path }}
+          CALLBACK_STATE_RUN_ID: ${{ inputs.callback_state_run_id }}
+        run: |
+          for _ in {1..10}; do
+            if gh workflow run "$CALLBACK_WORKFLOW" \
+              --ref "$CALLBACK_REF" \
+              -f "campaign_id=$CALLBACK_CAMPAIGN_ID" \
+              -f "engine_ref=$CALLBACK_ENGINE_REF" \
+              -f "config_path=$CALLBACK_CONFIG_PATH" \
+              -f "state_run_id=$CALLBACK_STATE_RUN_ID"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "ERROR: evidence is durable but the SPSA callback could not be dispatched" >&2
+          exit 1

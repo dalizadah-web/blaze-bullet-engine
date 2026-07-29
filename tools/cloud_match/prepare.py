@@ -39,6 +39,7 @@ def prepare_spec(
     baseline_sha256: str | None = None,
     elo0: float | None = None,
     elo1: float | None = None,
+    candidate_initstr: str | None = None,
     baseline_initstr: str | None = None,
     concurrency: int | None = None,
 ) -> dict[str, list[int]]:
@@ -69,6 +70,9 @@ def prepare_spec(
             elo1=base.sprt.elo1 if elo1 is None else elo1,
             alpha=base.sprt.alpha,
             beta=base.sprt.beta,
+        ),
+        candidate_initstr=(
+            base.candidate_initstr if candidate_initstr is None else candidate_initstr
         ),
         baseline_initstr=(
             base.baseline_initstr if baseline_initstr is None else baseline_initstr
@@ -128,6 +132,7 @@ def main() -> int:
     parser.add_argument("--baseline-sha256")
     parser.add_argument("--elo0", type=float)
     parser.add_argument("--elo1", type=float)
+    parser.add_argument("--candidate-initstr", type=str)
     parser.add_argument("--baseline-initstr", type=str)
     parser.add_argument("--github-output", type=Path)
     args = parser.parse_args()
@@ -151,6 +156,7 @@ def main() -> int:
         baseline_sha256=args.baseline_sha256,
         elo0=args.elo0,
         elo1=args.elo1,
+        candidate_initstr=args.candidate_initstr,
         baseline_initstr=args.baseline_initstr,
         concurrency=args.concurrency,
     )

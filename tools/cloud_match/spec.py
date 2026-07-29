@@ -126,6 +126,8 @@ class CloudMatchSpec:
             raise ValueError("games must be a positive even number")
         if not isinstance(self.shards, int) or not 1 <= self.shards <= 40:
             raise ValueError("shards must be between 1 and 40")
+        if self.games // 2 < self.shards:
+            raise ValueError("games must provide at least one pair per shard")
         if not isinstance(self.concurrency, int) or not 1 <= self.concurrency <= 4:
             raise ValueError("concurrency must be between 1 and 4")
         if not isinstance(self.threads, int) or not 1 <= self.threads <= 2:

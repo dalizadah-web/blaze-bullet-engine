@@ -53,6 +53,8 @@ class PrepareSpecTests(unittest.TestCase):
                 hash_mb=32,
                 opening_start=101,
                 opening_suite_positions=6,
+                candidate_initstr="SPSA Params=rfp_base=70",
+                baseline_initstr="SPSA Params=rfp_base=60",
             )
 
             payload = json.loads(output.read_text(encoding="utf-8"))
@@ -63,6 +65,8 @@ class PrepareSpecTests(unittest.TestCase):
             self.assertEqual(payload["time_control"], "0.5+0.01")
             self.assertEqual(payload["opening_start"], 101)
             self.assertEqual(payload["opening_suite_positions"], 6)
+            self.assertEqual(payload["candidate_initstr"], "SPSA Params=rfp_base=70")
+            self.assertEqual(payload["baseline_initstr"], "SPSA Params=rfp_base=60")
 
 
 if __name__ == "__main__":

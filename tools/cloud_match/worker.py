@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import json
 from pathlib import Path
 import platform
 from typing import Any
+
+import chess.pgn
 
 from tools.cloud_match.shards import game_ids_for_slots, pair_slots
 from tools.cloud_match.spec import CloudMatchSpec
@@ -84,6 +87,25 @@ def _resolve_openings(spec_path: Path, openings: str) -> Path:
         if candidate.is_file():
             return candidate.resolve()
     raise ValueError(f"opening file does not exist: {openings}")
+
+
+def _game_intervals(pgn_path: Path, expected_games: int) -> list[dict[str, str]]:
+    intervals: list[dict[str, str]] = []
+    with pgn_path.open(encoding="utf-8-sig") as stream:
+        while game := chess.pgn.read_game(stream):
+            start = game.headers.get("GameStartTime", "")
+            end = game.headers.get("GameEndTime", "")
+            try:
+                start_time = datetime.fromisoformat(start.replace(" UTC", "+00:00"))
+                end_time = datetime.fromisoformat(end.replace(" UTC", "+00:00"))
+            except ValueError as exc:
+                raise ValueError("PGN lacks valid UTC game timing evidence") from exc
+            if start_time.tzinfo is None or end_time.tzinfo is None or end_time <= start_time:
+                raise ValueError("PGN has an invalid game timing interval")
+            intervals.append({"start": start_time.isoformat(), "end": end_time.isoformat()})
+    if len(intervals) != expected_games:
+        raise ValueError("PGN game timing count does not match expected games")
+    return intervals
 
 
 def run_worker(
@@ -170,6 +192,7 @@ def run_worker(
         candidate_name="Candidate",
         opponent_name="Baseline",
     )
+    game_intervals = _game_intervals(match_output / "games.pgn", match_spec.games)
 
     experiment_id = spec.experiment_id()
     game_ids = game_ids_for_slots(
@@ -197,6 +220,7 @@ def run_worker(
             spec.opening_start + slot for _, slot in assigned_slots
         ],
         "game_ids": game_ids,
+        "game_intervals": game_intervals,
         "pgn": "match/games.pgn",
         "environment": {
             "machine": platform.machine(),

@@ -89,7 +89,7 @@ def _offer(
 
 
 def _stream_candidates(
-    stream: BinaryIO, *, seed: bytes, quota: int
+    stream: BinaryIO, *, seed: bytes, quota: int, excluded: set[bytes] | None = None
 ) -> tuple[dict[bytes, dict[bytes, tuple[bytes, int]]], str, dict[bytes, int], int]:
     heaps: dict[bytes, list[tuple[int, int, bytes]]] = {b"w": [], b"b": []}
     active: dict[bytes, dict[bytes, tuple[bytes, int]]] = {b"w": {}, b"b": {}}
@@ -107,6 +107,8 @@ def _stream_candidates(
             raise ValueError(f"invalid EPD side-to-move field on source line {line_number}")
         side = fields[1]
         side_counts[side] += 1
+        if excluded is not None and line in excluded:
+            continue
         _offer(
             heaps[side],
             active[side],
@@ -128,6 +130,7 @@ def select_openings(
     expected_source_nonempty_lines: int | None = None,
     source_archive: Path | str | None = None,
     expected_source_archive_sha256: str | None = None,
+    exclude: tuple[Path | str, ...] = (),
 ) -> dict[str, object]:
     if seed < 0:
         raise ValueError("seed must be nonnegative")
@@ -148,9 +151,15 @@ def select_openings(
                 f"expected {expected_source_archive_sha256.lower()}, got {archive_sha256}"
             )
     source_path = Path(source)
+    excluded = {
+        line.strip()
+        for path in exclude
+        for line in Path(path).read_bytes().splitlines()
+        if line.strip()
+    }
     with source_path.open("rb") as stream:
         selected_by_side, source_sha256, side_counts, nonempty = _stream_candidates(
-            stream, seed=seed_bytes, quota=quota_per_side
+            stream, seed=seed_bytes, quota=quota_per_side, excluded=excluded
         )
     if expected_source_sha256 is not None and source_sha256 != expected_source_sha256.lower():
         raise ValueError(
@@ -211,6 +220,7 @@ def select_openings(
         "output_sha256": hashlib.sha256(encoded).hexdigest(),
         "ordered_source_line_sha256": hashlib.sha256(line_number_bytes).hexdigest(),
         "selected_source_lines": source_line_numbers,
+        "excluded_positions": len(excluded),
     }
     if archive_sha256 is not None:
         metadata["source_archive_sha256"] = archive_sha256
@@ -227,6 +237,7 @@ def main() -> int:
     parser.add_argument("--expected-source-nonempty-lines", type=int)
     parser.add_argument("--source-archive", type=Path)
     parser.add_argument("--expected-source-archive-sha256")
+    parser.add_argument("--exclude", type=Path, action="append", default=[])
     parser.add_argument("--metadata", type=Path)
     args = parser.parse_args()
     metadata = select_openings(
@@ -238,6 +249,7 @@ def main() -> int:
         expected_source_nonempty_lines=args.expected_source_nonempty_lines,
         source_archive=args.source_archive,
         expected_source_archive_sha256=args.expected_source_archive_sha256,
+        exclude=tuple(args.exclude),
     )
     encoded = json.dumps(metadata, indent=2, sort_keys=True) + "\n"
     if args.metadata:

@@ -1,0 +1,216 @@
+name: Qualify frozen SPSA vector
+run-name: SPSA ${{ inputs.campaign_id }} qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      campaign_id:
+        required: true
+        default: search-v1-1plus0
+        type: string
+      engine_ref:
+        description: Immutable same-binary engine commit
+        required: true
+        type: string
+      state_run_id:
+        description: Completed controller run containing the frozen vector
+        required: true
+        type: string
+      config_path:
+        required: true
+        default: config/spsa/search-v1.json
+        type: string
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: spsa-qualification-${{ inputs.campaign_id }}
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CAMPAIGN_ID: ${{ inputs.campaign_id }}
+      ENGINE_REF: ${{ inputs.engine_ref }}
+      CONFIG_PATH: ${{ inputs.config_path }}
+      STATE_RUN_ID: ${{ inputs.state_run_id }}
+      WORKFLOW_REF: ${{ github.ref_name }}
+      CONTROLLER_COMMIT: ${{ github.sha }}
+      CONTROLLER_REF_TYPE: ${{ github.ref_type }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tools/cloud_match/requirements.txt
+      - run: pip install -r tools/cloud_match/requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: spsa-state-${{ inputs.campaign_id }}
+          path: campaign
+          run-id: ${{ inputs.state_run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify frozen state and qualification artifacts
+        id: final
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$CONTROLLER_REF_TYPE" = tag
+          test "$(git rev-parse "$WORKFLOW_REF^{commit}")" = "$CONTROLLER_COMMIT"
+          test "$(git rev-parse "$ENGINE_REF^{commit}")" = "$ENGINE_REF"
+          test "$ENGINE_REF" = "$CONTROLLER_COMMIT"
+          test "$CAMPAIGN_ID" = "$(jq -r .campaign_id "$CONFIG_PATH")"
+          test "$(jq -r .campaign_id campaign/state.json)" = "$CAMPAIGN_ID"
+          test "$(jq -r .status campaign/state.json)" = training-complete
+          test "$(jq -r .engine_commit campaign/state.json)" = "$ENGINE_REF"
+          test "$(jq -r .controller_commit campaign/state.json)" = "$CONTROLLER_COMMIT"
+          base="$(jq -r .qualification.base_config "$CONFIG_PATH")"
+          base_hash="$(jq -r .qualification.base_config_sha256 "$CONFIG_PATH")"
+          opening="$(jq -r .qualification.openings "$CONFIG_PATH")"
+          opening_hash="$(jq -r .qualification.opening_sha256 "$CONFIG_PATH")"
+          echo "$base_hash  $base" | sha256sum --check --strict
+          echo "$opening_hash  $opening" | sha256sum --check --strict
+          test "$(jq -r .opening_sha256 "$base")" = "$opening_hash"
+          python -m tools.cloud_match.spsa final \
+            --config "$CONFIG_PATH" --state campaign/state.json \
+            --output campaign/final-vector.json
+          final_hash="$(sha256sum campaign/final-vector.json | awk '{print $1}')"
+          echo "trial_id=$CAMPAIGN_ID-qualification-${final_hash:0:12}" >> "$GITHUB_OUTPUT"
+      - name: Resolve one sealed qualification run
+        id: child
+        shell: bash
+        run: |
+          set -euo pipefail
+          trial_id='${{ steps.final.outputs.trial_id }}'
+          runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 1000 \
+            --json attempt,databaseId,displayTitle,headSha,url)"
+          matches="$(jq -c --arg title "$trial_id" --arg sha "$CONTROLLER_COMMIT" \
+            '[.[] | select(.displayTitle == $title and .headSha == $sha)]' <<< "$runs")"
+          count="$(jq length <<< "$matches")"
+          if [ "$count" -gt 1 ]; then
+            echo "ERROR: multiple qualification runs exist for $trial_id" >&2
+            exit 1
+          fi
+          existing=false
+          if [ "$count" -eq 1 ]; then
+            existing=true
+            child_run_id="$(jq -r '.[0].databaseId' <<< "$matches")"
+            child_url="$(jq -r '.[0].url' <<< "$matches")"
+          else
+            candidate_initstr="$(jq -r .initstr campaign/final-vector.json)"
+            baseline_initstr=$'UseNNUE=true\nEvalFile=nn-c288c895ea92.nnue'
+            games="$(jq -r .qualification.games "$CONFIG_PATH")"
+            positions="$(jq -r .qualification.opening_positions "$CONFIG_PATH")"
+            shards="$(jq -r .qualification.shards "$CONFIG_PATH")"
+            concurrency="$(jq -r .qualification.concurrency "$CONFIG_PATH")"
+            threads="$(jq -r .qualification.threads "$CONFIG_PATH")"
+            hash_mb="$(jq -r .qualification.hash_mb "$CONFIG_PATH")"
+            time_control="$(jq -r .qualification.time_control "$CONFIG_PATH")"
+            base_config="$(jq -r .qualification.base_config "$CONFIG_PATH")"
+            dispatch_output="$(gh workflow run cloud-match.yml \
+              --ref "$WORKFLOW_REF" \
+              -f "candidate_ref=$ENGINE_REF" -f "baseline_ref=$ENGINE_REF" \
+              -f "games=$games" -f opening_start=1 -f opening_repeats=1 \
+              -f "opening_suite_positions=$positions" -f "shards=$shards" \
+              -f "concurrency=$concurrency" -f "time_control=$time_control" \
+              -f "threads=$threads" -f "hash_mb=$hash_mb" -f elo0=0 -f elo1=5 \
+              -f "candidate_initstr=$candidate_initstr" \
+              -f "baseline_initstr=$baseline_initstr" \
+              -f "match_config=$base_config" \
+              -f "trial_id=$trial_id" \
+              -f callback_workflow=spsa-qualify.yml \
+              -f "callback_ref=$WORKFLOW_REF" \
+              -f "callback_campaign_id=$CAMPAIGN_ID" \
+              -f "callback_engine_ref=$ENGINE_REF" \
+              -f "callback_config_path=$CONFIG_PATH" \
+              -f "callback_state_run_id=$STATE_RUN_ID")"
+            child_url="$(grep -Eo 'https://github.com/[^[:space:]]+/actions/runs/[0-9]+' <<< "$dispatch_output" | tail -1 || true)"
+            for _ in {1..30}; do
+              [ -n "$child_url" ] && break
+              sleep 2
+              runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
+                --json databaseId,displayTitle,headSha,url)"
+              child_url="$(jq -r --arg title "$trial_id" --arg sha "$CONTROLLER_COMMIT" \
+                '[.[] | select(.displayTitle == $title and .headSha == $sha)] | if length == 1 then .[0].url else empty end' <<< "$runs")"
+            done
+            test -n "$child_url"
+            child_run_id="${child_url##*/}"
+          fi
+          [[ "$child_run_id" =~ ^[0-9]+$ ]]
+          if [ "$existing" = true ]; then
+            for _ in {1..60}; do
+              child_status="$(gh run view "$child_run_id" --json status --jq .status)"
+              [ "$child_status" = completed ] && break
+              sleep 5
+            done
+          fi
+          metadata="$(gh run view "$child_run_id" --json attempt,conclusion,displayTitle,headSha,status,url)"
+          test "$(jq -r .displayTitle <<< "$metadata")" = "$trial_id"
+          test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
+          test "$(jq -r .attempt <<< "$metadata")" = 1
+          child_status="$(jq -r .status <<< "$metadata")"
+          if [ "$child_status" = completed ]; then
+            test "$(jq -r .conclusion <<< "$metadata")" = success
+          fi
+          jq -n --arg trial_id "$trial_id" --argjson child_run_id "$child_run_id" \
+            --arg child_run_url "$child_url" --arg controller_commit "$CONTROLLER_COMMIT" \
+            --arg campaign_id "$CAMPAIGN_ID" \
+            '{schema_version: 1, kind: "qualification", campaign_id: $campaign_id,
+              trial_id: $trial_id, child_run_id: $child_run_id, child_run_attempt: 1,
+              child_run_url: $child_run_url, controller_commit: $controller_commit}' \
+            > campaign/qualification-dispatch.json
+          echo "run_id=$child_run_id" >> "$GITHUB_OUTPUT"
+          echo "status=$child_status" >> "$GITHUB_OUTPUT"
+      - name: Upload durable qualification receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: spsa-qualification-dispatch-${{ inputs.campaign_id }}
+          path: |
+            campaign/final-vector.json
+            campaign/qualification-dispatch.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Validate sealed qualification evidence
+        if: ${{ steps.child.outputs.status == 'completed' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qualification-result
+          gh run download '${{ steps.child.outputs.run_id }}' -p 'result-*' -D qualification-result
+          summary="$(find qualification-result -name summary.json -type f -print -quit)"
+          test -n "$summary"
+          run_id='${{ steps.child.outputs.run_id }}'
+          metadata="$(gh run view "$run_id" --json attempt,conclusion,displayTitle,headSha)"
+          test "$(jq -r .attempt <<< "$metadata")" = 1
+          test "$(jq -r .conclusion <<< "$metadata")" = success
+          test "$(jq -r .displayTitle <<< "$metadata")" = '${{ steps.final.outputs.trial_id }}'
+          test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
+          matches="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 1000 \
+            --json attempt,databaseId,displayTitle,headSha | jq -c \
+            --arg title '${{ steps.final.outputs.trial_id }}' --arg sha "$CONTROLLER_COMMIT" \
+            '[.[] | select(.displayTitle == $title and .headSha == $sha)]')"
+          test "$(jq length <<< "$matches")" = 1
+          test "$(jq -r '.[0].databaseId' <<< "$matches")" = "$run_id"
+          test "$(jq -r '.[0].attempt' <<< "$matches")" = 1
+          cp "$summary" campaign/qualification-summary.json
+          python -m tools.cloud_match.spsa qualify \
+            --config "$CONFIG_PATH" --state campaign/state.json \
+            --final campaign/final-vector.json \
+            --dispatch campaign/qualification-dispatch.json \
+            --summary "$summary" \
+            --output campaign/qualification-report.json
+      - uses: actions/upload-artifact@v4
+        if: ${{ steps.child.outputs.status == 'completed' }}
+        with:
+          name: spsa-qualification-${{ inputs.campaign_id }}
+          path: campaign
+          retention-days: 90
+          if-no-files-found: error

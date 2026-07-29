@@ -146,6 +146,7 @@ bool UciSession::process_line(std::string_view raw_line) {
         write_line("option name Ponder type check default false");
         write_line("option name UseNNUE type check default false");
         write_line("option name EvalFile type string default <empty>");
+        write_line("option name SPSA Params type string default <empty>");
         write_line("uciok");
         return true;
     }
@@ -271,6 +272,27 @@ bool UciSession::set_position(std::string_view arguments) {
 
 bool UciSession::set_option(std::string_view arguments) {
     const std::vector<std::string> tokens = split(arguments);
+    const bool is_spsa_option = tokens.size() >= 3 && tokens[0] == "name" &&
+                                tokens[1] == "SPSA" && tokens[2] == "Params";
+    if (is_spsa_option) {
+        if (tokens.size() != 5 || tokens[3] != "value") {
+            search_parameters_valid_ = false;
+            write_line("info string invalid SPSA Params: expected name SPSA Params value <payload>");
+            return false;
+        }
+        SearchParameters parsed;
+        std::string error;
+        if (!parse_search_parameters(tokens[4], parsed, error)) {
+            search_parameters_valid_ = false;
+            write_line("info string invalid SPSA Params: " + error);
+            return false;
+        }
+        stop_search();
+        search_parameters_ = parsed;
+        search_parameters_valid_ = true;
+        table_.clear();
+        return true;
+    }
     if (tokens.size() == 4 && tokens[0] == "name" && tokens[1] == "Hash" && tokens[2] == "value") {
         std::size_t megabytes = 0;
         const auto parsed = std::from_chars(tokens[3].data(), tokens[3].data() + tokens[3].size(), megabytes);
@@ -344,6 +366,11 @@ bool UciSession::start_search(std::string_view arguments) {
     }
 
     stop_search();
+    if (!search_parameters_valid_) {
+        write_line("info string critical invalid SPSA parameter configuration");
+        write_line("bestmove 0000");
+        return false;
+    }
     pondering_ = go->ponder;
     ponder_arguments_ = std::string(arguments);
     const Position root = position_;
@@ -400,7 +427,7 @@ bool UciSession::start_search(std::string_view arguments) {
         const NetworkEvaluator* network = network_evaluator_
             ? &*network_evaluator_
             : nullptr;
-        Searcher searcher(table_, network);
+        Searcher searcher(table_, network, search_parameters_);
         const SearchResult result = searcher.search(root, limits, &stop_requested_, prior);
         const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - started);

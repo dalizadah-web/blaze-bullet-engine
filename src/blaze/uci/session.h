@@ -2,6 +2,7 @@
 #define BLAZE_UCI_SESSION_H
 
 #include "blaze/core/position.h"
+#include "blaze/search/parameters.h"
 #include "blaze/search/transposition_table.h"
 #include "blaze/uci/limits.h"
 
@@ -45,6 +46,8 @@ private:
     bool use_nnue_ = false;
     std::string eval_file_;
     std::optional<NetworkEvaluator> network_evaluator_;
+    SearchParameters search_parameters_{};
+    bool search_parameters_valid_ = true;
     bool pondering_ = false;
     std::string ponder_arguments_;
 

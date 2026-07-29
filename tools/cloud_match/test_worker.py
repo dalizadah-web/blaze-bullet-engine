@@ -4,6 +4,7 @@ import unittest
 
 from tools.cloud_match.shards import game_ids_for_slots
 from tools.cloud_match.worker import (
+    _game_intervals,
     _globalize_evidence,
     run_worker,
     write_shard_openings,
@@ -13,6 +14,22 @@ from tools.experiment.pentanomial import Pentanomial
 
 
 class WorkerOpeningTests(unittest.TestCase):
+    def test_extracts_complete_utc_game_timing_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            pgn = Path(temporary) / "games.pgn"
+            game = """[Event \"?\"]
+[Result \"*\"]
+[GameStartTime \"2026-01-01T00:00:00.000 UTC\"]
+[GameEndTime \"2026-01-01T00:00:01.000 UTC\"]
+
+*
+
+"""
+            pgn.write_text(game + game, encoding="utf-8")
+            intervals = _game_intervals(pgn, 2)
+            self.assertEqual(len(intervals), 2)
+            self.assertEqual(intervals[0]["start"], "2026-01-01T00:00:00+00:00")
+
     def test_globalizes_abnormal_records_without_changing_evidence_arithmetic(self) -> None:
         evidence = MatchEvidence(
             expected_games=2,

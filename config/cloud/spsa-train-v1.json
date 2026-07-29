@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "name": "blaze-spsa-search-training-v1",
+  "candidate_ref": "dc30592a8422234b8fc486bb49f5fe80402567c6",
+  "baseline_ref": "dc30592a8422234b8fc486bb49f5fe80402567c6",
+  "candidate_commit": "dc30592a8422234b8fc486bb49f5fe80402567c6",
+  "baseline_commit": "dc30592a8422234b8fc486bb49f5fe80402567c6",
+  "candidate_sha256": "",
+  "baseline_sha256": "",
+  "candidate_initstr": "UseNNUE=true\nEvalFile=nn-c288c895ea92.nnue",
+  "baseline_initstr": "UseNNUE=true\nEvalFile=nn-c288c895ea92.nnue",
+  "games": 400,
+  "shards": 40,
+  "concurrency": 2,
+  "time_control": "1+0",
+  "threads": 1,
+  "hash_mb": 16,
+  "openings": "testdata/openings/spsa-train-v1.epd",
+  "opening_sha256": "8de1c6bb3e55856d1ef1c96cdfa4e6c3126fa830d00fa139813926b16b6c36bf",
+  "opening_start": 1,
+  "opening_suite_positions": 200,
+  "opening_repeats": 1,
+  "sprt": {
+    "elo0": 0.0,
+    "elo1": 5.0,
+    "alpha": 0.05,
+    "beta": 0.05
+  }
+}

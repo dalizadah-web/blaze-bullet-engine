@@ -65,9 +65,11 @@ std::size_t correction_index(std::uint64_t value) {
     return static_cast<std::size_t>(mix64(value) & 16'383U);
 }
 
-int base_lmr(int depth, int move_count) {
-    const double reduction = 0.65 + std::log(static_cast<double>(std::max(1, depth))) *
-        std::log(static_cast<double>(std::max(1, move_count))) / 2.30;
+int base_lmr(int depth, int move_count, const SearchParameters& parameters) {
+    const double reduction = static_cast<double>(parameters.lmr_offset_hundredths) / 100.0 +
+        std::log(static_cast<double>(std::max(1, depth))) *
+        std::log(static_cast<double>(std::max(1, move_count))) /
+        (static_cast<double>(parameters.lmr_divisor_hundredths) / 100.0);
     return std::max(0, static_cast<int>(reduction));
 }
 
@@ -395,7 +397,7 @@ SearchResult Searcher::search_parallel(
     const unsigned worker_count = static_cast<unsigned>(std::clamp(limits.threads, 1, 64));
     workers_.reserve(worker_count);
     while (workers_.size() < worker_count) {
-        auto worker = std::make_unique<Searcher>(table_, network_);
+        auto worker = std::make_unique<Searcher>(table_, network_, parameters_);
         static_cast<void>(worker->prepare_nnue(position));
         workers_.push_back(std::move(worker));
     }
@@ -687,14 +689,20 @@ int Searcher::negamax(
     }
 
     if constexpr (node_type == NodeType::NonPV) {
-        const int rfp_margin = 65 + 75 * depth + 18 * depth * depth -
-            (improving ? 70 : 0) - (opponent_worsening ? 20 : 0);
-        if (!checked && !excluded_search && !decisive_score(beta) && depth <= 9 &&
+        const int rfp_margin = std::max(0,
+            parameters_.rfp_base + parameters_.rfp_depth * depth +
+            parameters_.rfp_depth_squared * depth * depth -
+            (improving ? parameters_.rfp_improving : 0) -
+            (opponent_worsening ? 20 : 0));
+        if (!checked && !excluded_search && !decisive_score(beta) &&
+            depth <= parameters_.rfp_max_depth &&
             search_eval - rfp_margin >= beta) {
             return search_eval - rfp_margin / 2;
         }
-        if (!checked && !excluded_search && !decisive_score(alpha) && depth <= 3 &&
-            search_eval + 180 + 150 * depth * depth <= alpha) {
+        if (!checked && !excluded_search && !decisive_score(alpha) &&
+            depth <= parameters_.razor_max_depth &&
+            search_eval + parameters_.razor_base +
+                parameters_.razor_depth_squared * depth * depth <= alpha) {
             PvLine razor_pv;
             const int razor = quiescence(position, alpha, beta, ply, context, razor_pv);
             if (!context.stopped && razor <= alpha) return razor;
@@ -705,7 +713,8 @@ int Searcher::negamax(
 #else
             true;
 #endif
-        if (null_enabled && allow_null && depth >= 3 && !checked && !excluded_search &&
+        if (null_enabled && allow_null && depth >= parameters_.null_min_depth &&
+            !checked && !excluded_search &&
             position.rule50() < 90 && beta < search_mate_threshold &&
             search_eval >= beta &&
             has_non_pawn_material(position, position.side_to_move())) {
@@ -718,8 +727,14 @@ int Searcher::negamax(
             };
             record_null_move_attempt();
 #endif
-            const int eval_term = std::clamp((search_eval - beta) / 180, 0, 3);
-            const int reduction = std::min(depth - 1, 3 + depth / 4 + eval_term);
+            const int eval_term = std::clamp(
+                (search_eval - beta) / parameters_.null_eval_divisor,
+                0,
+                parameters_.null_eval_cap);
+            const int reduction = std::min(
+                depth - 1,
+                parameters_.null_base_reduction +
+                    depth / parameters_.null_depth_divisor + eval_term);
             StateInfo null_state;
             position.make_null(null_state, context.nnue != nullptr);
             if (context.nnue) context.nnue->push(position, null_state);
@@ -743,7 +758,7 @@ int Searcher::negamax(
                 return 0;
             }
             if (null_score >= beta && !decisive_score(null_score)) {
-                if (depth < 10) {
+                if (depth < parameters_.null_verify_depth) {
                     return std::min(null_score, search_mate_threshold - 1);
                 }
 #ifndef NDEBUG
@@ -774,10 +789,15 @@ int Searcher::negamax(
     probcut_enabled = context.limits.enable_probcut;
 #endif
     if constexpr (node_type != NodeType::Root) {
-      if (probcut_enabled && depth >= 3 && !checked && !excluded_search &&
+      if (probcut_enabled && depth >= parameters_.probcut_min_depth &&
+          !checked && !excluded_search &&
           beta < search_mate_threshold - 600) {
-        const int probcut_margin = 120 + depth * 10;
-        const int probcut_depth = std::max(1, depth - (depth <= 5 ? 2 : 4));
+        const int probcut_margin = parameters_.probcut_base +
+            depth * parameters_.probcut_depth;
+        const int probcut_reduction = depth <= 5
+            ? parameters_.probcut_shallow_reduction
+            : parameters_.probcut_shallow_reduction + parameters_.probcut_deep_extra;
+        const int probcut_depth = std::max(1, depth - probcut_reduction);
         MoveList tactical_moves;
         generate_pseudo_legal(position, tactical_moves);
         for (std::size_t i = 0; i < tactical_moves.size(); ++i) {
@@ -834,11 +854,13 @@ int Searcher::negamax(
 
     int singular_extension = 0;
     if constexpr (node_type == NodeType::NonPV) {
-        if (!checked && tt_hit && rule50_safe && tt_move.is_valid() && depth >= 7 &&
+        if (!checked && tt_hit && rule50_safe && tt_move.is_valid() &&
+            depth >= parameters_.singular_min_depth &&
             (tt_hit->bound == Bound::Lower || tt_hit->bound == Bound::Exact) &&
             tt_hit->depth >= depth - 3 && !decisive_score(tt_hit->score) &&
             !excluded_search) {
-            const int singular_beta = tt_hit->score - (18 + 2 * depth);
+            const int singular_beta = tt_hit->score -
+                (parameters_.singular_beta_base + parameters_.singular_beta_depth * depth);
             const Move saved_excluded = frame.excluded_move;
             frame.excluded_move = tt_move;
             PvLine singular_pv;
@@ -854,7 +876,11 @@ int Searcher::negamax(
             frame.excluded_move = saved_excluded;
             if (context.stopped) return 0;
             if (singular_score < singular_beta) {
-                singular_extension = singular_score < singular_beta - 105 && depth >= 10 ? 2 : 1;
+                singular_extension =
+                    singular_score < singular_beta - parameters_.singular_double_margin &&
+                        depth >= parameters_.singular_double_depth
+                    ? 2
+                    : 1;
             } else if (singular_score >= beta && tt_hit->score >= beta &&
                        !decisive_score(singular_score)) {
                 return singular_score;
@@ -924,7 +950,8 @@ int Searcher::negamax(
         if constexpr (node_type == NodeType::NonPV) {
             if (!sparse_opposing_majors && !checked && !excluded_search &&
                 !tt_selected && move_count > 1 &&
-                ((quiet && depth <= 10) || (tactical && depth <= 8))) {
+                ((quiet && depth <= parameters_.quiet_pruning_max_depth) ||
+                 (tactical && depth <= parameters_.tactical_pruning_max_depth))) {
                 const Color moving_side = position.side_to_move();
                 StateInfo probe_state;
                 if (!position.make_move(move, probe_state, false)) continue;
@@ -939,12 +966,20 @@ int Searcher::negamax(
                     type_of(position.piece_on(move.from())) == PieceType::Pawn &&
                     rank_of(move.to()) == (position.side_to_move() == Color::White ? 6 : 1);
                 if (!gives_check && quiet && !killer && !counter && !advanced_pawn) {
-                    const int lmp_limit = (improving ? 5 : 3) +
-                        std::min(depth, 10) * std::min(depth, 10) / (improving ? 2 : 3);
+                    const int lmp_depth = std::min(depth, parameters_.lmp_depth_cap);
+                    const int lmp_base = parameters_.lmp_nonimproving_base +
+                        (improving ? parameters_.lmp_improving_extra : 0);
+                    const int lmp_divisor = parameters_.lmp_improving_divisor +
+                        (improving ? 0 : parameters_.lmp_nonimproving_divisor_extra);
+                    const int lmp_limit = lmp_base + lmp_depth * lmp_depth / lmp_divisor;
                     if (legal_count > lmp_limit ||
-                        (depth <= 7 && static_eval + 80 + 95 * depth + 35 * depth * depth <= alpha &&
+                        (depth <= parameters_.futility_max_depth &&
+                         static_eval + parameters_.futility_base +
+                             parameters_.futility_depth * depth +
+                             parameters_.futility_depth_squared * depth * depth <= alpha &&
                          history_score < 5'000) ||
-                        (depth <= 6 && history_score < -3'500 * depth)) {
+                        (depth <= parameters_.negative_history_max_depth &&
+                         history_score < -parameters_.negative_history_per_depth * depth)) {
                         update_history_penalty(position, move, previous_move, depth);
                         continue;
                     }
@@ -992,9 +1027,11 @@ int Searcher::negamax(
         const int used = frame.extension_count;
         int extension = same_move(move, tt_move) ? singular_extension : 0;
         if (used < maximum_extensions || extension < 0) {
-            const bool selective_check = gives_check && depth >= 3
-                && move_count <= 3;
-            const bool sound_recapture = recaptures && depth <= 10 && see_score >= 0;
+            const bool selective_check = gives_check &&
+                depth >= parameters_.selective_check_min_depth &&
+                move_count <= parameters_.selective_check_move_count;
+            const bool sound_recapture = recaptures &&
+                depth <= parameters_.recapture_max_depth && see_score >= 0;
             const bool forcing_pawn = move.has_flag(MoveFlag::Promotion) || pawn_advance;
             if (selective_check || sound_recapture || forcing_pawn) ++extension;
             extension = std::clamp(extension, -1, maximum_extensions - used);
@@ -1023,14 +1060,14 @@ int Searcher::negamax(
         } else {
             int reduction = 0;
             if (!sparse_opposing_majors && depth >= 2 && full_depth > 0 && !tt_selected) {
-                reduction = base_lmr(depth, move_count);
+                reduction = base_lmr(depth, move_count, parameters_);
                 if constexpr (!pv_node) ++reduction;
                 if (!improving) ++reduction;
                 if (!tt_move.is_valid()) ++reduction;
                 if (tactical) --reduction;
                 if (gives_check || killer || counter || opponent_worsening) --reduction;
-                if (history_score > 6'000) --reduction;
-                if (history_score < -4'000) ++reduction;
+                if (history_score > parameters_.lmr_high_history) --reduction;
+                if (history_score < -parameters_.lmr_low_history_magnitude) ++reduction;
                 reduction -= std::max(0, extension);
                 reduction = std::clamp(reduction, 0, std::max(0, full_depth - 1));
             }
@@ -1044,7 +1081,7 @@ int Searcher::negamax(
                 child_pv);
             if (!context.stopped && reduction > 0 && score > alpha) {
                 int research_depth = full_depth;
-                if (score < best_score + 12) --research_depth;
+                if (score < best_score + parameters_.lmr_research_margin) --research_depth;
                 research_depth = std::clamp(research_depth, 0, full_depth);
                 score = -negamax<NodeType::NonPV>(
                     position,
@@ -1192,7 +1229,8 @@ void Searcher::update_history_tables(const Position& position,
     const Color us = position.side_to_move();
     const int color_index = static_cast<int>(us);
 
-    const int bonus = std::min(2'000, depth * depth * 32);
+    const int bonus = std::min(
+        2'000, depth * depth * parameters_.history_success_multiplier);
     const bool quiet = !move.has_flag(MoveFlag::Capture) &&
         !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
     if (quiet) {
@@ -1235,7 +1273,9 @@ void Searcher::update_history_penalty(const Position& position,
     const int ti = square_index(move.to());
     const Color us = position.side_to_move();
     const int color_index = static_cast<int>(us);
-    const int penalty = std::min(1'000, std::max(16, depth * depth * 16));
+    const int penalty = std::min(
+        1'000,
+        std::max(16, depth * depth * parameters_.history_penalty_multiplier));
     const bool quiet = !move.has_flag(MoveFlag::Capture) &&
         !move.has_flag(MoveFlag::EnPassant) && !move.has_flag(MoveFlag::Promotion);
     if (quiet) {
@@ -1510,7 +1550,7 @@ int Searcher::quiescence(
         if (!checked && m.has_flag(MoveFlag::Capture) &&
             !m.has_flag(MoveFlag::Promotion) && !m.has_flag(MoveFlag::EnPassant)) {
             const Piece victim = position.piece_on(m.to());
-            if (stand_pat + victim_value(victim) + 120 < alpha) {
+            if (stand_pat + victim_value(victim) + parameters_.qsearch_delta_margin < alpha) {
                 ++context.picker_stats.captures_pruned_by_see;
                 pruned_this_node = true;
                 continue;
