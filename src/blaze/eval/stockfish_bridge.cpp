@@ -41,15 +41,6 @@ struct GlobalState {
 
 GlobalState* g_state = nullptr;
 
-int adjusted_value(const Position& pos, int psqt, int positional) {
-    int nnue = (125 * psqt + 131 * positional) / 128;
-    nnue -= nnue * std::abs(psqt - positional) / 18'236;
-    const int material = 534 * pos.count<PAWN>() + pos.non_pawn_material();
-    int value = nnue * (77'871 + material) / 77'871;
-    value -= value * pos.rule50_count() / 199;
-    return value;
-}
-
 int evaluate_state_raw(const std::string& fen) {
     thread_local Eval::NNUE::AccumulatorCaches::Cache<FTDimensions> tls_cache{};
     thread_local bool tls_cache_ready = false;
@@ -71,25 +62,6 @@ int evaluate_state_raw(const std::string& fen) {
     const auto [psqt, positional] = result;
 
     return static_cast<int>(psqt) + static_cast<int>(positional);
-}
-
-int evaluate_state_value(const std::string& fen) {
-    thread_local Eval::NNUE::AccumulatorCaches::Cache<FTDimensions> tls_cache{};
-    thread_local bool tls_cache_ready = false;
-    if (!tls_cache_ready) {
-        tls_cache.clear(g_state->network);
-        tls_cache_ready = true;
-    }
-
-    blaze::note_legacy_nnue_bridge_evaluation();
-    Position pos;
-    StateInfo si;
-    pos.set(fen, false, &si);
-    auto stack = std::make_unique<Eval::NNUE::AccumulatorStack>();
-    stack->reset();
-    stack->push();
-    const auto [psqt, positional] = g_state->network.evaluate(pos, *stack, tls_cache);
-    return adjusted_value(pos, psqt, positional);
 }
 
 blaze::NnueDebugSnapshot debug_state(const std::string& fen) {
@@ -138,10 +110,6 @@ blaze::NnueDebugSnapshot debug_state(const std::string& fen) {
     snapshot.raw_output =
         static_cast<int>(psqt / Eval::NNUE::OutputScale) +
         static_cast<int>(positional / Eval::NNUE::OutputScale);
-    snapshot.value_output = adjusted_value(
-        pos,
-        static_cast<int>(psqt / Eval::NNUE::OutputScale),
-        static_cast<int>(positional / Eval::NNUE::OutputScale));
     return snapshot;
 }
 
@@ -166,7 +134,7 @@ void blaze::sf_nnue_destroy() {
 
 int blaze::sf_nnue_evaluate(const std::string& fen) {
     if (!g_state) return 0;
-    return sf_nnue_public_score(evaluate_state_value(fen));
+    return sf_nnue_public_score(sf_nnue_evaluate_raw(fen));
 }
 
 int blaze::sf_nnue_evaluate_raw(const std::string& fen) {

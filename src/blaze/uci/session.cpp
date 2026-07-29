@@ -167,7 +167,6 @@ bool UciSession::process_line(std::string_view raw_line) {
     if (command == "ucinewgame") {
         stop_search();
         table_.clear();
-        searcher_.reset();
         reset_position();
         return true;
     }
@@ -318,14 +317,12 @@ bool UciSession::set_option(std::string_view arguments) {
         tokens[2] == "value" && (tokens[3] == "true" || tokens[3] == "false")) {
         stop_search();
         use_nnue_ = tokens[3] == "true";
-        searcher_.reset();
         if (!use_nnue_) network_evaluator_.reset();
         return true;
     }
     if (tokens.size() >= 4 && tokens[0] == "name" && tokens[1] == "EvalFile" &&
         tokens[2] == "value") {
         stop_search();
-        searcher_.reset();
         network_evaluator_.reset();
         eval_file_.clear();
         for (std::size_t index = 3; index < tokens.size(); ++index) {
@@ -361,12 +358,6 @@ bool UciSession::start_search(std::string_view arguments) {
         }
     } else if (!use_nnue_) {
         network_evaluator_.reset();
-    }
-    if (!searcher_) {
-        const NetworkEvaluator* network = network_evaluator_
-            ? &*network_evaluator_
-            : nullptr;
-        searcher_ = std::make_unique<Searcher>(table_, network);
     }
     MoveList complexity_moves;
     generate_pseudo_legal(root, complexity_moves);
@@ -406,7 +397,11 @@ bool UciSession::start_search(std::string_view arguments) {
     }
     worker_ = std::thread([this, root, limits, prior = std::move(prior)]() mutable {
         const auto started = std::chrono::steady_clock::now();
-        const SearchResult result = searcher_->search(root, limits, &stop_requested_, prior);
+        const NetworkEvaluator* network = network_evaluator_
+            ? &*network_evaluator_
+            : nullptr;
+        Searcher searcher(table_, network);
+        const SearchResult result = searcher.search(root, limits, &stop_requested_, prior);
         const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - started);
 

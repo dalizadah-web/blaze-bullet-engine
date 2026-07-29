@@ -10,7 +10,7 @@ import queue
 import subprocess
 import threading
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TextIO
@@ -179,7 +179,6 @@ class UciEngine:
         *,
         threads: int = 1,
         hash_mb: int = 64,
-        init_options: Mapping[str, str] | None = None,
         timeout: float = 10.0,
         shutdown_timeout: float = 1.0,
     ) -> None:
@@ -218,7 +217,7 @@ class UciEngine:
         )
         self._reader.start()
         try:
-            self._handshake(threads, hash_mb, init_options or {})
+            self._handshake(threads, hash_mb)
         except BaseException:
             self.close()
             raise
@@ -269,9 +268,7 @@ class UciEngine:
             if line == expected:
                 return received
 
-    def _handshake(
-        self, threads: int, hash_mb: int, init_options: Mapping[str, str]
-    ) -> None:
+    def _handshake(self, threads: int, hash_mb: int) -> None:
         self._send("uci")
         for line in self._wait_for("uciok"):
             if line.startswith("id name "):
@@ -300,13 +297,6 @@ class UciEngine:
             )
         self._send(f"setoption name Threads value {threads}")
         self._send(f"setoption name Hash value {hash_mb}")
-        unsupported = [name for name in init_options if name.casefold() not in advertised_names]
-        if unsupported:
-            raise ValueError(
-                "UCI engine did not advertise requested options: " + ", ".join(unsupported)
-            )
-        for name, value in init_options.items():
-            self._send(f"setoption name {name} value {value}")
         self._send("isready")
         self._wait_for("readyok")
 

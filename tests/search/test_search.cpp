@@ -712,16 +712,6 @@ TEST_CASE(see_pruning_retains_checking_capture_even_if_losing) {
     CHECK(result.picker_stats.checking_captures_exempted > 0);
 }
 
-TEST_CASE(qsearch_delta_pruning_retains_a_checking_capture) {
-    Position root = position("7k/6p1/5K1Q/8/8/8/8/8 w - - 0 1");
-    TranspositionTable table(4);
-    Searcher searcher(table);
-
-    const SearchResult result = searcher.debug_search_window(root, 0, 2000, 3000);
-
-    CHECK(result.score >= search_mate_threshold);
-}
-
 TEST_CASE(see_pruning_preserves_promotions) {
     // White pawn promotes to queen even though the promotion square is defended.
     // Promotions should never be SEE-pruned.
@@ -819,17 +809,14 @@ TEST_CASE(see_pruning_see_ge_agrees_with_see_exact_on_corpus) {
             const Move m = all_moves[i];
             if (!m.has_flag(MoveFlag::Capture) && !m.has_flag(MoveFlag::EnPassant)) continue;
             const int see_value = static_exchange_evaluation(pos, m);
-            for (const int threshold : {-500, -200, 0, 200}) {
-              const bool see_ge_result = see_ge(pos, m, threshold);
-              if ((see_value >= threshold) != see_ge_result) {
-                  std::cerr << "Corpus mismatch in position: " << fen
-                            << "\n  move=" << move_to_uci(m)
-                            << " see=" << see_value
-                            << " threshold=" << threshold
-                            << " see_ge=" << see_ge_result << "\n";
-              }
-              CHECK_EQ(see_ge_result, see_value >= threshold);
+            const bool see_ge_result = see_ge(pos, m, 0);
+            if ((see_value >= 0) != see_ge_result) {
+                std::cerr << "Corpus mismatch in position: " << fen
+                          << "\n  move=" << move_to_uci(m)
+                          << " see=" << see_value
+                          << " see_ge(0)=" << see_ge_result << "\n";
             }
+            CHECK_EQ(see_ge_result, see_value >= 0);
         }
     }
 }

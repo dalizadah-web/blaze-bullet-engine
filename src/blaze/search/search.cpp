@@ -585,7 +585,6 @@ int Searcher::negamax(
     if (alpha >= beta) {
         return alpha;
     }
-    const bool selective_window = !decisive_score(alpha) && !decisive_score(beta);
 
     auto& frame = context.stack[static_cast<std::size_t>(ply)];
     const bool excluded_search = frame.excluded_move.is_valid();
@@ -707,7 +706,7 @@ int Searcher::negamax(
             true;
 #endif
         if (null_enabled && allow_null && depth >= 3 && !checked && !excluded_search &&
-            selective_window && position.rule50() < 90 &&
+            position.rule50() < 90 && beta < search_mate_threshold &&
             search_eval >= beta &&
             has_non_pawn_material(position, position.side_to_move())) {
 #ifndef NDEBUG
@@ -774,8 +773,9 @@ int Searcher::negamax(
 #ifndef NDEBUG
     probcut_enabled = context.limits.enable_probcut;
 #endif
-    if constexpr (node_type == NodeType::NonPV) {
-      if (probcut_enabled && selective_window && depth >= 3 && !checked && !excluded_search) {
+    if constexpr (node_type != NodeType::Root) {
+      if (probcut_enabled && depth >= 3 && !checked && !excluded_search &&
+          beta < search_mate_threshold - 600) {
         const int probcut_margin = 120 + depth * 10;
         const int probcut_depth = std::max(1, depth - (depth <= 5 ? 2 : 4));
         MoveList tactical_moves;
@@ -922,7 +922,7 @@ int Searcher::negamax(
         bool preprobed = false;
         bool gives_check = false;
         if constexpr (node_type == NodeType::NonPV) {
-            if (selective_window && !sparse_opposing_majors && !checked && !excluded_search &&
+            if (!sparse_opposing_majors && !checked && !excluded_search &&
                 !tt_selected && move_count > 1 &&
                 ((quiet && depth <= 10) || (tactical && depth <= 8))) {
                 const Color moving_side = position.side_to_move();
@@ -997,8 +997,8 @@ int Searcher::negamax(
             const bool sound_recapture = recaptures && depth <= 10 && see_score >= 0;
             const bool forcing_pawn = move.has_flag(MoveFlag::Promotion) || pawn_advance;
             if (selective_check || sound_recapture || forcing_pawn) ++extension;
+            extension = std::clamp(extension, -1, maximum_extensions - used);
         }
-        extension = std::clamp(extension, -1, maximum_extensions - used);
         const int child_extension_count = used + std::max(0, extension);
         auto& child = context.stack[static_cast<std::size_t>(ply + 1)];
         child = SearchStackEntry{};
@@ -1022,8 +1022,7 @@ int Searcher::negamax(
             }
         } else {
             int reduction = 0;
-            if (selective_window && !checked && !sparse_opposing_majors &&
-                depth >= 2 && full_depth > 0 && !tt_selected) {
+            if (!sparse_opposing_majors && depth >= 2 && full_depth > 0 && !tt_selected) {
                 reduction = base_lmr(depth, move_count);
                 if constexpr (!pv_node) ++reduction;
                 if (!improving) ++reduction;
@@ -1479,9 +1478,7 @@ int Searcher::quiescence(
     int q_count = 0;
 
     bool tt_used = false;
-    const bool tactical_tt_move = tt_move.has_flag(MoveFlag::Capture) ||
-        tt_move.has_flag(MoveFlag::EnPassant) || tt_move.has_flag(MoveFlag::Promotion);
-    if (tt_move.is_valid() && (checked || tactical_tt_move)) {
+    if (tt_move.is_valid()) {
         StateInfo tt_state;
         if (position.make_move(tt_move, tt_state)) {
             if (king_is_safe_after_move(position, opposite(position.side_to_move()))) {
@@ -1513,36 +1510,25 @@ int Searcher::quiescence(
         if (!checked && m.has_flag(MoveFlag::Capture) &&
             !m.has_flag(MoveFlag::Promotion) && !m.has_flag(MoveFlag::EnPassant)) {
             const Piece victim = position.piece_on(m.to());
-            bool checking_capture = false;
-            const auto is_checking_capture = [&] {
-                const Color moving_side = position.side_to_move();
-                StateInfo state;
-                if (!position.make_move(m, state)) return false;
-                const bool result = king_is_safe_after_move(position, moving_side) &&
-                    in_check(position);
-                position.unmake_move(m, state);
-                return result;
-            };
             if (stand_pat + victim_value(victim) + 120 < alpha) {
-                checking_capture = is_checking_capture();
-                if (!checking_capture) {
+                ++context.picker_stats.captures_pruned_by_see;
+                pruned_this_node = true;
+                continue;
+            }
+            ++context.picker_stats.see_pruning_calls;
+            if (!see_ge(position, m, 0)) {
+                StateInfo si;
+                bool gives_check = false;
+                if (position.make_move(m, si)) {
+                    gives_check = in_check(position);
+                    position.unmake_move(m, si);
+                }
+                if (!gives_check) {
                     ++context.picker_stats.captures_pruned_by_see;
                     pruned_this_node = true;
                     continue;
                 }
                 ++context.picker_stats.checking_captures_exempted;
-            }
-            ++context.picker_stats.see_pruning_calls;
-            if (!see_ge(position, m, 0)) {
-                if (!checking_capture) checking_capture = is_checking_capture();
-                if (!checking_capture) {
-                    ++context.picker_stats.captures_pruned_by_see;
-                    pruned_this_node = true;
-                    continue;
-                }
-                if (stand_pat + victim_value(victim) + 120 >= alpha) {
-                    ++context.picker_stats.checking_captures_exempted;
-                }
             }
         } else if (!checked &&
                    (m.has_flag(MoveFlag::Promotion) || m.has_flag(MoveFlag::EnPassant))) {

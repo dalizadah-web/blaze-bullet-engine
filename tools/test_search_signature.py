@@ -240,18 +240,6 @@ class UciEngineTests(unittest.TestCase):
         self.assertIn("go nodes 100", commands)
         self.assertEqual(commands[-1], "quit")
 
-    def test_handshake_applies_requested_advertised_options(self) -> None:
-        engine = UciEngine(
-            self.command(),
-            init_options={"Hash": "48", "Threads": "3"},
-            timeout=1.0,
-        )
-        engine.close()
-
-        commands = self.commands()
-        self.assertIn("setoption name Hash value 48", commands)
-        self.assertIn("setoption name Threads value 3", commands)
-
     def test_two_searches_each_reset_and_synchronize_the_engine(self) -> None:
         engine = UciEngine(self.command(), timeout=1.0)
         try:
@@ -461,8 +449,9 @@ class CorpusTests(unittest.TestCase):
         self.assertEqual(entry["position_count"], len(positions))
         self.assertEqual(entry["license"], "CC0-1.0")
         self.assertFalse(entry["stockfish_derived"])
-        canonical_bytes = corpus_path.read_bytes().replace(b"\r\n", b"\n")
-        self.assertEqual(entry["sha256"], hashlib.sha256(canonical_bytes).hexdigest())
+        self.assertEqual(
+            entry["sha256"], hashlib.sha256(corpus_path.read_bytes()).hexdigest()
+        )
         prefixes = {position.identifier.split("-", 1)[0] for position in positions}
         self.assertTrue(
             {

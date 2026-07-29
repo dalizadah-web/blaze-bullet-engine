@@ -582,7 +582,6 @@ struct RawOutput {
     std::int32_t psqt = 0;
     std::int32_t positional = 0;
     int raw = 0;
-    int value = 0;
 };
 
 RawOutput propagate(
@@ -621,24 +620,13 @@ RawOutput propagate(
             architecture.fc_1.biases_data(), architecture.fc_1.weights_data(),
             architecture.fc_2.biases_data(), architecture.fc_2.weights_data()},
         scratch);
-    const int psqt = static_cast<int>(output.psqt / Stockfish::Eval::NNUE::OutputScale);
-    const int positional = static_cast<int>(
-        output.positional / Stockfish::Eval::NNUE::OutputScale);
-    output.raw = psqt + positional;
-    int nnue = (125 * psqt + 131 * positional) / 128;
-    const int complexity = std::abs(psqt - positional);
-    nnue -= nnue * complexity / 18'236;
-    const auto count = [&position](PieceType type) {
-        return std::popcount(static_cast<std::uint64_t>(
-            position.pieces(Color::White, type) | position.pieces(Color::Black, type)));
-    };
-    const int material = 534 * count(PieceType::Pawn) +
-        static_cast<int>(Stockfish::KnightValue) * count(PieceType::Knight) +
-        static_cast<int>(Stockfish::BishopValue) * count(PieceType::Bishop) +
-        static_cast<int>(Stockfish::RookValue) * count(PieceType::Rook) +
-        static_cast<int>(Stockfish::QueenValue) * count(PieceType::Queen);
-    output.value = nnue * (77'871 + material) / 77'871;
-    output.value -= output.value * position.rule50() / 199;
+    // The legacy bridge exposed the two Network::evaluate() components after
+    // their internal OutputScale division, then divided their sum once more.
+    // Keep that public score contract while the bridge remains the oracle.
+    // Match Network::evaluate(): each component is converted from network
+    // units independently before its wrapper combines the two values.
+    output.raw = static_cast<int>(output.psqt / Stockfish::Eval::NNUE::OutputScale) +
+                 static_cast<int>(output.positional / Stockfish::Eval::NNUE::OutputScale);
     return output;
 }
 
@@ -656,7 +644,6 @@ NnueDebugSnapshot make_snapshot(
     snapshot.psqt_output = output.psqt;
     snapshot.positional_output = output.positional;
     snapshot.raw_output = output.raw;
-    snapshot.value_output = output.value;
     return snapshot;
 }
 
@@ -973,7 +960,7 @@ void NnueThreadState::pop() {
 
 int sf_nnue_public_score(int raw_network_output) {
     ProfileScope timer(NnueProfileComponent::PublicScore);
-    return std::clamp(raw_network_output * 100 / Stockfish::PawnValue,
+    return std::clamp(raw_network_output / Stockfish::Eval::NNUE::OutputScale,
         -search_mate_threshold + 1, search_mate_threshold - 1);
 }
 
@@ -995,23 +982,11 @@ NnueDebugSnapshot NnueThreadState::debug_snapshot(const Position& position) cons
 }
 
 int NnueThreadState::evaluate(const Position& position) const {
-    record(g_runtime_stats.evaluations);
-    record_benchmark_counter(impl_->fresh_evaluation
-        ? BenchmarkCounter::Fresh : BenchmarkCounter::Incremental);
-    record_benchmark_counter(BenchmarkCounter::Inference);
-    return sf_nnue_public_score(propagate(
-        impl_->materialize(impl_->ply),
-        *impl_->weights,
-        position,
-        impl_->inference_scratch,
-        impl_->inference_buffers).value);
+    return sf_nnue_public_score(raw_evaluate(position));
 }
 
 int NetworkEvaluator::evaluate(const Position& position) const {
-    auto state = make_thread_state();
-    state.impl_->fresh_evaluation = true;
-    state.reset(position);
-    return state.evaluate(position);
+    return sf_nnue_public_score(raw_evaluate(position));
 }
 
 int NetworkEvaluator::raw_evaluate(const Position& position) const {
