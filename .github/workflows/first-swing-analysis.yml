@@ -1,0 +1,132 @@
+name: First-swing loss analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Completed cloud-match workflow run ID
+        required: true
+        type: string
+      experiment_id:
+        description: Immutable cloud-match experiment ID
+        required: true
+        type: string
+      depth:
+        description: Fixed Stockfish analysis depth
+        required: true
+        default: '10'
+        type: string
+      swing_cp:
+        description: Minimum first-swing threshold in centipawns
+        required: true
+        default: '150'
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  analyse:
+    strategy:
+      fail-fast: false
+      max-parallel: 40
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tools/cloud_match/requirements.txt
+      - run: pip install -r tools/cloud_match/requirements.txt
+      - name: Download source shard
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download '${{ inputs.source_run_id }}' --repo '${{ github.repository }}' \
+            --name 'shard-${{ inputs.experiment_id }}-${{ matrix.shard }}' --dir input
+      - name: Fetch pinned Stockfish 18
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 -o stockfish.tar \
+            'https://github.com/official-stockfish/Stockfish/releases/download/sf_18/stockfish-ubuntu-x86-64-avx2.tar'
+          tar -xf stockfish.tar
+          stockfish_bin="$(find stockfish -type f -name 'stockfish-*' -print -quit)"
+          test -n "$stockfish_bin"
+          chmod +x "$stockfish_bin"
+          cp "$stockfish_bin" stockfish18
+      - name: Analyse shard ${{ matrix.shard }}
+        run: |
+          python tools/analyze_first_swings.py \
+            --pgn-root input \
+            --stockfish stockfish18 \
+            --output first-swing-${{ matrix.shard }}.json \
+            --depth '${{ inputs.depth }}' \
+            --swing-cp '${{ inputs.swing_cp }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: first-swing-${{ inputs.source_run_id }}-${{ matrix.shard }}
+          path: first-swing-${{ matrix.shard }}.json
+          retention-days: 30
+          if-no-files-found: error
+
+  aggregate:
+    needs: analyse
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: first-swing-${{ inputs.source_run_id }}-*
+          path: reports
+          merge-multiple: true
+      - name: Aggregate first swings
+        shell: bash
+        run: |
+          python - <<'PY'
+          from collections import Counter
+          import json
+          from pathlib import Path
+
+          reports = [json.loads(path.read_text(encoding="utf-8")) for path in sorted(Path("reports").glob("*.json"))]
+          if len(reports) != 40:
+              raise SystemExit(f"expected 40 shard reports, found {len(reports)}")
+          swings = [item for report in reports for item in report["first_swings"]]
+          categories = Counter(item["classification"] for item in swings)
+          confirmed = sum(item.get("confirmed", False) for item in swings)
+          payload = {
+              "source_run_id": "${{ inputs.source_run_id }}",
+              "experiment_id": "${{ inputs.experiment_id }}",
+              "depth": int("${{ inputs.depth }}"),
+              "swing_cp": int("${{ inputs.swing_cp }}"),
+              "losses": len(swings),
+              "confirmed_first_swings": confirmed,
+              "categories": dict(sorted(categories.items())),
+              "first_swings": swings,
+          }
+          Path("summary.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+          lines = [
+              "# First-swing loss analysis",
+              "",
+              f"- Losses analysed: {payload['losses']}",
+              f"- Stockfish-confirmed first swings: {confirmed}",
+              f"- Analysis depth: {payload['depth']}",
+              f"- Swing threshold: {payload['swing_cp']} cp",
+              "",
+              "## Categories",
+              "",
+          ]
+          lines.extend(f"- {category}: {count}" for category, count in payload["categories"].items())
+          Path("summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: first-swing-summary-${{ inputs.source_run_id }}
+          path: |
+            summary.json
+            summary.md
+          retention-days: 30
+          if-no-files-found: error
