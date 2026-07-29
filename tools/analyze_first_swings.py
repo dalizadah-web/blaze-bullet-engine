@@ -202,9 +202,12 @@ def main() -> int:
     parser.add_argument("--swing-cp", type=int, default=150)
     args = parser.parse_args()
 
+    stockfish = args.stockfish.resolve()
+    if not stockfish.is_file():
+        parser.error(f"Stockfish binary does not exist: {stockfish}")
     records = _loss_records(args.pgn_root, args.swing_cp)
     results: list[dict[str, Any]] = []
-    _configure_worker(str(args.stockfish), args.depth, args.swing_cp)
+    _configure_worker(str(stockfish), args.depth, args.swing_cp)
     try:
         for completed, record in enumerate(records, start=1):
             results.append(_analyse_loss(record))
@@ -217,7 +220,7 @@ def main() -> int:
     categories = Counter(item["classification"] for item in results)
     payload = {
         "pgn_root": str(args.pgn_root.resolve()),
-        "stockfish": str(args.stockfish.resolve()),
+        "stockfish": str(stockfish),
         "depth": args.depth,
         "swing_cp": args.swing_cp,
         "losses": len(results),
