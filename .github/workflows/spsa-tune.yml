@@ -2,6 +2,21 @@ name: Constrained SPSA search tuning
 run-name: SPSA ${{ inputs.campaign_id }} controller
 
 on:
+  workflow_call:
+    inputs:
+      campaign_id:
+        required: true
+        type: string
+      engine_ref:
+        required: true
+        type: string
+      config_path:
+        required: true
+        type: string
+      state_run_id:
+        required: false
+        default: ''
+        type: string
   workflow_dispatch:
     inputs:
       campaign_id:
@@ -135,6 +150,12 @@ jobs:
             hash_mb="$(jq -r .match.hash_mb "$CONFIG_PATH")"
             time_control="$(jq -r .match.time_control "$CONFIG_PATH")"
             base_config="$(jq -r .match.base_config "$CONFIG_PATH")"
+            callback_payload="$(jq -cn --arg workflow cloud-match.yml --arg action tune \
+              --arg ref "$WORKFLOW_REF" --arg campaign_id "$CAMPAIGN_ID" \
+              --arg engine_ref "$ENGINE_REF" --arg config_path "$CONFIG_PATH" \
+              --arg state_run_id "$GITHUB_RUN_ID" \
+              '{workflow: $workflow, action: $action, ref: $ref, campaign_id: $campaign_id,
+                engine_ref: $engine_ref, config_path: $config_path, state_run_id: $state_run_id}')"
             dispatch_output="$(gh workflow run cloud-match.yml \
               --ref "$WORKFLOW_REF" \
               -f "candidate_ref=$ENGINE_REF" \
@@ -153,12 +174,7 @@ jobs:
               -f "baseline_initstr=$baseline_initstr" \
               -f "match_config=$base_config" \
               -f "trial_id=$trial_id" \
-              -f callback_workflow=spsa-tune.yml \
-              -f "callback_ref=$WORKFLOW_REF" \
-              -f "callback_campaign_id=$CAMPAIGN_ID" \
-              -f "callback_engine_ref=$ENGINE_REF" \
-              -f "callback_config_path=$CONFIG_PATH" \
-              -f "callback_state_run_id=$GITHUB_RUN_ID")"
+              -f "callback_payload=$callback_payload")"
             child_url="$(grep -Eo 'https://github.com/[^[:space:]]+/actions/runs/[0-9]+' <<< "$dispatch_output" | tail -1 || true)"
             for _ in {1..30}; do
               [ -n "$child_url" ] && break
@@ -275,10 +291,11 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$(jq -r .status campaign/state.json)" = "running" ]; then
-            gh workflow run spsa-tune.yml \
+            gh workflow run cloud-match.yml \
               --ref "$WORKFLOW_REF" \
-              -f "campaign_id=$CAMPAIGN_ID" \
-              -f "engine_ref=$ENGINE_REF" \
-              -f "config_path=$CONFIG_PATH" \
-              -f "state_run_id=$GITHUB_RUN_ID"
+              -f controller_action=tune \
+              -f "controller_campaign_id=$CAMPAIGN_ID" \
+              -f "controller_engine_ref=$ENGINE_REF" \
+              -f "controller_config_path=$CONFIG_PATH" \
+              -f "controller_state_run_id=$GITHUB_RUN_ID"
           fi

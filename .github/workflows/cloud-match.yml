@@ -1,5 +1,5 @@
 name: Distributed bullet match
-run-name: ${{ inputs.trial_id || 'Distributed bullet match' }}
+run-name: ${{ inputs.trial_id || (inputs.controller_action != '' && format('SPSA {0} {1}', inputs.controller_campaign_id, inputs.controller_action)) || 'Distributed bullet match' }}
 
 on:
   workflow_dispatch:
@@ -94,29 +94,29 @@ on:
         required: false
         default: ''
         type: string
-      callback_workflow:
-        description: Optional trusted SPSA workflow to resume after aggregation
+      controller_action:
+        description: Optional reusable SPSA entry point (tune or qualify)
         required: false
         default: ''
         type: string
-      callback_ref:
-        description: Immutable tag containing the callback workflow
+      controller_campaign_id:
         required: false
         default: ''
         type: string
-      callback_campaign_id:
+      controller_engine_ref:
         required: false
         default: ''
         type: string
-      callback_engine_ref:
+      controller_config_path:
         required: false
         default: ''
         type: string
-      callback_config_path:
+      controller_state_run_id:
         required: false
         default: ''
         type: string
-      callback_state_run_id:
+      callback_payload:
+        description: Optional compact trusted SPSA callback descriptor
         required: false
         default: ''
         type: string
@@ -126,11 +126,30 @@ permissions:
   contents: read
 
 concurrency:
-  group: cloud-match-${{ github.ref }}-${{ inputs.trial_id }}-${{ inputs.candidate_ref }}-${{ inputs.baseline_ref }}
+  group: cloud-match-${{ github.ref }}-${{ inputs.controller_action }}-${{ inputs.controller_campaign_id }}-${{ inputs.trial_id }}-${{ inputs.candidate_ref }}-${{ inputs.baseline_ref }}
   cancel-in-progress: false
 
 jobs:
+  controller-tune:
+    if: ${{ inputs.controller_action == 'tune' }}
+    uses: ./.github/workflows/spsa-tune.yml
+    with:
+      campaign_id: ${{ inputs.controller_campaign_id }}
+      engine_ref: ${{ inputs.controller_engine_ref }}
+      config_path: ${{ inputs.controller_config_path }}
+      state_run_id: ${{ inputs.controller_state_run_id }}
+
+  controller-qualify:
+    if: ${{ inputs.controller_action == 'qualify' }}
+    uses: ./.github/workflows/spsa-qualify.yml
+    with:
+      campaign_id: ${{ inputs.controller_campaign_id }}
+      engine_ref: ${{ inputs.controller_engine_ref }}
+      config_path: ${{ inputs.controller_config_path }}
+      state_run_id: ${{ inputs.controller_state_run_id }}
+
   prepare:
+    if: ${{ inputs.controller_action == '' }}
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.spec.outputs.matrix }}
@@ -152,23 +171,21 @@ jobs:
       - name: Validate optional controller callback
         shell: bash
         env:
-          CALLBACK_WORKFLOW: ${{ inputs.callback_workflow }}
-          CALLBACK_REF: ${{ inputs.callback_ref }}
-          CALLBACK_CAMPAIGN_ID: ${{ inputs.callback_campaign_id }}
-          CALLBACK_ENGINE_REF: ${{ inputs.callback_engine_ref }}
-          CALLBACK_CONFIG_PATH: ${{ inputs.callback_config_path }}
-          CALLBACK_STATE_RUN_ID: ${{ inputs.callback_state_run_id }}
+          CALLBACK_PAYLOAD: ${{ inputs.callback_payload }}
         run: |
           set -euo pipefail
-          values=("$CALLBACK_WORKFLOW" "$CALLBACK_REF" "$CALLBACK_CAMPAIGN_ID" \
-            "$CALLBACK_ENGINE_REF" "$CALLBACK_CONFIG_PATH" "$CALLBACK_STATE_RUN_ID")
-          populated=0
-          for value in "${values[@]}"; do
-            [ -n "$value" ] && populated=$((populated + 1))
-          done
-          if [ "$populated" -ne 0 ]; then
-            test "$populated" -eq "${#values[@]}"
-            [[ "$CALLBACK_WORKFLOW" =~ ^spsa-(tune|qualify)\.yml$ ]]
+          if [ -n "$CALLBACK_PAYLOAD" ]; then
+            test "$(jq -r 'keys | sort | join(",")' <<< "$CALLBACK_PAYLOAD")" = \
+              action,campaign_id,config_path,engine_ref,ref,state_run_id,workflow
+            CALLBACK_WORKFLOW="$(jq -er .workflow <<< "$CALLBACK_PAYLOAD")"
+            CALLBACK_ACTION="$(jq -er .action <<< "$CALLBACK_PAYLOAD")"
+            CALLBACK_REF="$(jq -er .ref <<< "$CALLBACK_PAYLOAD")"
+            CALLBACK_CAMPAIGN_ID="$(jq -er .campaign_id <<< "$CALLBACK_PAYLOAD")"
+            CALLBACK_ENGINE_REF="$(jq -er .engine_ref <<< "$CALLBACK_PAYLOAD")"
+            CALLBACK_CONFIG_PATH="$(jq -er .config_path <<< "$CALLBACK_PAYLOAD")"
+            CALLBACK_STATE_RUN_ID="$(jq -er .state_run_id <<< "$CALLBACK_PAYLOAD")"
+            test "$CALLBACK_WORKFLOW" = cloud-match.yml
+            [[ "$CALLBACK_ACTION" =~ ^(tune|qualify)$ ]]
             [[ "$CALLBACK_REF" =~ ^[A-Za-z0-9._/-]+$ ]]
             [[ "$CALLBACK_CAMPAIGN_ID" =~ ^[a-z0-9][a-z0-9._-]{0,63}$ ]]
             [[ "$CALLBACK_ENGINE_REF" =~ ^[0-9a-f]{40}$ ]]
@@ -535,25 +552,28 @@ jobs:
           retention-days: 90
           if-no-files-found: error
       - name: Resume SPSA controller after evidence is durable
-        if: ${{ inputs.callback_workflow != '' }}
+        if: ${{ inputs.callback_payload != '' }}
         continue-on-error: true
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          CALLBACK_WORKFLOW: ${{ inputs.callback_workflow }}
-          CALLBACK_REF: ${{ inputs.callback_ref }}
-          CALLBACK_CAMPAIGN_ID: ${{ inputs.callback_campaign_id }}
-          CALLBACK_ENGINE_REF: ${{ inputs.callback_engine_ref }}
-          CALLBACK_CONFIG_PATH: ${{ inputs.callback_config_path }}
-          CALLBACK_STATE_RUN_ID: ${{ inputs.callback_state_run_id }}
+          CALLBACK_PAYLOAD: ${{ inputs.callback_payload }}
         run: |
+          CALLBACK_WORKFLOW="$(jq -er .workflow <<< "$CALLBACK_PAYLOAD")"
+          CALLBACK_ACTION="$(jq -er .action <<< "$CALLBACK_PAYLOAD")"
+          CALLBACK_REF="$(jq -er .ref <<< "$CALLBACK_PAYLOAD")"
+          CALLBACK_CAMPAIGN_ID="$(jq -er .campaign_id <<< "$CALLBACK_PAYLOAD")"
+          CALLBACK_ENGINE_REF="$(jq -er .engine_ref <<< "$CALLBACK_PAYLOAD")"
+          CALLBACK_CONFIG_PATH="$(jq -er .config_path <<< "$CALLBACK_PAYLOAD")"
+          CALLBACK_STATE_RUN_ID="$(jq -er .state_run_id <<< "$CALLBACK_PAYLOAD")"
           for _ in {1..10}; do
             if gh workflow run "$CALLBACK_WORKFLOW" \
               --ref "$CALLBACK_REF" \
-              -f "campaign_id=$CALLBACK_CAMPAIGN_ID" \
-              -f "engine_ref=$CALLBACK_ENGINE_REF" \
-              -f "config_path=$CALLBACK_CONFIG_PATH" \
-              -f "state_run_id=$CALLBACK_STATE_RUN_ID"; then
+              -f "controller_action=$CALLBACK_ACTION" \
+              -f "controller_campaign_id=$CALLBACK_CAMPAIGN_ID" \
+              -f "controller_engine_ref=$CALLBACK_ENGINE_REF" \
+              -f "controller_config_path=$CALLBACK_CONFIG_PATH" \
+              -f "controller_state_run_id=$CALLBACK_STATE_RUN_ID"; then
               exit 0
             fi
             sleep 5

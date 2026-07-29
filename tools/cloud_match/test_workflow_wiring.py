@@ -79,7 +79,9 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertNotIn("plan.dispatched.json", workflow)
         self.assertNotIn("campaign/plan.dispatched", workflow)
         self.assertNotIn("$sha)])\"", workflow)
-        self.assertIn("callback_state_run_id=$GITHUB_RUN_ID", workflow)
+        self.assertIn('--arg state_run_id "$GITHUB_RUN_ID"', workflow)
+        self.assertIn('-f "callback_payload=$callback_payload"', workflow)
+        self.assertIn("controller_action=tune", workflow)
         self.assertIn("Upload resumable state while child runs asynchronously", workflow)
         config = (Path(__file__).resolve().parents[2] / "config" / "spsa" / "search-v1.json").read_text(encoding="utf-8")
         self.assertIn('"shards": 40', config)
@@ -94,7 +96,7 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertIn("tools.cloud_match.spsa qualify", workflow)
         self.assertIn("qualification-summary.json", workflow)
         self.assertNotIn("$sha)])\"", workflow)
-        self.assertIn("callback_workflow=spsa-qualify.yml", workflow)
+        self.assertIn("--arg workflow cloud-match.yml --arg action qualify", workflow)
 
     def test_cloud_shards_use_a_measured_eighty_game_barrier_and_callback(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
