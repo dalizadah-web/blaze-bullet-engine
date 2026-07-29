@@ -418,6 +418,7 @@ jobs:
             echo "$name smoke-test PASSED"
           done
           echo "All engine preflight checks passed"
+          printf '%s\n' "$(( $(date +%s) + 180 ))" > bundle/shard-start-epoch.txt
           tar -czf frozen-match.tar.gz -C bundle .
       - name: Verify frozen artifact hashes
         run: sha256sum bundle/candidate bundle/baseline bundle/cutechess-cli bundle/*.nnue bundle/nnue-sha256.txt frozen-match.tar.gz
@@ -459,39 +460,12 @@ jobs:
           tar -xzf frozen/frozen-match.tar.gz -C bundle
           chmod +x bundle/candidate bundle/baseline bundle/cutechess-cli
           cp bundle/*.nnue .
-      - name: Publish shard readiness
+      - name: Synchronize shard start without API polling
         shell: bash
-        run: |
-          mkdir readiness
-          printf '%s\n' '${{ matrix.shard }}' > 'readiness/${{ matrix.shard }}.txt'
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ready-${{ needs.prepare.outputs.experiment_id }}-${{ matrix.shard }}
-          path: readiness
-          retention-days: 1
-          if-no-files-found: error
-      - name: Synchronize all shard runners
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          READY_PREFIX: ready-${{ needs.prepare.outputs.experiment_id }}-
-          EXPECTED_SHARDS: ${{ inputs.shards }}
         run: |
           set -euo pipefail
-          latest=''
-          for _ in {1..300}; do
-            artifacts="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100")"
-            count="$(jq -r --arg prefix "$READY_PREFIX" \
-              '[.artifacts[] | select(.name | startswith($prefix))] | length' <<< "$artifacts")"
-            if [ "$count" -eq "$EXPECTED_SHARDS" ]; then
-              latest="$(jq -r --arg prefix "$READY_PREFIX" \
-                '[.artifacts[] | select(.name | startswith($prefix)) | .created_at] | max' <<< "$artifacts")"
-              break
-            fi
-            sleep 2
-          done
-          test -n "$latest"
-          gate=$(( $(date --date="$latest" +%s) + 30 ))
+          gate="$(cat bundle/shard-start-epoch.txt)"
+          [[ "$gate" =~ ^[0-9]+$ ]]
           now="$(date +%s)"
           if [ "$gate" -gt "$now" ]; then
             sleep "$((gate - now))"

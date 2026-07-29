@@ -100,8 +100,9 @@ class CloudWorkflowWiringTests(unittest.TestCase):
 
     def test_cloud_shards_use_a_measured_eighty_game_barrier_and_callback(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("Publish shard readiness", workflow)
-        self.assertIn("Synchronize all shard runners", workflow)
+        self.assertIn("shard-start-epoch.txt", workflow)
+        self.assertIn("Synchronize shard start without API polling", workflow)
+        self.assertNotIn("actions/runs/$GITHUB_RUN_ID/artifacts", workflow)
         self.assertIn("Resume SPSA controller after evidence is durable", workflow)
         self.assertIn('--source-run-attempt "$GITHUB_RUN_ATTEMPT"', workflow)
 

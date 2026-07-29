@@ -124,7 +124,7 @@ jobs:
         run: |
           set -euo pipefail
           trial_id='${{ steps.plan.outputs.trial_id }}'
-          runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 1000 \
+          runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
             --json attempt,databaseId,displayTitle,headSha,url)"
           matches="$(jq -c --arg title "$trial_id" --arg sha "$CONTROLLER_COMMIT" \
             '[.[] | select(.displayTitle == $title and .headSha == $sha)]' <<< "$runs")"
@@ -257,7 +257,7 @@ jobs:
           test "$(jq -r .conclusion <<< "$metadata")" = success
           test "$(jq -r .displayTitle <<< "$metadata")" = '${{ steps.plan.outputs.trial_id }}'
           test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
-          matches="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 1000 \
+          matches="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
             --json attempt,databaseId,displayTitle,headSha | jq -c \
             --arg title '${{ steps.plan.outputs.trial_id }}' --arg sha "$CONTROLLER_COMMIT" \
             '[.[] | select(.displayTitle == $title and .headSha == $sha)]')"
