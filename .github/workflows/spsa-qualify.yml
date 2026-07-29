@@ -135,7 +135,7 @@ jobs:
               --arg state_run_id "$STATE_RUN_ID" \
               '{workflow: $workflow, action: $action, ref: $ref, campaign_id: $campaign_id,
                 engine_ref: $engine_ref, config_path: $config_path, state_run_id: $state_run_id}')"
-            dispatch_output="$(gh workflow run cloud-match.yml \
+            if ! dispatch_output="$(gh workflow run cloud-match.yml \
               --ref "$WORKFLOW_REF" \
               -f "candidate_ref=$ENGINE_REF" -f "baseline_ref=$ENGINE_REF" \
               -f "games=$games" -f opening_start=1 -f opening_repeats=1 \
@@ -146,7 +146,10 @@ jobs:
               -f "baseline_initstr=$baseline_initstr" \
               -f "match_config=$base_config" \
               -f "trial_id=$trial_id" \
-              -f "callback_payload=$callback_payload")"
+              -f "callback_payload=$callback_payload" 2>&1)"; then
+              echo "$dispatch_output" >&2
+              exit 1
+            fi
             child_url="$(grep -Eo 'https://github.com/[^[:space:]]+/actions/runs/[0-9]+' <<< "$dispatch_output" | tail -1 || true)"
             for _ in {1..30}; do
               [ -n "$child_url" ] && break
