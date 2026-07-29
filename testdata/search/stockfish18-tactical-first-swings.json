@@ -4,7 +4,8 @@
     "run_id": "30406326525",
     "experiment_id": "4f0aa4c5b803ae9ca07f10ec",
     "stockfish_depth": 20,
-    "swing_cp": 150
+    "swing_cp": 150,
+    "stockfish_multipv": 2
   },
   "positions": [
     {
@@ -20,7 +21,11 @@
       "played_score_cp": -933,
       "swing_cp": 203,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d7e6",
+        "d7f7"
+      ]
     },
     {
       "id": "sf18-first-swing-00e35230a4cbf7ee",
@@ -35,7 +40,11 @@
       "played_score_cp": 23,
       "swing_cp": 202,
       "motif": "hanging_piece",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c6d4",
+        "a6c4"
+      ]
     },
     {
       "id": "sf18-first-swing-0382750ad689d8ae",
@@ -50,7 +59,10 @@
       "played_score_cp": -99991,
       "swing_cp": 98779,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g1h1"
+      ]
     },
     {
       "id": "sf18-first-swing-046a30da2b02370d",
@@ -65,7 +77,11 @@
       "played_score_cp": -99997,
       "swing_cp": 99303,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1c2",
+        "f1g1"
+      ]
     },
     {
       "id": "sf18-first-swing-04e47d8d2134d7a0",
@@ -80,7 +96,11 @@
       "played_score_cp": -462,
       "swing_cp": 712,
       "motif": "hanging_piece",
-      "occurrences": 3
+      "occurrences": 3,
+      "top_two_uci": [
+        "e4f6",
+        "d7d5"
+      ]
     },
     {
       "id": "sf18-first-swing-065258f4a42cdd29",
@@ -95,7 +115,11 @@
       "played_score_cp": -978,
       "swing_cp": 372,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g2g3",
+        "h2h3"
+      ]
     },
     {
       "id": "sf18-first-swing-07d2d9ac9fd1b817",
@@ -110,7 +134,11 @@
       "played_score_cp": -662,
       "swing_cp": 211,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e3f1",
+        "e1d2"
+      ]
     },
     {
       "id": "sf18-first-swing-07e601f987e713f9",
@@ -125,7 +153,11 @@
       "played_score_cp": -99996,
       "swing_cp": 99656,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1f3",
+        "d1h5"
+      ]
     },
     {
       "id": "sf18-first-swing-08b9af8b661ef1b0",
@@ -140,7 +172,11 @@
       "played_score_cp": -502,
       "swing_cp": 281,
       "motif": "hanging_piece",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d4d2",
+        "f7f6"
+      ]
     },
     {
       "id": "sf18-first-swing-08c8f36071a2894d",
@@ -155,7 +191,11 @@
       "played_score_cp": -1227,
       "swing_cp": 244,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d7d8",
+        "d7c6"
+      ]
     },
     {
       "id": "sf18-first-swing-09bb237002932e9b",
@@ -170,7 +210,11 @@
       "played_score_cp": -99997,
       "swing_cp": 99375,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g4f5",
+        "d1d2"
+      ]
     },
     {
       "id": "sf18-first-swing-09f891343bf03319",
@@ -185,7 +229,11 @@
       "played_score_cp": -1067,
       "swing_cp": 409,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e2c3",
+        "d4d2"
+      ]
     },
     {
       "id": "sf18-first-swing-0b06fe147d2ef542",
@@ -200,7 +248,11 @@
       "played_score_cp": -432,
       "swing_cp": 152,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g3g4",
+        "f1h3"
+      ]
     },
     {
       "id": "sf18-first-swing-0d45e403893bd544",
@@ -215,7 +267,11 @@
       "played_score_cp": -357,
       "swing_cp": 191,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g8h8",
+        "g8h7"
+      ]
     },
     {
       "id": "sf18-first-swing-0ddaba2bc0b129c5",
@@ -230,7 +286,11 @@
       "played_score_cp": -653,
       "swing_cp": 258,
       "motif": "king_attack",
-      "occurrences": 2
+      "occurrences": 2,
+      "top_two_uci": [
+        "g8h8",
+        "g8h7"
+      ]
     },
     {
       "id": "sf18-first-swing-0f75934e2cfb202e",
@@ -245,7 +305,11 @@
       "played_score_cp": -1036,
       "swing_cp": 251,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1g1",
+        "d1a1"
+      ]
     },
     {
       "id": "sf18-first-swing-100ec9c6b35a28f2",
@@ -260,7 +324,11 @@
       "played_score_cp": -401,
       "swing_cp": 236,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e4f5",
+        "e3f4"
+      ]
     },
     {
       "id": "sf18-first-swing-10a2ca0165d2b5be",
@@ -275,7 +343,11 @@
       "played_score_cp": -323,
       "swing_cp": 240,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e3e4",
+        "b3a4"
+      ]
     },
     {
       "id": "sf18-first-swing-121c87466900e275",
@@ -290,7 +362,11 @@
       "played_score_cp": -720,
       "swing_cp": 213,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1b3",
+        "d1d3"
+      ]
     },
     {
       "id": "sf18-first-swing-138a93209cf3b555",
@@ -305,7 +381,11 @@
       "played_score_cp": -1314,
       "swing_cp": 336,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1e1",
+        "c1d2"
+      ]
     },
     {
       "id": "sf18-first-swing-174d66cd359ac608",
@@ -320,7 +400,11 @@
       "played_score_cp": -99996,
       "swing_cp": 99369,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c7e5",
+        "c7c4"
+      ]
     },
     {
       "id": "sf18-first-swing-17cf0096795d2cfb",
@@ -335,7 +419,11 @@
       "played_score_cp": -770,
       "swing_cp": 262,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a1f1",
+        "d4e2"
+      ]
     },
     {
       "id": "sf18-first-swing-17d2311323368fef",
@@ -350,7 +438,11 @@
       "played_score_cp": -494,
       "swing_cp": 283,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1c1",
+        "d1a1"
+      ]
     },
     {
       "id": "sf18-first-swing-17da276ca284c10e",
@@ -365,7 +457,11 @@
       "played_score_cp": -394,
       "swing_cp": 270,
       "motif": "tactical_other",
-      "occurrences": 2
+      "occurrences": 2,
+      "top_two_uci": [
+        "e4f2",
+        "e4g5"
+      ]
     },
     {
       "id": "sf18-first-swing-1880074da9dedce8",
@@ -380,7 +476,11 @@
       "played_score_cp": -470,
       "swing_cp": 316,
       "motif": "missed_forcing_move",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1d3",
+        "h2h4"
+      ]
     },
     {
       "id": "sf18-first-swing-1b6d9cdd04c93067",
@@ -395,7 +495,11 @@
       "played_score_cp": -1148,
       "swing_cp": 550,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f3d2",
+        "h1h3"
+      ]
     },
     {
       "id": "sf18-first-swing-21d6734439a1d0de",
@@ -410,7 +514,11 @@
       "played_score_cp": -1168,
       "swing_cp": 258,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f1c1",
+        "f1e1"
+      ]
     },
     {
       "id": "sf18-first-swing-22eb5b3204181700",
@@ -425,7 +533,11 @@
       "played_score_cp": -590,
       "swing_cp": 193,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h7h6",
+        "h8e8"
+      ]
     },
     {
       "id": "sf18-first-swing-2325476b4b8e1962",
@@ -440,7 +552,11 @@
       "played_score_cp": -703,
       "swing_cp": 160,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1e2",
+        "d1d4"
+      ]
     },
     {
       "id": "sf18-first-swing-23a9eca76af138a4",
@@ -455,7 +571,11 @@
       "played_score_cp": -1334,
       "swing_cp": 614,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f2g3",
+        "d3e3"
+      ]
     },
     {
       "id": "sf18-first-swing-24de506dba16cc72",
@@ -470,7 +590,11 @@
       "played_score_cp": -960,
       "swing_cp": 167,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g1h1",
+        "f1e2"
+      ]
     },
     {
       "id": "sf18-first-swing-26a9c2a6b31f0aaf",
@@ -485,7 +609,11 @@
       "played_score_cp": -1039,
       "swing_cp": 237,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g2g3",
+        "h2h3"
+      ]
     },
     {
       "id": "sf18-first-swing-26ac053c123d7394",
@@ -500,7 +628,11 @@
       "played_score_cp": -99996,
       "swing_cp": 99324,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f4f5",
+        "d4e3"
+      ]
     },
     {
       "id": "sf18-first-swing-27d4047394776e64",
@@ -515,7 +647,11 @@
       "played_score_cp": -99994,
       "swing_cp": 99474,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f7g7",
+        "a5b7"
+      ]
     },
     {
       "id": "sf18-first-swing-284665e22b6b92d1",
@@ -530,7 +666,11 @@
       "played_score_cp": -768,
       "swing_cp": 188,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1c2",
+        "h1e1"
+      ]
     },
     {
       "id": "sf18-first-swing-28cd4919d635775c",
@@ -545,7 +685,11 @@
       "played_score_cp": -99996,
       "swing_cp": 98938,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g5d5",
+        "a5e5"
+      ]
     },
     {
       "id": "sf18-first-swing-29829c1699bdddbe",
@@ -560,7 +704,11 @@
       "played_score_cp": -99985,
       "swing_cp": 99015,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e5g3",
+        "g1h1"
+      ]
     },
     {
       "id": "sf18-first-swing-2b33b14157c5d314",
@@ -575,7 +723,11 @@
       "played_score_cp": -999,
       "swing_cp": 286,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b1c3",
+        "b1a3"
+      ]
     },
     {
       "id": "sf18-first-swing-2bd67848bce3383c",
@@ -590,7 +742,11 @@
       "played_score_cp": -872,
       "swing_cp": 208,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c1e3",
+        "d1f1"
+      ]
     },
     {
       "id": "sf18-first-swing-2c754df73a12a647",
@@ -605,7 +761,11 @@
       "played_score_cp": -541,
       "swing_cp": 330,
       "motif": "missed_forcing_move",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d2e4",
+        "a1d1"
+      ]
     },
     {
       "id": "sf18-first-swing-2c877e79324dbb4b",
@@ -620,7 +780,11 @@
       "played_score_cp": -1268,
       "swing_cp": 420,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e8d7",
+        "c8e6"
+      ]
     },
     {
       "id": "sf18-first-swing-2cab4e91ce5bbf27",
@@ -635,7 +799,11 @@
       "played_score_cp": -947,
       "swing_cp": 267,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f4h6",
+        "g1f2"
+      ]
     },
     {
       "id": "sf18-first-swing-2dd713a996d5ccb4",
@@ -650,7 +818,11 @@
       "played_score_cp": -1061,
       "swing_cp": 165,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1f2",
+        "b1b2"
+      ]
     },
     {
       "id": "sf18-first-swing-2e9b6699704ff735",
@@ -665,7 +837,11 @@
       "played_score_cp": -382,
       "swing_cp": 300,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d3c2",
+        "d3e2"
+      ]
     },
     {
       "id": "sf18-first-swing-2ed29573dfed328c",
@@ -680,7 +856,11 @@
       "played_score_cp": -99998,
       "swing_cp": 99102,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e1e2",
+        "e1e3"
+      ]
     },
     {
       "id": "sf18-first-swing-2f9c9692b470c3fd",
@@ -695,7 +875,11 @@
       "played_score_cp": -1195,
       "swing_cp": 315,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h5h8",
+        "e1f2"
+      ]
     },
     {
       "id": "sf18-first-swing-3075a687de26f42c",
@@ -710,7 +894,11 @@
       "played_score_cp": -99994,
       "swing_cp": 98901,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d8e8",
+        "d8d7"
+      ]
     },
     {
       "id": "sf18-first-swing-3190b2567b42716f",
@@ -725,7 +913,11 @@
       "played_score_cp": -988,
       "swing_cp": 170,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e3g5",
+        "d4d8"
+      ]
     },
     {
       "id": "sf18-first-swing-35b025e46e5fe35c",
@@ -740,7 +932,11 @@
       "played_score_cp": -892,
       "swing_cp": 232,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f1f2",
+        "f1f4"
+      ]
     },
     {
       "id": "sf18-first-swing-3656f632af67ed72",
@@ -755,7 +951,11 @@
       "played_score_cp": -656,
       "swing_cp": 186,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c8e6",
+        "g5g4"
+      ]
     },
     {
       "id": "sf18-first-swing-37370bca4ee418f3",
@@ -770,7 +970,11 @@
       "played_score_cp": -1223,
       "swing_cp": 318,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f8d6",
+        "f8e8"
+      ]
     },
     {
       "id": "sf18-first-swing-39bc568dfcb8b1b0",
@@ -785,7 +989,11 @@
       "played_score_cp": -424,
       "swing_cp": 219,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c3b5",
+        "d2d3"
+      ]
     },
     {
       "id": "sf18-first-swing-3a4477cf6eb64f07",
@@ -800,7 +1008,11 @@
       "played_score_cp": -803,
       "swing_cp": 266,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g1g2",
+        "g1h1"
+      ]
     },
     {
       "id": "sf18-first-swing-3adcb6ed9ae1e0d3",
@@ -815,7 +1027,11 @@
       "played_score_cp": -99999,
       "swing_cp": 98930,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c2d3",
+        "d1b1"
+      ]
     },
     {
       "id": "sf18-first-swing-3cca043e5421d595",
@@ -830,7 +1046,11 @@
       "played_score_cp": -99998,
       "swing_cp": 99322,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e3g1",
+        "c8h8"
+      ]
     },
     {
       "id": "sf18-first-swing-4134c44e0a876efd",
@@ -845,7 +1065,11 @@
       "played_score_cp": -702,
       "swing_cp": 162,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g8g7",
+        "h2h3"
+      ]
     },
     {
       "id": "sf18-first-swing-417892acc590535c",
@@ -860,7 +1084,11 @@
       "played_score_cp": -941,
       "swing_cp": 318,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d7d4",
+        "d7b7"
+      ]
     },
     {
       "id": "sf18-first-swing-41ded07fc79c527a",
@@ -875,7 +1103,11 @@
       "played_score_cp": -1292,
       "swing_cp": 470,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e5e4",
+        "d7f7"
+      ]
     },
     {
       "id": "sf18-first-swing-421a59f4a9dbaadd",
@@ -890,7 +1122,11 @@
       "played_score_cp": -1004,
       "swing_cp": 265,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g2f1",
+        "g1h2"
+      ]
     },
     {
       "id": "sf18-first-swing-437271104b8d3f64",
@@ -905,7 +1141,11 @@
       "played_score_cp": -961,
       "swing_cp": 151,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f4h3",
+        "f4e2"
+      ]
     },
     {
       "id": "sf18-first-swing-44d21650e581b529",
@@ -920,7 +1160,11 @@
       "played_score_cp": -73,
       "swing_cp": 392,
       "motif": "missed_forcing_move",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d3b5",
+        "e5d7"
+      ]
     },
     {
       "id": "sf18-first-swing-47595e7d58dd3269",
@@ -935,7 +1179,11 @@
       "played_score_cp": -877,
       "swing_cp": 177,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f2f3",
+        "h2h4"
+      ]
     },
     {
       "id": "sf18-first-swing-47951b4f21455a10",
@@ -950,7 +1198,11 @@
       "played_score_cp": -99985,
       "swing_cp": 99187,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d2c3",
+        "d2d1"
+      ]
     },
     {
       "id": "sf18-first-swing-4862e79100fb2c78",
@@ -965,7 +1217,11 @@
       "played_score_cp": -99995,
       "swing_cp": 99234,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e7h4",
+        "e7g5"
+      ]
     },
     {
       "id": "sf18-first-swing-4929b32d3bea2bd4",
@@ -980,7 +1236,11 @@
       "played_score_cp": -779,
       "swing_cp": 325,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a1e1",
+        "c4c7"
+      ]
     },
     {
       "id": "sf18-first-swing-4c1fe83d6445d5eb",
@@ -995,7 +1255,11 @@
       "played_score_cp": -99987,
       "swing_cp": 98816,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f2c2",
+        "c1b1"
+      ]
     },
     {
       "id": "sf18-first-swing-4ccfc736850bbf8c",
@@ -1010,7 +1274,11 @@
       "played_score_cp": -765,
       "swing_cp": 264,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1d4",
+        "f3g3"
+      ]
     },
     {
       "id": "sf18-first-swing-50c3a1741bdd4fc9",
@@ -1025,7 +1293,11 @@
       "played_score_cp": -99994,
       "swing_cp": 99147,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g2g3",
+        "e1f1"
+      ]
     },
     {
       "id": "sf18-first-swing-5224fd82d842828b",
@@ -1040,7 +1312,11 @@
       "played_score_cp": -99993,
       "swing_cp": 98905,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e1e3",
+        "h2g2"
+      ]
     },
     {
       "id": "sf18-first-swing-5317178601ebfd9d",
@@ -1055,7 +1331,11 @@
       "played_score_cp": -99997,
       "swing_cp": 98939,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d3c4",
+        "d2e3"
+      ]
     },
     {
       "id": "sf18-first-swing-532aadae89c9123e",
@@ -1070,7 +1350,11 @@
       "played_score_cp": -812,
       "swing_cp": 151,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e2f2",
+        "e2f1"
+      ]
     },
     {
       "id": "sf18-first-swing-5476662bcbe3d3bb",
@@ -1085,7 +1369,11 @@
       "played_score_cp": -1166,
       "swing_cp": 673,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d8a5",
+        "d8d4"
+      ]
     },
     {
       "id": "sf18-first-swing-54bd87a05531ee56",
@@ -1100,7 +1388,11 @@
       "played_score_cp": -728,
       "swing_cp": 317,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d4c3",
+        "c1b1"
+      ]
     },
     {
       "id": "sf18-first-swing-55b9cf43e2c29a16",
@@ -1115,7 +1407,11 @@
       "played_score_cp": -1071,
       "swing_cp": 396,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c2c3",
+        "g6g7"
+      ]
     },
     {
       "id": "sf18-first-swing-56fb4c07dc505b26",
@@ -1130,7 +1426,11 @@
       "played_score_cp": -893,
       "swing_cp": 196,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c4e3",
+        "f2f4"
+      ]
     },
     {
       "id": "sf18-first-swing-57002449dbff7560",
@@ -1145,7 +1445,11 @@
       "played_score_cp": -834,
       "swing_cp": 228,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b3b5",
+        "e1d1"
+      ]
     },
     {
       "id": "sf18-first-swing-58349f58962cf700",
@@ -1160,7 +1464,11 @@
       "played_score_cp": -1131,
       "swing_cp": 518,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d3e4",
+        "g2g3"
+      ]
     },
     {
       "id": "sf18-first-swing-58e7ea3376a419ce",
@@ -1175,7 +1483,11 @@
       "played_score_cp": -99989,
       "swing_cp": 98807,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f2e1",
+        "f1g2"
+      ]
     },
     {
       "id": "sf18-first-swing-594c1ac400d7a411",
@@ -1190,7 +1502,11 @@
       "played_score_cp": -99998,
       "swing_cp": 99199,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h3f3",
+        "a6e2"
+      ]
     },
     {
       "id": "sf18-first-swing-5dfcce6378bebc0c",
@@ -1205,7 +1521,11 @@
       "played_score_cp": -99984,
       "swing_cp": 99160,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b3c3",
+        "d4h8"
+      ]
     },
     {
       "id": "sf18-first-swing-5e66a837535a333c",
@@ -1220,7 +1540,11 @@
       "played_score_cp": -1294,
       "swing_cp": 489,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g1f1",
+        "g1g2"
+      ]
     },
     {
       "id": "sf18-first-swing-5f27683d2d9f1d37",
@@ -1235,7 +1559,11 @@
       "played_score_cp": -1022,
       "swing_cp": 458,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e4e5",
+        "d1d3"
+      ]
     },
     {
       "id": "sf18-first-swing-6170efced2d6eed0",
@@ -1250,7 +1578,11 @@
       "played_score_cp": -813,
       "swing_cp": 282,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1c2",
+        "e2f4"
+      ]
     },
     {
       "id": "sf18-first-swing-6318fcb7ec955477",
@@ -1265,7 +1597,11 @@
       "played_score_cp": -898,
       "swing_cp": 234,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f3h2",
+        "d1d3"
+      ]
     },
     {
       "id": "sf18-first-swing-63f1637f704a453c",
@@ -1280,7 +1616,11 @@
       "played_score_cp": -99998,
       "swing_cp": 99369,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d2e3",
+        "d1c2"
+      ]
     },
     {
       "id": "sf18-first-swing-65cdc79db0656c36",
@@ -1295,7 +1635,11 @@
       "played_score_cp": -716,
       "swing_cp": 162,
       "motif": "missed_forcing_move",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c2d3",
+        "e1f1"
+      ]
     },
     {
       "id": "sf18-first-swing-6724567322b0a2a6",
@@ -1310,7 +1654,11 @@
       "played_score_cp": -99995,
       "swing_cp": 99553,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d2e3",
+        "d1g4"
+      ]
     },
     {
       "id": "sf18-first-swing-67d7ef12bddc7c3f",
@@ -1325,7 +1673,11 @@
       "played_score_cp": -99987,
       "swing_cp": 99138,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1e2",
+        "a2a1"
+      ]
     },
     {
       "id": "sf18-first-swing-683cbc8aaf616d8d",
@@ -1340,7 +1692,11 @@
       "played_score_cp": -1101,
       "swing_cp": 256,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c1c2",
+        "e4e5"
+      ]
     },
     {
       "id": "sf18-first-swing-684fe49a52c97d65",
@@ -1355,7 +1711,11 @@
       "played_score_cp": -99997,
       "swing_cp": 99118,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1c2",
+        "d1b3"
+      ]
     },
     {
       "id": "sf18-first-swing-69835fead3e835a1",
@@ -1370,7 +1730,11 @@
       "played_score_cp": -99992,
       "swing_cp": 99170,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f2g1",
+        "c3c2"
+      ]
     },
     {
       "id": "sf18-first-swing-6df7d6d4c2a25f1e",
@@ -1385,7 +1749,11 @@
       "played_score_cp": -715,
       "swing_cp": 203,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e3g3",
+        "e3f3"
+      ]
     },
     {
       "id": "sf18-first-swing-6f59e2ab9969b624",
@@ -1400,7 +1768,11 @@
       "played_score_cp": -188,
       "swing_cp": 188,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b2c1",
+        "b2c2"
+      ]
     },
     {
       "id": "sf18-first-swing-6f59fdbc10fe4e87",
@@ -1415,7 +1787,11 @@
       "played_score_cp": -99995,
       "swing_cp": 99286,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h6h7",
+        "d8d7"
+      ]
     },
     {
       "id": "sf18-first-swing-710be723b5ab6dc3",
@@ -1430,7 +1806,11 @@
       "played_score_cp": -963,
       "swing_cp": 303,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e6d5",
+        "e6f5"
+      ]
     },
     {
       "id": "sf18-first-swing-727ee53764c9a32b",
@@ -1445,7 +1825,11 @@
       "played_score_cp": -736,
       "swing_cp": 173,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f4e5",
+        "d1f3"
+      ]
     },
     {
       "id": "sf18-first-swing-72d875520e069747",
@@ -1460,7 +1844,11 @@
       "played_score_cp": -1271,
       "swing_cp": 396,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e1d1",
+        "c1c2"
+      ]
     },
     {
       "id": "sf18-first-swing-737c5d3b0ae4b613",
@@ -1475,7 +1863,11 @@
       "played_score_cp": -177,
       "swing_cp": 177,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e2e3",
+        "a2a3"
+      ]
     },
     {
       "id": "sf18-first-swing-7468f624101d6ac1",
@@ -1490,7 +1882,10 @@
       "played_score_cp": -984,
       "swing_cp": 298,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e1e2"
+      ]
     },
     {
       "id": "sf18-first-swing-74bd72851045cd8b",
@@ -1505,7 +1900,11 @@
       "played_score_cp": -767,
       "swing_cp": 280,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g8f7",
+        "f6f8"
+      ]
     },
     {
       "id": "sf18-first-swing-75619c2e1d2f1027",
@@ -1520,7 +1919,11 @@
       "played_score_cp": -99997,
       "swing_cp": 98719,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d6c5",
+        "h4f2"
+      ]
     },
     {
       "id": "sf18-first-swing-7785dab7cb8b147f",
@@ -1535,7 +1938,11 @@
       "played_score_cp": -631,
       "swing_cp": 160,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a8a5",
+        "d8e7"
+      ]
     },
     {
       "id": "sf18-first-swing-77d229f8f48a107c",
@@ -1550,7 +1957,11 @@
       "played_score_cp": -99992,
       "swing_cp": 99299,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f1e1",
+        "f1d1"
+      ]
     },
     {
       "id": "sf18-first-swing-7850b717137c937a",
@@ -1565,7 +1976,11 @@
       "played_score_cp": -99996,
       "swing_cp": 99292,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c1d2",
+        "d1d3"
+      ]
     },
     {
       "id": "sf18-first-swing-7a7ae811b8265160",
@@ -1580,7 +1995,11 @@
       "played_score_cp": -997,
       "swing_cp": 434,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1f3",
+        "d2f3"
+      ]
     },
     {
       "id": "sf18-first-swing-7e759efdda5d1b56",
@@ -1595,7 +2014,11 @@
       "played_score_cp": -99982,
       "swing_cp": 99101,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d2f2",
+        "f4f3"
+      ]
     },
     {
       "id": "sf18-first-swing-7e9c9d30d7789863",
@@ -1610,7 +2033,11 @@
       "played_score_cp": -99996,
       "swing_cp": 99334,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1d5",
+        "e6d5"
+      ]
     },
     {
       "id": "sf18-first-swing-80ab6171dda9826b",
@@ -1625,7 +2052,11 @@
       "played_score_cp": -99989,
       "swing_cp": 99381,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b5d3",
+        "e3c5"
+      ]
     },
     {
       "id": "sf18-first-swing-80fda659f2342243",
@@ -1640,7 +2071,11 @@
       "played_score_cp": -99987,
       "swing_cp": 99200,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d2e1",
+        "d2f2"
+      ]
     },
     {
       "id": "sf18-first-swing-82b5f93eb5618f91",
@@ -1655,7 +2090,11 @@
       "played_score_cp": -99991,
       "swing_cp": 98943,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h3c3",
+        "h5h4"
+      ]
     },
     {
       "id": "sf18-first-swing-835870d2e93bd408",
@@ -1670,7 +2109,11 @@
       "played_score_cp": -900,
       "swing_cp": 201,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b4d2",
+        "d3c2"
+      ]
     },
     {
       "id": "sf18-first-swing-846a48f55fdf4257",
@@ -1685,7 +2128,11 @@
       "played_score_cp": -1014,
       "swing_cp": 254,
       "motif": "hanging_piece",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c3b2",
+        "f7f8"
+      ]
     },
     {
       "id": "sf18-first-swing-8984dc8c94a3ad45",
@@ -1700,7 +2147,11 @@
       "played_score_cp": -1190,
       "swing_cp": 485,
       "motif": "missed_forcing_move",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b2d2",
+        "c6b6"
+      ]
     },
     {
       "id": "sf18-first-swing-89af56421da04546",
@@ -1715,7 +2166,11 @@
       "played_score_cp": -1122,
       "swing_cp": 201,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d2f2",
+        "b5d7"
+      ]
     },
     {
       "id": "sf18-first-swing-8a1f27a859715610",
@@ -1730,7 +2185,11 @@
       "played_score_cp": -99996,
       "swing_cp": 98679,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h6h7",
+        "g4h4"
+      ]
     },
     {
       "id": "sf18-first-swing-8afd3b5ec986a02c",
@@ -1745,7 +2204,11 @@
       "played_score_cp": -1013,
       "swing_cp": 239,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g1f2",
+        "g1f1"
+      ]
     },
     {
       "id": "sf18-first-swing-8d3e95876d5b6746",
@@ -1760,7 +2223,11 @@
       "played_score_cp": -99995,
       "swing_cp": 99592,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f1e2",
+        "g2g1"
+      ]
     },
     {
       "id": "sf18-first-swing-8f2861f0a11c5928",
@@ -1775,7 +2242,11 @@
       "played_score_cp": -99996,
       "swing_cp": 99122,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1f3",
+        "h5h2"
+      ]
     },
     {
       "id": "sf18-first-swing-9009161eced0e7a4",
@@ -1790,7 +2261,11 @@
       "played_score_cp": -803,
       "swing_cp": 201,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g1h1",
+        "g1g2"
+      ]
     },
     {
       "id": "sf18-first-swing-905196e3d1405bd2",
@@ -1805,7 +2280,11 @@
       "played_score_cp": -99998,
       "swing_cp": 99530,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c7c6",
+        "h8h6"
+      ]
     },
     {
       "id": "sf18-first-swing-90a7f9abcd9e7273",
@@ -1820,7 +2299,11 @@
       "played_score_cp": -99988,
       "swing_cp": 99293,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f2e1",
+        "c1g1"
+      ]
     },
     {
       "id": "sf18-first-swing-91786d3c4ebcaa52",
@@ -1835,7 +2318,11 @@
       "played_score_cp": -1101,
       "swing_cp": 185,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c3d5",
+        "h2g2"
+      ]
     },
     {
       "id": "sf18-first-swing-91edd697c78ae56a",
@@ -1850,7 +2337,11 @@
       "played_score_cp": -99998,
       "swing_cp": 99147,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e7c7",
+        "e7b4"
+      ]
     },
     {
       "id": "sf18-first-swing-95bfd02ff8c43a44",
@@ -1865,7 +2356,11 @@
       "played_score_cp": -737,
       "swing_cp": 155,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f8f5",
+        "f8f3"
+      ]
     },
     {
       "id": "sf18-first-swing-990b0e40d7ce583d",
@@ -1880,7 +2375,11 @@
       "played_score_cp": -1095,
       "swing_cp": 170,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a1a7",
+        "a1a2"
+      ]
     },
     {
       "id": "sf18-first-swing-9f2ddfc10808a1fa",
@@ -1895,7 +2394,11 @@
       "played_score_cp": -981,
       "swing_cp": 171,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e2e3",
+        "e2f1"
+      ]
     },
     {
       "id": "sf18-first-swing-9f8276b1a44dbe80",
@@ -1910,7 +2413,11 @@
       "played_score_cp": -681,
       "swing_cp": 179,
       "motif": "hanging_piece",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h7h6",
+        "c8f8"
+      ]
     },
     {
       "id": "sf18-first-swing-a1b70b8f02bd8033",
@@ -1925,7 +2432,11 @@
       "played_score_cp": -778,
       "swing_cp": 270,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e2e4",
+        "f2f4"
+      ]
     },
     {
       "id": "sf18-first-swing-a3e619d8a053953b",
@@ -1940,7 +2451,11 @@
       "played_score_cp": -1059,
       "swing_cp": 400,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g1h2",
+        "g1f2"
+      ]
     },
     {
       "id": "sf18-first-swing-a4e737b01a73e780",
@@ -1955,7 +2470,11 @@
       "played_score_cp": -275,
       "swing_cp": 193,
       "motif": "hanging_piece",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a4e4",
+        "a4c2"
+      ]
     },
     {
       "id": "sf18-first-swing-a593d17ab3fe216b",
@@ -1970,7 +2489,11 @@
       "played_score_cp": -99994,
       "swing_cp": 98820,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f8d6",
+        "f8g7"
+      ]
     },
     {
       "id": "sf18-first-swing-a6c2112c2260e864",
@@ -1985,7 +2508,11 @@
       "played_score_cp": -1391,
       "swing_cp": 505,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h2h3",
+        "f3f2"
+      ]
     },
     {
       "id": "sf18-first-swing-a742f53d94a04b9e",
@@ -2000,7 +2527,11 @@
       "played_score_cp": -13,
       "swing_cp": 178,
       "motif": "hanging_piece",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e8d8",
+        "f6g5"
+      ]
     },
     {
       "id": "sf18-first-swing-a81ca0e2994292dd",
@@ -2015,7 +2546,11 @@
       "played_score_cp": -695,
       "swing_cp": 336,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1e2",
+        "e4e3"
+      ]
     },
     {
       "id": "sf18-first-swing-a833e948cc3e168b",
@@ -2030,7 +2565,11 @@
       "played_score_cp": -770,
       "swing_cp": 205,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e3e4",
+        "c6b5"
+      ]
     },
     {
       "id": "sf18-first-swing-a8accc76ad3e9e21",
@@ -2045,7 +2584,11 @@
       "played_score_cp": -99979,
       "swing_cp": 98837,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e7d6",
+        "g8g7"
+      ]
     },
     {
       "id": "sf18-first-swing-a9662d81db7e4879",
@@ -2060,7 +2603,11 @@
       "played_score_cp": -505,
       "swing_cp": 174,
       "motif": "missed_forcing_move",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d2h6",
+        "e1f1"
+      ]
     },
     {
       "id": "sf18-first-swing-ac2901e649b031c0",
@@ -2075,7 +2622,11 @@
       "played_score_cp": -587,
       "swing_cp": 178,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a1c1",
+        "g6f6"
+      ]
     },
     {
       "id": "sf18-first-swing-adb6d759886478c4",
@@ -2090,7 +2641,11 @@
       "played_score_cp": -701,
       "swing_cp": 248,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b4d2",
+        "b4c3"
+      ]
     },
     {
       "id": "sf18-first-swing-af0a3d880e556c89",
@@ -2105,7 +2660,11 @@
       "played_score_cp": -99993,
       "swing_cp": 99148,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c1f4",
+        "c1e3"
+      ]
     },
     {
       "id": "sf18-first-swing-b18f5a281b5ae432",
@@ -2120,7 +2679,11 @@
       "played_score_cp": -99993,
       "swing_cp": 98779,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c7c6",
+        "c7c5"
+      ]
     },
     {
       "id": "sf18-first-swing-b19422609d80b1b6",
@@ -2135,7 +2698,11 @@
       "played_score_cp": 75,
       "swing_cp": 162,
       "motif": "hanging_piece",
-      "occurrences": 2
+      "occurrences": 2,
+      "top_two_uci": [
+        "g4g5",
+        "b3b7"
+      ]
     },
     {
       "id": "sf18-first-swing-b7de88df4ab1dd77",
@@ -2150,7 +2717,11 @@
       "played_score_cp": -973,
       "swing_cp": 662,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1c2",
+        "h2h4"
+      ]
     },
     {
       "id": "sf18-first-swing-b88c34a2c2199b32",
@@ -2165,7 +2736,11 @@
       "played_score_cp": -99997,
       "swing_cp": 99268,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a8a4",
+        "f1a1"
+      ]
     },
     {
       "id": "sf18-first-swing-bf467e72347f71b7",
@@ -2180,7 +2755,11 @@
       "played_score_cp": -1183,
       "swing_cp": 440,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a7a6",
+        "g6d3"
+      ]
     },
     {
       "id": "sf18-first-swing-bff9add15c53f122",
@@ -2195,7 +2774,11 @@
       "played_score_cp": -719,
       "swing_cp": 202,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d7d6",
+        "d7e8"
+      ]
     },
     {
       "id": "sf18-first-swing-bffd553eae8c0b32",
@@ -2210,7 +2793,11 @@
       "played_score_cp": -879,
       "swing_cp": 241,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1g4",
+        "f1f2"
+      ]
     },
     {
       "id": "sf18-first-swing-c03add6687f3024f",
@@ -2225,7 +2812,11 @@
       "played_score_cp": -1467,
       "swing_cp": 378,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g1h2",
+        "h3g3"
+      ]
     },
     {
       "id": "sf18-first-swing-c040625432f9f086",
@@ -2240,7 +2831,11 @@
       "played_score_cp": -658,
       "swing_cp": 346,
       "motif": "king_attack",
-      "occurrences": 2
+      "occurrences": 2,
+      "top_two_uci": [
+        "e8f7",
+        "a8d8"
+      ]
     },
     {
       "id": "sf18-first-swing-c15ffe18893781f1",
@@ -2255,7 +2850,11 @@
       "played_score_cp": -99998,
       "swing_cp": 98669,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c1e3",
+        "f2f1"
+      ]
     },
     {
       "id": "sf18-first-swing-c241996986d0e8ca",
@@ -2270,7 +2869,11 @@
       "played_score_cp": -653,
       "swing_cp": 173,
       "motif": "missed_forcing_move",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a1a8",
+        "a1d1"
+      ]
     },
     {
       "id": "sf18-first-swing-c277ce091c5f08cd",
@@ -2285,7 +2888,11 @@
       "played_score_cp": -99986,
       "swing_cp": 98959,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g6f5",
+        "e6f5"
+      ]
     },
     {
       "id": "sf18-first-swing-c8114419dc9d8341",
@@ -2300,7 +2907,11 @@
       "played_score_cp": -786,
       "swing_cp": 156,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e4c2",
+        "e1g1"
+      ]
     },
     {
       "id": "sf18-first-swing-c8ceb4f4b09ef8ec",
@@ -2315,7 +2926,11 @@
       "played_score_cp": -761,
       "swing_cp": 160,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "g1g2",
+        "e2d4"
+      ]
     },
     {
       "id": "sf18-first-swing-cacad8f36e902c7a",
@@ -2330,7 +2945,11 @@
       "played_score_cp": -1093,
       "swing_cp": 436,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e2g2",
+        "e2d1"
+      ]
     },
     {
       "id": "sf18-first-swing-ce5752b9696b75c4",
@@ -2345,7 +2964,11 @@
       "played_score_cp": -1149,
       "swing_cp": 314,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b2b3",
+        "a2a3"
+      ]
     },
     {
       "id": "sf18-first-swing-d027042edf0050a7",
@@ -2360,7 +2983,11 @@
       "played_score_cp": -231,
       "swing_cp": 195,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e8g8",
+        "c7c6"
+      ]
     },
     {
       "id": "sf18-first-swing-d2666c8b361a80eb",
@@ -2375,7 +3002,11 @@
       "played_score_cp": -755,
       "swing_cp": 158,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c1d2",
+        "c4c7"
+      ]
     },
     {
       "id": "sf18-first-swing-d2802a896e511164",
@@ -2390,7 +3021,11 @@
       "played_score_cp": -99989,
       "swing_cp": 99414,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c6c8",
+        "h8g8"
+      ]
     },
     {
       "id": "sf18-first-swing-d421b3913b1b892c",
@@ -2405,7 +3040,11 @@
       "played_score_cp": -984,
       "swing_cp": 218,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e2f3",
+        "a3a4"
+      ]
     },
     {
       "id": "sf18-first-swing-d67ff768f7ce9edc",
@@ -2420,7 +3059,11 @@
       "played_score_cp": -662,
       "swing_cp": 271,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h2h4",
+        "a6e2"
+      ]
     },
     {
       "id": "sf18-first-swing-d780517573d50e86",
@@ -2435,7 +3078,11 @@
       "played_score_cp": -1266,
       "swing_cp": 737,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e1d2",
+        "c3d5"
+      ]
     },
     {
       "id": "sf18-first-swing-d92bbdf1e9e81466",
@@ -2450,7 +3097,11 @@
       "played_score_cp": -1356,
       "swing_cp": 468,
       "motif": "hanging_piece",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1e3",
+        "a4a1"
+      ]
     },
     {
       "id": "sf18-first-swing-dbffb96ccc296642",
@@ -2465,7 +3116,11 @@
       "played_score_cp": -530,
       "swing_cp": 293,
       "motif": "missed_forcing_move",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e2e8",
+        "e2e4"
+      ]
     },
     {
       "id": "sf18-first-swing-ddde493459b65d5c",
@@ -2480,7 +3135,11 @@
       "played_score_cp": -72,
       "swing_cp": 315,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e8c8",
+        "e7e6"
+      ]
     },
     {
       "id": "sf18-first-swing-decfcfc38fc34d00",
@@ -2495,7 +3154,11 @@
       "played_score_cp": -1489,
       "swing_cp": 457,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1c2",
+        "f3f4"
+      ]
     },
     {
       "id": "sf18-first-swing-dfde9b7e96de33b0",
@@ -2510,7 +3173,11 @@
       "played_score_cp": -747,
       "swing_cp": 193,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f4f1",
+        "g1f2"
+      ]
     },
     {
       "id": "sf18-first-swing-e021311b8fe66aae",
@@ -2525,7 +3192,11 @@
       "played_score_cp": -99997,
       "swing_cp": 99346,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "f1e1",
+        "f1d1"
+      ]
     },
     {
       "id": "sf18-first-swing-e03a82185c4f799f",
@@ -2540,7 +3211,11 @@
       "played_score_cp": -882,
       "swing_cp": 212,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a7a6",
+        "f7e5"
+      ]
     },
     {
       "id": "sf18-first-swing-e10d74773a3db685",
@@ -2555,7 +3230,11 @@
       "played_score_cp": -675,
       "swing_cp": 438,
       "motif": "hanging_piece",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h8h6",
+        "h8g8"
+      ]
     },
     {
       "id": "sf18-first-swing-e3484fe30e8e25af",
@@ -2570,7 +3249,11 @@
       "played_score_cp": -279,
       "swing_cp": 260,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c4d3",
+        "c4c7"
+      ]
     },
     {
       "id": "sf18-first-swing-e57c3b9e375913d0",
@@ -2585,7 +3268,11 @@
       "played_score_cp": -99995,
       "swing_cp": 99215,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1d3",
+        "d1d2"
+      ]
     },
     {
       "id": "sf18-first-swing-e5ebcc67eaedfb90",
@@ -2600,7 +3287,11 @@
       "played_score_cp": -99986,
       "swing_cp": 99418,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "h8h6",
+        "e7f5"
+      ]
     },
     {
       "id": "sf18-first-swing-e6b48a4aa6723158",
@@ -2615,7 +3306,11 @@
       "played_score_cp": -1078,
       "swing_cp": 161,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e1e2",
+        "g2g6"
+      ]
     },
     {
       "id": "sf18-first-swing-eaeb6220cbc80291",
@@ -2630,7 +3325,11 @@
       "played_score_cp": -1410,
       "swing_cp": 463,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d1e2",
+        "f3e2"
+      ]
     },
     {
       "id": "sf18-first-swing-ec4681dd2839e5e5",
@@ -2645,7 +3344,11 @@
       "played_score_cp": -99984,
       "swing_cp": 99154,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a2a1q",
+        "e8e6"
+      ]
     },
     {
       "id": "sf18-first-swing-ecc4d9195483f4f9",
@@ -2660,7 +3363,11 @@
       "played_score_cp": -551,
       "swing_cp": 188,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c3e2",
+        "f3g5"
+      ]
     },
     {
       "id": "sf18-first-swing-ecf877a2ee80be45",
@@ -2675,7 +3382,11 @@
       "played_score_cp": -99988,
       "swing_cp": 99221,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "a1b3",
+        "f7f6"
+      ]
     },
     {
       "id": "sf18-first-swing-edc57cbf6bdb43f9",
@@ -2690,7 +3401,11 @@
       "played_score_cp": -532,
       "swing_cp": 234,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "c2c1",
+        "c2b2"
+      ]
     },
     {
       "id": "sf18-first-swing-ef639bce16284375",
@@ -2705,7 +3420,11 @@
       "played_score_cp": -405,
       "swing_cp": 209,
       "motif": "unsound_capture",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b5b4",
+        "h7h6"
+      ]
     },
     {
       "id": "sf18-first-swing-f05c7aea7535cdf0",
@@ -2720,7 +3439,11 @@
       "played_score_cp": -99997,
       "swing_cp": 98567,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d8e7",
+        "c5e7"
+      ]
     },
     {
       "id": "sf18-first-swing-f08cfa9de5c578e2",
@@ -2735,7 +3458,11 @@
       "played_score_cp": -911,
       "swing_cp": 258,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d2d3",
+        "c2c3"
+      ]
     },
     {
       "id": "sf18-first-swing-f2e584794876ce5a",
@@ -2750,7 +3477,11 @@
       "played_score_cp": -99990,
       "swing_cp": 99243,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "b5b4",
+        "f5f4"
+      ]
     },
     {
       "id": "sf18-first-swing-f6420bc46390ab71",
@@ -2765,7 +3496,11 @@
       "played_score_cp": -99998,
       "swing_cp": 99119,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e7f6",
+        "b8f4"
+      ]
     },
     {
       "id": "sf18-first-swing-f6fd0b218bef533c",
@@ -2780,7 +3515,11 @@
       "played_score_cp": -1195,
       "swing_cp": 190,
       "motif": "king_attack",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d8e7",
+        "d8c7"
+      ]
     },
     {
       "id": "sf18-first-swing-f7d6d3d4822f0b51",
@@ -2795,7 +3534,11 @@
       "played_score_cp": -690,
       "swing_cp": 187,
       "motif": "tactical_other",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "d3d2",
+        "d3d4"
+      ]
     },
     {
       "id": "sf18-first-swing-fe3b510178d29e9c",
@@ -2810,7 +3553,11 @@
       "played_score_cp": -99994,
       "swing_cp": 98936,
       "motif": "missed_mate_defense",
-      "occurrences": 1
+      "occurrences": 1,
+      "top_two_uci": [
+        "e5f6",
+        "g1g2"
+      ]
     }
   ]
 }

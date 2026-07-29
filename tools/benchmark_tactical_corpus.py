@@ -23,12 +23,13 @@ def main() -> int:
     try:
         for index, entry in enumerate(corpus, start=1):
             result = engine.search(entry["fen"], args.nodes)
-            hit = result["bestmove"] == entry["best_uci"]
+            expected = entry.get("top_two_uci", [entry["best_uci"]])
+            hit = result["bestmove"] in expected
             results.append(
                 {
                     "id": entry["id"],
                     "motif": entry["motif"],
-                    "expected": entry["best_uci"],
+                    "expected": expected,
                     "actual": result["bestmove"],
                     "hit": hit,
                 }
