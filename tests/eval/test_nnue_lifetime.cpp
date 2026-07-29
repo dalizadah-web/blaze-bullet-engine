@@ -280,6 +280,8 @@ void require_snapshot_equal(
         fail("positional_output", -1, 0, expected.positional_output, actual.positional_output);
     if (expected.raw_output != actual.raw_output)
         fail("raw_output", -1, 0, expected.raw_output, actual.raw_output);
+    if (expected.value_output != actual.value_output)
+        fail("value_output", -1, 0, expected.value_output, actual.value_output);
 }
 
 TEST_CASE(nnue_thread_state_matches_a_fresh_direct_refresh_after_a_move) {
@@ -399,6 +401,8 @@ TEST_CASE(direct_big_nnue_matches_the_legacy_bridge_oracle) {
         auto state = evaluator->make_thread_state();
         state.reset(*position);
         const int incremental_raw = state.raw_evaluate(*position);
+        const auto legacy = sf_nnue_debug_snapshot(position->to_fen());
+        const auto fresh = evaluator->debug_snapshot(*position);
         const int legacy_public = sf_nnue_evaluate(position->to_fen());
         const int fresh_public = evaluator->evaluate(*position);
         const int incremental_public = state.evaluate(*position);
@@ -415,9 +419,9 @@ TEST_CASE(direct_big_nnue_matches_the_legacy_bridge_oracle) {
         }
         CHECK_EQ(direct_raw, legacy_raw);
         CHECK_EQ(incremental_raw, legacy_raw);
-        CHECK_EQ(fresh_public, sf_nnue_public_score(legacy_raw));
-        CHECK_EQ(legacy_public, sf_nnue_public_score(legacy_raw));
-        CHECK_EQ(incremental_public, sf_nnue_public_score(legacy_raw));
+        CHECK_EQ(fresh_public, sf_nnue_public_score(fresh.value_output));
+        CHECK_EQ(legacy_public, sf_nnue_public_score(legacy.value_output));
+        CHECK_EQ(incremental_public, sf_nnue_public_score(fresh.value_output));
     }
     sf_nnue_destroy();
 }
@@ -443,9 +447,9 @@ TEST_CASE(direct_big_nnue_randomized_incremental_oracle) {
             const NnueDebugSnapshot legacy = sf_nnue_debug_snapshot(position.to_fen());
             require_snapshot_equal(legacy, fresh, position, moves, ply, "legacy");
             CHECK_EQ(fresh.raw_output, sf_nnue_evaluate_raw(position.to_fen()));
-            CHECK_EQ(evaluator->evaluate(position), sf_nnue_public_score(fresh.raw_output));
-            CHECK_EQ(incremental.evaluate(position), sf_nnue_public_score(fresh.raw_output));
-            CHECK_EQ(sf_nnue_evaluate(position.to_fen()), sf_nnue_public_score(fresh.raw_output));
+            CHECK_EQ(evaluator->evaluate(position), sf_nnue_public_score(fresh.value_output));
+            CHECK_EQ(incremental.evaluate(position), sf_nnue_public_score(fresh.value_output));
+            CHECK_EQ(sf_nnue_evaluate(position.to_fen()), sf_nnue_public_score(fresh.value_output));
             Position copied = position;
             const NnueDebugSnapshot copied_snapshot = evaluator->debug_snapshot(copied);
             require_snapshot_equal(fresh, copied_snapshot, position, moves, ply, "position_copy");
@@ -470,7 +474,7 @@ TEST_CASE(direct_big_nnue_randomized_incremental_oracle) {
                                    static_cast<int>(index - 1), "unmake");
             require_snapshot_equal(sf_nnue_debug_snapshot(position.to_fen()), fresh, position,
                                    moves, static_cast<int>(index - 1), "legacy_unmake");
-            CHECK_EQ(incremental.evaluate(position), sf_nnue_public_score(fresh.raw_output));
+            CHECK_EQ(incremental.evaluate(position), sf_nnue_public_score(fresh.value_output));
         }
     }
     sf_nnue_destroy();
@@ -611,9 +615,9 @@ TEST_CASE(direct_big_nnue_special_move_oracle) {
                 sf_nnue_debug_snapshot(position.to_fen()), fresh, position, history,
                 static_cast<int>(history.size()), "legacy");
             CHECK_EQ(fresh.raw_output, sf_nnue_evaluate_raw(position.to_fen()));
-            CHECK_EQ(evaluator->evaluate(position), sf_nnue_public_score(fresh.raw_output));
-            CHECK_EQ(incremental.evaluate(position), sf_nnue_public_score(fresh.raw_output));
-            CHECK_EQ(sf_nnue_evaluate(position.to_fen()), sf_nnue_public_score(fresh.raw_output));
+            CHECK_EQ(evaluator->evaluate(position), sf_nnue_public_score(fresh.value_output));
+            CHECK_EQ(incremental.evaluate(position), sf_nnue_public_score(fresh.value_output));
+            CHECK_EQ(sf_nnue_evaluate(position.to_fen()), sf_nnue_public_score(fresh.value_output));
             Position copied = position;
             require_snapshot_equal(fresh, evaluator->debug_snapshot(copied), position, history,
                                    static_cast<int>(history.size()), "fixture_copy");
@@ -679,7 +683,7 @@ TEST_CASE(direct_big_nnue_special_move_oracle) {
                                null_state.debug_snapshot(null_position), null_position,
                                null_history, 1, "null_push");
         CHECK_EQ(null_state.evaluate(null_position),
-                 sf_nnue_public_score(sf_nnue_evaluate_raw(null_position.to_fen())));
+                  sf_nnue_evaluate(null_position.to_fen()));
         null_state.pop();
         null_position.unmake_null(state);
         require_snapshot_equal(before, null_state.debug_snapshot(null_position), null_position,

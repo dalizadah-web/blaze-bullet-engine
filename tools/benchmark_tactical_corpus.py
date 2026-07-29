@@ -14,12 +14,25 @@ def main() -> int:
     parser.add_argument("--engine", type=Path, required=True)
     parser.add_argument("--corpus", type=Path, required=True)
     parser.add_argument("--nodes", type=int, default=50_000)
+    parser.add_argument("--eval-file", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
     corpus = json.loads(args.corpus.read_text(encoding="utf-8"))["positions"]
     results = []
-    engine = UciEngine(str(args.engine.resolve()), threads=1, hash_mb=16, timeout=30.0)
+    init_options = {}
+    if args.eval_file:
+        init_options = {
+            "UseNNUE": "true",
+            "EvalFile": str(args.eval_file.resolve()),
+        }
+    engine = UciEngine(
+        str(args.engine.resolve()),
+        threads=1,
+        hash_mb=16,
+        init_options=init_options,
+        timeout=30.0,
+    )
     try:
         for index, entry in enumerate(corpus, start=1):
             result = engine.search(entry["fen"], args.nodes)
@@ -48,6 +61,7 @@ def main() -> int:
         }
     payload = {
         "nodes": args.nodes,
+        "eval_file": str(args.eval_file.resolve()) if args.eval_file else None,
         "positions": len(results),
         "hits": sum(entry["hit"] for entry in results),
         "by_motif": by_motif,

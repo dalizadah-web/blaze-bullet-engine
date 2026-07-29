@@ -133,6 +133,7 @@ struct NnueDebugSnapshot {
     std::int32_t psqt_output = 0;
     std::int32_t positional_output = 0;
     int raw_output = 0;
+    int value_output = 0;
 };
 
 class NnueThreadState final {

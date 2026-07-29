@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cstdint>
 #include <istream>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <ostream>
@@ -18,6 +19,8 @@
 #include <vector>
 
 namespace blaze {
+
+class Searcher;
 
 class UciSession {
 public:
@@ -45,6 +48,7 @@ private:
     bool use_nnue_ = false;
     std::string eval_file_;
     std::optional<NetworkEvaluator> network_evaluator_;
+    std::unique_ptr<Searcher> searcher_;
     bool pondering_ = false;
     std::string ponder_arguments_;
 

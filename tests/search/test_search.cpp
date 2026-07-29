@@ -819,14 +819,17 @@ TEST_CASE(see_pruning_see_ge_agrees_with_see_exact_on_corpus) {
             const Move m = all_moves[i];
             if (!m.has_flag(MoveFlag::Capture) && !m.has_flag(MoveFlag::EnPassant)) continue;
             const int see_value = static_exchange_evaluation(pos, m);
-            const bool see_ge_result = see_ge(pos, m, 0);
-            if ((see_value >= 0) != see_ge_result) {
-                std::cerr << "Corpus mismatch in position: " << fen
-                          << "\n  move=" << move_to_uci(m)
-                          << " see=" << see_value
-                          << " see_ge(0)=" << see_ge_result << "\n";
+            for (const int threshold : {-500, -200, 0, 200}) {
+              const bool see_ge_result = see_ge(pos, m, threshold);
+              if ((see_value >= threshold) != see_ge_result) {
+                  std::cerr << "Corpus mismatch in position: " << fen
+                            << "\n  move=" << move_to_uci(m)
+                            << " see=" << see_value
+                            << " threshold=" << threshold
+                            << " see_ge=" << see_ge_result << "\n";
+              }
+              CHECK_EQ(see_ge_result, see_value >= threshold);
             }
-            CHECK_EQ(see_ge_result, see_value >= 0);
         }
     }
 }
