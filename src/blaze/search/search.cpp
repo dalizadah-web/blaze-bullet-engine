@@ -1510,25 +1510,36 @@ int Searcher::quiescence(
         if (!checked && m.has_flag(MoveFlag::Capture) &&
             !m.has_flag(MoveFlag::Promotion) && !m.has_flag(MoveFlag::EnPassant)) {
             const Piece victim = position.piece_on(m.to());
+            bool checking_capture = false;
+            const auto is_checking_capture = [&] {
+                const Color moving_side = position.side_to_move();
+                StateInfo state;
+                if (!position.make_move(m, state)) return false;
+                const bool result = king_is_safe_after_move(position, moving_side) &&
+                    in_check(position);
+                position.unmake_move(m, state);
+                return result;
+            };
             if (stand_pat + victim_value(victim) + 120 < alpha) {
-                ++context.picker_stats.captures_pruned_by_see;
-                pruned_this_node = true;
-                continue;
-            }
-            ++context.picker_stats.see_pruning_calls;
-            if (!see_ge(position, m, 0)) {
-                StateInfo si;
-                bool gives_check = false;
-                if (position.make_move(m, si)) {
-                    gives_check = in_check(position);
-                    position.unmake_move(m, si);
-                }
-                if (!gives_check) {
+                checking_capture = is_checking_capture();
+                if (!checking_capture) {
                     ++context.picker_stats.captures_pruned_by_see;
                     pruned_this_node = true;
                     continue;
                 }
                 ++context.picker_stats.checking_captures_exempted;
+            }
+            ++context.picker_stats.see_pruning_calls;
+            if (!see_ge(position, m, 0)) {
+                if (!checking_capture) checking_capture = is_checking_capture();
+                if (!checking_capture) {
+                    ++context.picker_stats.captures_pruned_by_see;
+                    pruned_this_node = true;
+                    continue;
+                }
+                if (stand_pat + victim_value(victim) + 120 >= alpha) {
+                    ++context.picker_stats.checking_captures_exempted;
+                }
             }
         } else if (!checked &&
                    (m.has_flag(MoveFlag::Promotion) || m.has_flag(MoveFlag::EnPassant))) {

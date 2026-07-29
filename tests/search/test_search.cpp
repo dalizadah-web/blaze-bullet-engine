@@ -712,6 +712,16 @@ TEST_CASE(see_pruning_retains_checking_capture_even_if_losing) {
     CHECK(result.picker_stats.checking_captures_exempted > 0);
 }
 
+TEST_CASE(qsearch_delta_pruning_retains_a_checking_capture) {
+    Position root = position("7k/6p1/5K1Q/8/8/8/8/8 w - - 0 1");
+    TranspositionTable table(4);
+    Searcher searcher(table);
+
+    const SearchResult result = searcher.debug_search_window(root, 0, 2000, 3000);
+
+    CHECK(result.score >= search_mate_threshold);
+}
+
 TEST_CASE(see_pruning_preserves_promotions) {
     // White pawn promotes to queen even though the promotion square is defended.
     // Promotions should never be SEE-pruned.
