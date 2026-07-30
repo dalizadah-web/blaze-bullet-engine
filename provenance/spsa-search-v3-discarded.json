@@ -1,0 +1,23 @@
+{
+  "campaign_id": "search-v3-1plus0",
+  "disposition": "invalidated-before-update",
+  "reason": "The complete child match did not meet the immutable 80-game measured peak-concurrency requirement.",
+  "replacement_campaign_id": "search-v4-1plus0",
+  "trial_id": "7cd6157b00c47c1237315b4a",
+  "child_runs": [
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "id": 30533697257,
+      "peak_concurrent_games": 68,
+      "url": "https://github.com/dalizadah-web/blaze-bullet-engine/actions/runs/30533697257"
+    }
+  ],
+  "controller_run": {
+    "conclusion": "failure",
+    "id": 30534668985,
+    "reason": "cloud match did not achieve the required game concurrency"
+  },
+  "accepted_state_update": false,
+  "schema_version": 1
+}

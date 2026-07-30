@@ -83,7 +83,7 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertIn('-f "callback_payload=$callback_payload"', workflow)
         self.assertIn("controller_action=tune", workflow)
         self.assertIn("Upload resumable state while child runs asynchronously", workflow)
-        config = (Path(__file__).resolve().parents[2] / "config" / "spsa" / "search-v3.json").read_text(encoding="utf-8")
+        config = (Path(__file__).resolve().parents[2] / "config" / "spsa" / "search-v4.json").read_text(encoding="utf-8")
         self.assertIn('"shards": 40', config)
         self.assertIn('"concurrency": 2', config)
         self.assertIn('"time_control": "1+0"', config)
