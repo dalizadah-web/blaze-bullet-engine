@@ -1,0 +1,21 @@
+{
+  "campaign_id": "search-v1-1plus0",
+  "disposition": "invalidated-before-update",
+  "reason": "Two first-attempt cloud matches completed for the same immutable trial; neither result may be used.",
+  "replacement_campaign_id": "search-v2-1plus0",
+  "trial_id": "44faa1003d06082af489651d",
+  "child_runs": [
+    {
+      "attempt": 1,
+      "id": 30531654051,
+      "url": "https://github.com/dalizadah-web/blaze-bullet-engine/actions/runs/30531654051"
+    },
+    {
+      "attempt": 1,
+      "id": 30531734471,
+      "url": "https://github.com/dalizadah-web/blaze-bullet-engine/actions/runs/30531734471"
+    }
+  ],
+  "accepted_state_update": false,
+  "schema_version": 1
+}

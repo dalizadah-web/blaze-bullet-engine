@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "campaign_id": "search-v1-1plus0",
-  "master_seed": "b17a5e5e1f4a3c29d8607b6fc2e91845a7d003ce5b7f8264d19a6c30e2459f71",
+  "campaign_id": "search-v2-1plus0",
+  "master_seed": "1b2e648e9a8247c604dcdac5d76111f7b4c144a242ab809e5db7cc5613c14265",
   "iterations": 160,
   "gain": {
     "a0": 0.004,
