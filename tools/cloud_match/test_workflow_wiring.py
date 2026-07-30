@@ -87,6 +87,8 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertIn("for _ in {1..30}; do", workflow)
         self.assertIn("case \"$child_status\" in", workflow)
         self.assertIn("queued|in_progress|requested|waiting|pending)", workflow)
+        self.assertIn("child_trial_id=\"$trial_id-retry-$retry_number\"", workflow)
+        self.assertIn("capacity retry limit reached", workflow)
         config = (Path(__file__).resolve().parents[2] / "config" / "spsa" / "search-cloud-v2.json").read_text(encoding="utf-8")
         self.assertIn('"games": 160', config)
         self.assertIn('"concurrency": 4', config)

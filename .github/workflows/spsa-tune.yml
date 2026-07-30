@@ -126,111 +126,135 @@ jobs:
             --output campaign/plan.json
           echo "trial_id=$(jq -r .trial_id campaign/plan.json)" >> "$GITHUB_OUTPUT"
           echo "iteration=$(jq -r .iteration campaign/plan.json)" >> "$GITHUB_OUTPUT"
-      - name: Resolve exactly one same-binary child run
+      - name: Resolve one same-binary child run or capacity retry
         id: child
         shell: bash
         run: |
           set -euo pipefail
           trial_id='${{ steps.plan.outputs.trial_id }}'
-          runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
-            --json attempt,databaseId,displayTitle,headSha,url)"
-          matches="$(jq -c --arg title "$trial_id" --arg sha "$CONTROLLER_COMMIT" \
-            '[.[] | select(.displayTitle == $title and .headSha == $sha)]' <<< "$runs")"
-          count="$(jq length <<< "$matches")"
-          if [ "$count" -gt 1 ]; then
-            echo "ERROR: multiple child runs exist for immutable trial $trial_id" >&2
-            exit 1
-          fi
-          existing=false
-          if [ "$count" -eq 1 ]; then
-            existing=true
-            child_run_id="$(jq -r '.[0].databaseId' <<< "$matches")"
-            child_url="$(jq -r '.[0].url' <<< "$matches")"
-          else
-            candidate_initstr="$(jq -r .candidate_initstr campaign/plan.json)"
-            baseline_initstr="$(jq -r .baseline_initstr campaign/plan.json)"
-            opening_start="$(jq -r .opening_start campaign/plan.json)"
-            opening_count="$(jq -r .opening_suite_positions campaign/plan.json)"
-            games="$(jq -r .match.games "$CONFIG_PATH")"
-            shards="$(jq -r .match.shards "$CONFIG_PATH")"
-            concurrency="$(jq -r .match.concurrency "$CONFIG_PATH")"
-            threads="$(jq -r .match.threads "$CONFIG_PATH")"
-            hash_mb="$(jq -r .match.hash_mb "$CONFIG_PATH")"
-            time_control="$(jq -r .match.time_control "$CONFIG_PATH")"
-            base_config="$(jq -r .match.base_config "$CONFIG_PATH")"
-            callback_payload="$(jq -cn --arg workflow cloud-match.yml --arg action tune \
-              --arg ref "$WORKFLOW_REF" --arg campaign_id "$CAMPAIGN_ID" \
-              --arg engine_ref "$ENGINE_REF" --arg config_path "$CONFIG_PATH" \
-              --arg state_run_id "$GITHUB_RUN_ID" \
-              '{workflow: $workflow, action: $action, ref: $ref, campaign_id: $campaign_id,
-                engine_ref: $engine_ref, config_path: $config_path, state_run_id: $state_run_id}')"
-            if ! dispatch_output="$(gh workflow run cloud-match.yml \
-              --ref "$WORKFLOW_REF" \
-              -f "candidate_ref=$ENGINE_REF" \
-              -f "baseline_ref=$ENGINE_REF" \
-              -f "games=$games" \
-              -f "opening_start=$opening_start" \
-              -f opening_repeats=1 \
-              -f "opening_suite_positions=$opening_count" \
-              -f "shards=$shards" \
-              -f "concurrency=$concurrency" \
-              -f "time_control=$time_control" \
-              -f "threads=$threads" \
-              -f "hash_mb=$hash_mb" \
-              -f elo0=0 -f elo1=5 \
-              -f "candidate_initstr=$candidate_initstr" \
-              -f "baseline_initstr=$baseline_initstr" \
-              -f "match_config=$base_config" \
-              -f "trial_id=$trial_id" \
-              -f "callback_payload=$callback_payload" 2>&1)"; then
-              echo "$dispatch_output" >&2
+          child_trial_id="$trial_id"
+          retry_number=0
+          while true; do
+            runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
+              --json attempt,databaseId,displayTitle,headSha,url)"
+            matches="$(jq -c --arg title "$child_trial_id" --arg sha "$CONTROLLER_COMMIT" \
+              '[.[] | select(.displayTitle == $title and .headSha == $sha)]' <<< "$runs")"
+            count="$(jq length <<< "$matches")"
+            if [ "$count" -gt 1 ]; then
+              echo "ERROR: multiple child runs exist for immutable trial $child_trial_id" >&2
               exit 1
             fi
-            child_url="$(grep -Eo 'https://github.com/[^[:space:]]+/actions/runs/[0-9]+' <<< "$dispatch_output" | tail -1 || true)"
+            existing=false
+            if [ "$count" -eq 1 ]; then
+              existing=true
+              child_run_id="$(jq -r '.[0].databaseId' <<< "$matches")"
+              child_url="$(jq -r '.[0].url' <<< "$matches")"
+            else
+              candidate_initstr="$(jq -r .candidate_initstr campaign/plan.json)"
+              baseline_initstr="$(jq -r .baseline_initstr campaign/plan.json)"
+              opening_start="$(jq -r .opening_start campaign/plan.json)"
+              opening_count="$(jq -r .opening_suite_positions campaign/plan.json)"
+              games="$(jq -r .match.games "$CONFIG_PATH")"
+              shards="$(jq -r .match.shards "$CONFIG_PATH")"
+              concurrency="$(jq -r .match.concurrency "$CONFIG_PATH")"
+              threads="$(jq -r .match.threads "$CONFIG_PATH")"
+              hash_mb="$(jq -r .match.hash_mb "$CONFIG_PATH")"
+              time_control="$(jq -r .match.time_control "$CONFIG_PATH")"
+              base_config="$(jq -r .match.base_config "$CONFIG_PATH")"
+              callback_payload="$(jq -cn --arg workflow cloud-match.yml --arg action tune \
+                --arg ref "$WORKFLOW_REF" --arg campaign_id "$CAMPAIGN_ID" \
+                --arg engine_ref "$ENGINE_REF" --arg config_path "$CONFIG_PATH" \
+                --arg state_run_id "$GITHUB_RUN_ID" \
+                '{workflow: $workflow, action: $action, ref: $ref, campaign_id: $campaign_id,
+                  engine_ref: $engine_ref, config_path: $config_path, state_run_id: $state_run_id}')"
+              if ! dispatch_output="$(gh workflow run cloud-match.yml \
+                --ref "$WORKFLOW_REF" \
+                -f "candidate_ref=$ENGINE_REF" \
+                -f "baseline_ref=$ENGINE_REF" \
+                -f "games=$games" \
+                -f "opening_start=$opening_start" \
+                -f opening_repeats=1 \
+                -f "opening_suite_positions=$opening_count" \
+                -f "shards=$shards" \
+                -f "concurrency=$concurrency" \
+                -f "time_control=$time_control" \
+                -f "threads=$threads" \
+                -f "hash_mb=$hash_mb" \
+                -f elo0=0 -f elo1=5 \
+                -f "candidate_initstr=$candidate_initstr" \
+                -f "baseline_initstr=$baseline_initstr" \
+                -f "match_config=$base_config" \
+                -f "trial_id=$child_trial_id" \
+                -f "callback_payload=$callback_payload" 2>&1)"; then
+                echo "$dispatch_output" >&2
+                exit 1
+              fi
+              child_url="$(grep -Eo 'https://github.com/[^[:space:]]+/actions/runs/[0-9]+' <<< "$dispatch_output" | tail -1 || true)"
+              for _ in {1..30}; do
+                [ -n "$child_url" ] && break
+                sleep 2
+                runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
+                  --json databaseId,displayTitle,headSha,url)"
+                child_url="$(jq -r --arg title "$child_trial_id" --arg sha "$CONTROLLER_COMMIT" \
+                  '[.[] | select(.displayTitle == $title and .headSha == $sha)] | if length == 1 then .[0].url else empty end' <<< "$runs")"
+              done
+              test -n "$child_url"
+              child_run_id="${child_url##*/}"
+            fi
+            [[ "$child_run_id" =~ ^[0-9]+$ ]]
+            if [ "$existing" = true ]; then
+              for _ in {1..60}; do
+                child_status="$(gh run view "$child_run_id" --json status --jq .status)"
+                [ "$child_status" = completed ] && break
+                sleep 5
+              done
+            fi
+            metadata=''
             for _ in {1..30}; do
-              [ -n "$child_url" ] && break
+              if metadata="$(gh run view "$child_run_id" --json attempt,conclusion,databaseId,displayTitle,headSha,status,url 2>/dev/null)" && \
+                 [ "$(jq -r .displayTitle <<< "$metadata")" = "$child_trial_id" ] && \
+                 [ "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT" ]; then
+                break
+              fi
               sleep 2
-              runs="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
-                --json databaseId,displayTitle,headSha,url)"
-              child_url="$(jq -r --arg title "$trial_id" --arg sha "$CONTROLLER_COMMIT" \
-                '[.[] | select(.displayTitle == $title and .headSha == $sha)] | if length == 1 then .[0].url else empty end' <<< "$runs")"
             done
-            test -n "$child_url"
-            child_run_id="${child_url##*/}"
-          fi
-          [[ "$child_run_id" =~ ^[0-9]+$ ]]
-          if [ "$existing" = true ]; then
-            for _ in {1..60}; do
-              child_status="$(gh run view "$child_run_id" --json status --jq .status)"
-              [ "$child_status" = completed ] && break
-              sleep 5
-            done
-          fi
-          metadata=''
-          for _ in {1..30}; do
-            if metadata="$(gh run view "$child_run_id" --json attempt,conclusion,databaseId,displayTitle,headSha,status,url 2>/dev/null)" && \
-               [ "$(jq -r .displayTitle <<< "$metadata")" = "$trial_id" ] && \
-               [ "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT" ]; then
+            test -n "$metadata"
+            test "$(jq -r .displayTitle <<< "$metadata")" = "$child_trial_id"
+            test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
+            child_status="$(jq -r .status <<< "$metadata")"
+            case "$child_status" in
+              completed)
+                test "$(jq -r .attempt <<< "$metadata")" = 1
+                test "$(jq -r .conclusion <<< "$metadata")" = success
+                ;;
+              queued|in_progress|requested|waiting|pending)
+                break
+                ;;
+              *)
+                echo "ERROR: child run has unexpected status $child_status" >&2
+                exit 1
+                ;;
+            esac
+            if [ "$child_status" != completed ]; then
               break
             fi
-            sleep 2
-          done
-          test -n "$metadata"
-          test "$(jq -r .displayTitle <<< "$metadata")" = "$trial_id"
-          test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
-          child_status="$(jq -r .status <<< "$metadata")"
-          case "$child_status" in
-            completed)
-              test "$(jq -r .attempt <<< "$metadata")" = 1
-              test "$(jq -r .conclusion <<< "$metadata")" = success
-              ;;
-            queued|in_progress|requested|waiting|pending)
-              ;;
-            *)
-              echo "ERROR: child run has unexpected status $child_status" >&2
+            rm -rf child-probe
+            gh run download "$child_run_id" -p 'result-*' -D child-probe
+            probe_summary="$(find child-probe -name summary.json -type f -print -quit)"
+            test -n "$probe_summary"
+            required_peak="$(jq -r .match.required_peak_concurrent_games "$CONFIG_PATH")"
+            measured_peak="$(jq -r .peak_concurrent_games "$probe_summary")"
+            if [ "$measured_peak" -ge "$required_peak" ]; then
+              break
+            fi
+            retry_number=$((retry_number + 1))
+            if [ "$retry_number" -gt 3 ]; then
+              echo "ERROR: capacity retry limit reached for $trial_id (last peak $measured_peak; required $required_peak)" >&2
               exit 1
-              ;;
-          esac
+            fi
+            child_trial_id="$trial_id-retry-$retry_number"
+            echo "Retrying $trial_id after measured peak $measured_peak; child trial $child_trial_id" >&2
+          done
           iteration='${{ steps.plan.outputs.iteration }}'
           receipt="campaign/dispatches/$(printf '%04d' "$iteration").json"
           jq -n --arg trial_id "$trial_id" --argjson iteration "$iteration" \
@@ -242,6 +266,7 @@ jobs:
           echo "run_id=$child_run_id" >> "$GITHUB_OUTPUT"
           echo "url=$child_url" >> "$GITHUB_OUTPUT"
           echo "status=$child_status" >> "$GITHUB_OUTPUT"
+          echo "child_trial_id=$child_trial_id" >> "$GITHUB_OUTPUT"
       - name: Upload durable dispatch receipt
         uses: actions/upload-artifact@v4
         with:
@@ -280,12 +305,12 @@ jobs:
           metadata="$(gh run view "$run_id" --json attempt,conclusion,displayTitle,headSha)"
           test "$(jq -r .attempt <<< "$metadata")" = 1
           test "$(jq -r .conclusion <<< "$metadata")" = success
-          test "$(jq -r .displayTitle <<< "$metadata")" = '${{ steps.plan.outputs.trial_id }}'
-          test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
-          matches="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
-            --json attempt,databaseId,displayTitle,headSha | jq -c \
-            --arg title '${{ steps.plan.outputs.trial_id }}' --arg sha "$CONTROLLER_COMMIT" \
-            '[.[] | select(.displayTitle == $title and .headSha == $sha)]')"
+           test "$(jq -r .displayTitle <<< "$metadata")" = '${{ steps.child.outputs.child_trial_id }}'
+           test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
+           matches="$(gh run list --workflow cloud-match.yml --event workflow_dispatch --limit 100 \
+             --json attempt,databaseId,displayTitle,headSha | jq -c \
+             --arg title '${{ steps.child.outputs.child_trial_id }}' --arg sha "$CONTROLLER_COMMIT" \
+             '[.[] | select(.displayTitle == $title and .headSha == $sha)]')"
           test "$(jq length <<< "$matches")" = 1
           test "$(jq -r '.[0].databaseId' <<< "$matches")" = "$run_id"
           test "$(jq -r '.[0].attempt' <<< "$matches")" = 1
