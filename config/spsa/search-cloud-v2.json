@@ -17,7 +17,7 @@
     "threads": 1,
     "hash_mb": 16,
     "time_control": "1+0",
-    "required_peak_concurrent_games": 160,
+    "required_peak_concurrent_games": 144,
     "openings_per_iteration": 80,
     "training_positions": 6400,
     "opening_start": 2101,

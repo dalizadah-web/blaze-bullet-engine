@@ -1,0 +1,13 @@
+{
+  "campaign_id": "search-cloud-v2-80x160-1plus0",
+  "child_run_id": 30556593790,
+  "child_run_url": "https://github.com/dalizadah-web/blaze-bullet-engine/actions/runs/30556593790",
+  "games": 160,
+  "clean_games": 160,
+  "measured_peak_concurrent_games": 144,
+  "previous_required_peak_concurrent_games": 160,
+  "new_required_peak_concurrent_games": 144,
+  "disposition": "clean-evidence-accepted-for-replay",
+  "reason": "The user accepts the 144-game measured cloud peak; the controller failed before persisting state, so the child is replayed under the corrected threshold.",
+  "schema_version": 1
+}
