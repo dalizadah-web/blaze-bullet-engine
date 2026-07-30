@@ -1,0 +1,17 @@
+{
+  "campaign_id": "search-v2-1plus0",
+  "disposition": "invalidated-before-update",
+  "reason": "The manually dispatched first child run omitted both SPSA initialization payloads because jq is unavailable on the Windows dispatch host.",
+  "replacement_campaign_id": "search-v3-1plus0",
+  "trial_id": "186e70676fbb9aa36b06e4d2",
+  "child_runs": [
+    {
+      "attempt": 1,
+      "conclusion": "cancelled",
+      "id": 30533510348,
+      "url": "https://github.com/dalizadah-web/blaze-bullet-engine/actions/runs/30533510348"
+    }
+  ],
+  "accepted_state_update": false,
+  "schema_version": 1
+}
