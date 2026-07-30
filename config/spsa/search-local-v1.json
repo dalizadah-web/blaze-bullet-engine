@@ -1,8 +1,10 @@
 {
   "schema_version": 1,
-  "campaign_id": "search-v4-1plus0",
-  "master_seed": "8517e11c3cce5a2df26af1213bd0f8002448ac0ab759fc2bd4cf838e49598bb9",
+  "campaign_id": "search-local-v1-1plus0p1",
+  "master_seed": "cceb32a667d628485810cda9768aee5e925be0e2db9f00dd2495e5bb578f664e",
   "iterations": 160,
+  "local_concurrency": 8,
+  "local_time_control": "1+0.1",
   "gain": {
     "a0": 0.004,
     "c0": 0.06,

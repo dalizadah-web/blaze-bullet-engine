@@ -28,8 +28,11 @@ def main() -> int:
     parser.add_argument("--time-control", required=True)
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--hash-mb", type=int, default=16)
+    parser.add_argument("--time-margin-ms", type=int, default=150)
     parser.add_argument("--elo0", type=float, default=0.0)
     parser.add_argument("--elo1", type=float, default=5.0)
+    parser.add_argument("--candidate-initstr", default="")
+    parser.add_argument("--baseline-initstr", default="")
     parser.add_argument("--source-commit", required=True)
     args = parser.parse_args()
 
@@ -52,11 +55,14 @@ def main() -> int:
         time_control=args.time_control,
         threads=args.threads,
         hash_mb=args.hash_mb,
+        time_margin_ms=args.time_margin_ms,
         repeat=True,
         opening_format="epd",
         openings=str(openings),
         opening_sha256=base.opening_sha256,
         opponent_sha256=baseline_identity.sha256,
+        candidate_initstr=args.candidate_initstr,
+        opponent_initstr=args.baseline_initstr,
         sprt=SprtSpec(
             elo0=args.elo0,
             elo1=args.elo1,
@@ -98,6 +104,9 @@ def main() -> int:
         "decision": result.decision,
         "configuration": configuration,
         "local_concurrency": args.concurrency,
+        "local_time_margin_ms": args.time_margin_ms,
+        "candidate_initstr": args.candidate_initstr,
+        "baseline_initstr": args.baseline_initstr,
         "environment": {
             "machine": platform.machine(),
             "os": platform.platform(),

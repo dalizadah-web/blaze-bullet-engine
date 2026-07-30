@@ -1,0 +1,17 @@
+{
+  "campaign_id": "search-v4-1plus0",
+  "disposition": "invalidated-before-update",
+  "reason": "The first cloud child run was cancelled at the user's request to move the campaign to a local eight-concurrency lane.",
+  "replacement_campaign_id": "search-local-v1-1plus0p1",
+  "trial_id": "864013441c17693d2350c9c8",
+  "child_runs": [
+    {
+      "attempt": 1,
+      "conclusion": "cancelled",
+      "id": 30535199423,
+      "url": "https://github.com/dalizadah-web/blaze-bullet-engine/actions/runs/30535199423"
+    }
+  ],
+  "accepted_state_update": false,
+  "schema_version": 1
+}
