@@ -66,12 +66,21 @@ jobs:
           cache: pip
           cache-dependency-path: tools/cloud_match/requirements.txt
       - run: pip install -r tools/cloud_match/requirements.txt
-      - uses: actions/download-artifact@v4
-        with:
-          name: spsa-state-${{ inputs.campaign_id }}
-          path: campaign
-          run-id: ${{ inputs.state_run_id }}
-          github-token: ${{ github.token }}
+      - name: Restore completed campaign state
+        shell: bash
+        run: |
+          set -euo pipefail
+          for _ in {1..60}; do
+            rm -rf campaign
+            if gh run download "$STATE_RUN_ID" \
+              --name "spsa-state-$CAMPAIGN_ID" \
+              --dir campaign && test -f campaign/state.json; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "ERROR: state artifact did not become available for run $STATE_RUN_ID" >&2
+          exit 1
       - name: Verify frozen state and qualification artifacts
         id: final
         shell: bash
@@ -173,11 +182,19 @@ jobs:
           metadata="$(gh run view "$child_run_id" --json attempt,conclusion,displayTitle,headSha,status,url)"
           test "$(jq -r .displayTitle <<< "$metadata")" = "$trial_id"
           test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
-          test "$(jq -r .attempt <<< "$metadata")" = 1
           child_status="$(jq -r .status <<< "$metadata")"
-          if [ "$child_status" = completed ]; then
-            test "$(jq -r .conclusion <<< "$metadata")" = success
-          fi
+          case "$child_status" in
+            completed)
+              test "$(jq -r .attempt <<< "$metadata")" = 1
+              test "$(jq -r .conclusion <<< "$metadata")" = success
+              ;;
+            queued|in_progress|requested|waiting|pending)
+              ;;
+            *)
+              echo "ERROR: child run has unexpected status $child_status" >&2
+              exit 1
+              ;;
+          esac
           jq -n --arg trial_id "$trial_id" --argjson child_run_id "$child_run_id" \
             --arg child_run_url "$child_url" --arg controller_commit "$CONTROLLER_COMMIT" \
             --arg campaign_id "$CAMPAIGN_ID" \

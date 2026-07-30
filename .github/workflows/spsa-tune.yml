@@ -91,12 +91,20 @@ jobs:
           done
       - name: Restore previous campaign state
         if: ${{ inputs.state_run_id != '' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: spsa-state-${{ inputs.campaign_id }}
-          path: campaign
-          run-id: ${{ inputs.state_run_id }}
-          github-token: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for _ in {1..60}; do
+            rm -rf campaign
+            if gh run download "$STATE_RUN_ID" \
+              --name "spsa-state-$CAMPAIGN_ID" \
+              --dir campaign && test -f campaign/state.json; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "ERROR: state artifact did not become available for run $STATE_RUN_ID" >&2
+          exit 1
       - name: Initialize or plan deterministic trial
         id: plan
         shell: bash
@@ -201,11 +209,19 @@ jobs:
           metadata="$(gh run view "$child_run_id" --json attempt,conclusion,databaseId,displayTitle,headSha,status,url)"
           test "$(jq -r .displayTitle <<< "$metadata")" = "$trial_id"
           test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
-          test "$(jq -r .attempt <<< "$metadata")" = 1
           child_status="$(jq -r .status <<< "$metadata")"
-          if [ "$child_status" = completed ]; then
-            test "$(jq -r .conclusion <<< "$metadata")" = success
-          fi
+          case "$child_status" in
+            completed)
+              test "$(jq -r .attempt <<< "$metadata")" = 1
+              test "$(jq -r .conclusion <<< "$metadata")" = success
+              ;;
+            queued|in_progress|requested|waiting|pending)
+              ;;
+            *)
+              echo "ERROR: child run has unexpected status $child_status" >&2
+              exit 1
+              ;;
+          esac
           iteration='${{ steps.plan.outputs.iteration }}'
           receipt="campaign/dispatches/$(printf '%04d' "$iteration").json"
           jq -n --arg trial_id "$trial_id" --argjson iteration "$iteration" \

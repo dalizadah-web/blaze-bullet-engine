@@ -83,6 +83,9 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertIn('-f "callback_payload=$callback_payload"', workflow)
         self.assertIn("controller_action=tune", workflow)
         self.assertIn("Upload resumable state while child runs asynchronously", workflow)
+        self.assertIn("gh run download \"$STATE_RUN_ID\"", workflow)
+        self.assertIn("case \"$child_status\" in", workflow)
+        self.assertIn("queued|in_progress|requested|waiting|pending)", workflow)
         config = (Path(__file__).resolve().parents[2] / "config" / "spsa" / "search-cloud-v2.json").read_text(encoding="utf-8")
         self.assertIn('"games": 160', config)
         self.assertIn('"concurrency": 4', config)
@@ -105,6 +108,9 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertNotIn("actions/runs/$GITHUB_RUN_ID/artifacts", workflow)
         self.assertIn("Resume SPSA controller after evidence is durable", workflow)
         self.assertIn('--source-run-attempt "$GITHUB_RUN_ATTEMPT"', workflow)
+        qualification = QUALIFICATION.read_text(encoding="utf-8")
+        self.assertIn("gh run download \"$STATE_RUN_ID\"", qualification)
+        self.assertIn("case \"$child_status\" in", qualification)
 
 
 if __name__ == "__main__":
