@@ -315,6 +315,11 @@ class SpsaTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "bounds or grid"):
             validate_config(cfg)
 
+    def test_configuration_allows_four_game_cloud_workers(self) -> None:
+        cfg = config()
+        cfg["match"]["concurrency"] = 4
+        validate_config(cfg)
+
 
 if __name__ == "__main__":
     unittest.main()

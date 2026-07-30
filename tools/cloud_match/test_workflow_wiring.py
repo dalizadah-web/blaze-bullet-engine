@@ -83,9 +83,9 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertIn('-f "callback_payload=$callback_payload"', workflow)
         self.assertIn("controller_action=tune", workflow)
         self.assertIn("Upload resumable state while child runs asynchronously", workflow)
-        config = (Path(__file__).resolve().parents[2] / "config" / "spsa" / "search-local-v2.json").read_text(encoding="utf-8")
-        self.assertIn('"games": 20', config)
-        self.assertIn('"concurrency": 2', config)
+        config = (Path(__file__).resolve().parents[2] / "config" / "spsa" / "search-cloud-v2.json").read_text(encoding="utf-8")
+        self.assertIn('"games": 160', config)
+        self.assertIn('"concurrency": 4', config)
         self.assertIn('"time_control": "1+0"', config)
 
     def test_spsa_qualification_is_resumable_and_sealed(self) -> None:

@@ -91,8 +91,8 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ValueError("match.games must be a positive even integer")
     if not isinstance(shards, int) or not 1 <= shards <= 40 or games // 2 < shards:
         raise ValueError("match.shards cannot exceed 40 or the available pairs")
-    if concurrency != 2 or match.get("threads") != 1 or match.get("time_control") != "1+0":
-        raise ValueError("the cloud campaign is fixed to concurrency=2, threads=1, time_control=1+0")
+    if concurrency not in (2, 4) or match.get("threads") != 1 or match.get("time_control") != "1+0":
+        raise ValueError("the cloud campaign requires concurrency=2 or 4, threads=1, time_control=1+0")
     if not isinstance(openings, int) or openings <= 0 or games != openings * 2:
         raise ValueError("games must equal twice openings_per_iteration")
     if match.get("training_positions", 0) < iterations * openings:

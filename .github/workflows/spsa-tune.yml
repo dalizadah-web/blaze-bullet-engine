@@ -22,7 +22,7 @@ on:
       campaign_id:
         description: Stable campaign identifier
         required: true
-        default: search-local-v2-80x20-1plus0p1
+        default: search-cloud-v2-80x160-1plus0
         type: string
       engine_ref:
         description: Immutable engine commit used by both sides
@@ -31,7 +31,7 @@ on:
       config_path:
         description: Trusted SPSA configuration in this revision
         required: true
-        default: config/spsa/search-local-v2.json
+        default: config/spsa/search-cloud-v2.json
         type: string
       state_run_id:
         description: Previous controller run containing the latest state artifact

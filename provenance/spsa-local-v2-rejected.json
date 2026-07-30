@@ -1,0 +1,12 @@
+{
+  "campaign_id": "search-local-v2-80x20-1plus0p1",
+  "disposition": "rejected-by-cloud-confirmation",
+  "confirmation_run_id": 30552646552,
+  "confirmation_url": "https://github.com/dalizadah-web/blaze-bullet-engine/actions/runs/30552646552",
+  "games": 32000,
+  "peak_concurrent_games": 80,
+  "sprt_decision": "reject",
+  "sprt_llr": -5.937516721140128,
+  "replacement_campaign_id": "search-cloud-v2-80x160-1plus0",
+  "schema_version": 1
+}
