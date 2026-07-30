@@ -125,6 +125,7 @@ def main() -> int:
     parser.add_argument("--engine-commit", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-iterations", type=int)
+    parser.add_argument("--extend-from-iterations", type=int)
     args = parser.parse_args()
 
     config = _read(args.config)
@@ -143,6 +144,21 @@ def main() -> int:
     )
     if state["engine_commit"] != args.engine_commit or state["controller_commit"] != args.engine_commit:
         raise ValueError("local state is bound to a different engine commit")
+    if state["config_sha256"] != _sha256(config):
+        previous_iterations = args.extend_from_iterations
+        if (
+            previous_iterations is None
+            or previous_iterations >= config["iterations"]
+            or state["next_iteration"] > previous_iterations
+            or state["next_iteration"] != config["iterations"] // 2 + 1
+        ):
+            raise ValueError("local state does not belong to this campaign configuration")
+        # Preserve the first final-half center at the rebased boundary.
+        state = dict(state)
+        state["config_sha256"] = _sha256(config)
+        state["tail_sums_hex"] = list(state["centers_hex"])
+        state["tail_count"] = 1
+        _write(state_path, state)
 
     while state["status"] == "running" and (
         args.max_iterations is None or state["next_iteration"] < args.max_iterations

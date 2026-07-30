@@ -1,0 +1,9 @@
+{
+  "campaign_id": "search-local-v2-80x20-1plus0p1",
+  "previous_config_sha256": "4c3cce1a205dcac4436ba9ffbbbff1bd6c5a309e082c83c7535f66b26bfff122",
+  "previous_iterations": 80,
+  "resumed_from_next_iteration": 53,
+  "target_iterations": 105,
+  "tail_average_rebased_at_iteration": 52,
+  "schema_version": 1
+}
