@@ -290,7 +290,7 @@ def plan_trial(config: dict[str, Any], state: dict[str, Any]) -> dict[str, Any]:
         "candidate_is_plus": candidate_is_plus,
         "candidate_initstr": candidate_init,
         "baseline_initstr": baseline_init,
-        "opening_start": iteration * config["match"]["openings_per_iteration"] + 1,
+        "opening_start": config["match"].get("opening_start", 1) + iteration * config["match"]["openings_per_iteration"],
         "opening_suite_positions": config["match"]["openings_per_iteration"],
         "previous_trial_sha256": state["last_trial_sha256"],
     }

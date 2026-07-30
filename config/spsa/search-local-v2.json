@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "campaign_id": "search-local-v1-1plus0p1",
-  "master_seed": "cceb32a667d628485810cda9768aee5e925be0e2db9f00dd2495e5bb578f664e",
-  "iterations": 160,
+  "campaign_id": "search-local-v2-80x20-1plus0p1",
+  "master_seed": "48c0e9f55c4a28fbac5a494a10d151f276d2a5a2fcbcbc125ebb01a1b8f094bc",
+  "iterations": 80,
   "local_concurrency": 8,
   "local_time_control": "1+0.1",
   "gain": {
@@ -13,15 +13,16 @@
     "A": 16.0
   },
   "match": {
-    "games": 400,
-    "shards": 40,
+    "games": 20,
+    "shards": 10,
     "concurrency": 2,
     "threads": 1,
     "hash_mb": 16,
     "time_control": "1+0",
-    "required_peak_concurrent_games": 80,
-    "openings_per_iteration": 200,
-    "training_positions": 32000,
+    "required_peak_concurrent_games": 8,
+    "openings_per_iteration": 10,
+    "training_positions": 800,
+    "opening_start": 1001,
     "base_config": "config/cloud/spsa-train-v1.json",
     "base_config_sha256": "952844d556e8fb3bc0a5bb7e1dc0163bff593edce399cdb18b9c2eb8b90aeac7",
     "name": "blaze-spsa-search-training-v1",

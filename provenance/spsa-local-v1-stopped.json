@@ -1,0 +1,12 @@
+{
+  "campaign_id": "search-local-v1-1plus0p1",
+  "disposition": "stopped-before-selection",
+  "reason": "The user reduced the local campaign budget from 160x400 to 80x20 after two accepted iterations.",
+  "replacement_campaign_id": "search-local-v2-80x20-1plus0p1",
+  "accepted_trials": [
+    "27cc204f13ad3f1cf602c991",
+    "f3d533dab4a37388c3e06792"
+  ],
+  "next_iteration": 2,
+  "schema_version": 1
+}

@@ -20,7 +20,7 @@ on:
     inputs:
       campaign_id:
         required: true
-        default: search-local-v1-1plus0p1
+        default: search-local-v2-80x20-1plus0p1
         type: string
       engine_ref:
         description: Immutable same-binary engine commit
@@ -32,7 +32,7 @@ on:
         type: string
       config_path:
         required: true
-        default: config/spsa/search-local-v1.json
+        default: config/spsa/search-local-v2.json
         type: string
 
 permissions:

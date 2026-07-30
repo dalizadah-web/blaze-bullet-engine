@@ -185,6 +185,12 @@ class SpsaTests(unittest.TestCase):
         self.assertNotEqual(first["plus"], first["minus"])
         self.assertEqual(first["opening_start"], 1)
 
+    def test_plan_honors_configured_training_opening_offset(self) -> None:
+        cfg = config()
+        cfg["match"]["opening_start"] = 81
+        state = initialize_state(cfg, COMMIT, CONTROLLER_COMMIT)
+        self.assertEqual(plan_trial(cfg, state)["opening_start"], 81)
+
     def test_candidate_role_is_normalized_before_update(self) -> None:
         cfg = config()
         state = initialize_state(cfg, COMMIT, CONTROLLER_COMMIT)
