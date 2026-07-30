@@ -206,7 +206,16 @@ jobs:
               sleep 5
             done
           fi
-          metadata="$(gh run view "$child_run_id" --json attempt,conclusion,databaseId,displayTitle,headSha,status,url)"
+          metadata=''
+          for _ in {1..30}; do
+            if metadata="$(gh run view "$child_run_id" --json attempt,conclusion,databaseId,displayTitle,headSha,status,url 2>/dev/null)" && \
+               [ "$(jq -r .displayTitle <<< "$metadata")" = "$trial_id" ] && \
+               [ "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT" ]; then
+              break
+            fi
+            sleep 2
+          done
+          test -n "$metadata"
           test "$(jq -r .displayTitle <<< "$metadata")" = "$trial_id"
           test "$(jq -r .headSha <<< "$metadata")" = "$CONTROLLER_COMMIT"
           child_status="$(jq -r .status <<< "$metadata")"

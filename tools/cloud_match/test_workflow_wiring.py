@@ -84,6 +84,7 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertIn("controller_action=tune", workflow)
         self.assertIn("Upload resumable state while child runs asynchronously", workflow)
         self.assertIn("gh run download \"$STATE_RUN_ID\"", workflow)
+        self.assertIn("for _ in {1..30}; do", workflow)
         self.assertIn("case \"$child_status\" in", workflow)
         self.assertIn("queued|in_progress|requested|waiting|pending)", workflow)
         config = (Path(__file__).resolve().parents[2] / "config" / "spsa" / "search-cloud-v2.json").read_text(encoding="utf-8")
@@ -110,6 +111,7 @@ class CloudWorkflowWiringTests(unittest.TestCase):
         self.assertIn('--source-run-attempt "$GITHUB_RUN_ATTEMPT"', workflow)
         qualification = QUALIFICATION.read_text(encoding="utf-8")
         self.assertIn("gh run download \"$STATE_RUN_ID\"", qualification)
+        self.assertIn("for _ in {1..30}; do", qualification)
         self.assertIn("case \"$child_status\" in", qualification)
 
 
